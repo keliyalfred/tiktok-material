@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="素材库">
+<meta name="theme-color" content="#534AB7">
+<title>TikTok 素材库</title>
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiVGlrVG9rIOe0oOadkOW6kyIsInNob3J0X25hbWUiOiLntKDmnZDlupMiLCJzdGFydF91cmwiOiIuIiwiZGlzcGxheSI6InN0YW5kYWxvbmUiLCJiYWNrZ3JvdW5kX2NvbG9yIjoiI2Y4ZjdmNCIsInRoZW1lX2NvbG9yIjoiIzUzNEFCNyJ9">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f8f7f4;--surface:#fff;--surface2:#f1f0ec;
+  --text:#1a1a1a;--text2:#6b6966;--text3:#9e9b95;
+  --border:#e5e3dd;--border2:#d4d1ca;
+  --purple:#534AB7;--purple-bg:#EEEDFE;--purple-text:#3C3489;
+  --green:#1D9E75;--green-bg:#E1F5EE;--green-text:#085041;
+  --red:#E24B4A;--red-bg:#FCEBEB;--red-text:#791F1F;
+  --blue:#378ADD;--blue-bg:#E6F1FB;--blue-text:#0C447C;
+  --amber:#BA7517;--amber-bg:#FAEEDA;--amber-text:#633806;
+  --coral:#D85A30;--pink:#D4537E;
+  --radius:12px;--radius-sm:8px;
+}
+body{font-family:'Noto Sans SC',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;min-height:100dvh}
+button{font-family:inherit;cursor:pointer}
+input,textarea,select{font-family:inherit}
+
+.app{max-width:480px;margin:0 auto;padding:0 0 80px}
+.header{position:sticky;top:0;z-index:50;background:var(--bg);padding:16px 16px 12px;border-bottom:0.5px solid var(--border)}
+.header h1{font-size:18px;font-weight:600;letter-spacing:-0.3px}
+.header p{font-size:12px;color:var(--text2);margin-top:2px}
+.header-actions{display:flex;gap:8px;margin-top:10px}
+.btn-refresh{padding:7px 14px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);background:var(--surface);font-size:13px;color:var(--text2);display:flex;align-items:center;gap:4px}
+.btn-refresh:active{background:var(--surface2)}
+.btn-add{flex:1;padding:7px 14px;border-radius:var(--radius-sm);border:none;background:var(--purple);color:#fff;font-size:13px;font-weight:500;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-add:active{opacity:0.85}
+
+.libs-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding:12px 16px;scrollbar-width:none}
+.libs-scroll::-webkit-scrollbar{display:none}
+.libs-row{display:flex;gap:8px;min-width:max-content}
+.lib-chip{display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 14px;border-radius:var(--radius-sm);border:0.5px solid var(--border);background:var(--surface);min-width:72px;flex-shrink:0;transition:all 0.15s}
+.lib-chip.active{border:2px solid var(--purple);background:var(--purple-bg)}
+.lib-chip .icon{font-size:18px;line-height:1}
+.lib-chip .name{font-size:10px;color:var(--text2);white-space:nowrap;font-weight:500}
+.lib-chip.active .name{color:var(--purple-text)}
+.lib-chip .count{font-size:15px;font-weight:600;color:var(--text)}
+
+.content{padding:0 16px}
+.table-header{display:flex;align-items:center;gap:8px;padding:14px 0 10px}
+.table-header .icon{font-size:20px}
+.table-header .title{font-size:15px;font-weight:500}
+.table-header .num{font-size:12px;color:var(--text3);margin-left:auto}
+
+.card{background:var(--surface);border-radius:var(--radius);border:0.5px solid var(--border);margin-bottom:10px;overflow:hidden}
+.card-body{padding:14px 16px}
+.card-field{margin-bottom:10px}
+.card-field:last-child{margin-bottom:0}
+.card-label{font-size:11px;color:var(--text3);margin-bottom:2px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px}
+.card-value{font-size:13px;color:var(--text);line-height:1.6}
+.card-value a{color:var(--blue);text-decoration:none}
+.card-meta{display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--surface2);border-top:0.5px solid var(--border);flex-wrap:wrap}
+
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:500}
+.badge-waiting{background:var(--amber-bg);color:var(--amber-text)}
+.badge-processing{background:var(--blue-bg);color:var(--blue-text)}
+.badge-done{background:var(--green-bg);color:var(--green-text)}
+.badge-rejected{background:var(--red-bg);color:var(--red-text)}
+.badge-lib{background:var(--surface2);color:var(--text2);font-size:10px;padding:2px 6px}
+.badge-dot{width:5px;height:5px;border-radius:50%;display:inline-block}
+.badge-waiting .badge-dot{background:var(--amber)}
+.badge-processing .badge-dot{background:var(--blue)}
+.badge-done .badge-dot{background:var(--green)}
+.badge-rejected .badge-dot{background:var(--red)}
+
+.empty{text-align:center;padding:60px 20px;color:var(--text3);font-size:14px}
+.loading{text-align:center;padding:40px;color:var(--text3);font-size:13px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;display:flex;align-items:flex-end;justify-content:center;animation:fadeIn 0.2s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal{background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:480px;max-height:90vh;max-height:90dvh;overflow-y:auto;animation:slideUp 0.25s ease-out;padding:0 0 env(safe-area-inset-bottom)}
+.modal-header{display:flex;justify-content:space-between;align-items:center;padding:18px 20px 12px;position:sticky;top:0;background:var(--surface);z-index:1}
+.modal-header h3{font-size:17px;font-weight:600}
+.modal-close{width:28px;height:28px;border-radius:50%;border:none;background:var(--surface2);font-size:16px;color:var(--text2);display:flex;align-items:center;justify-content:center}
+.modal-body{padding:0 20px 20px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px;font-weight:500}
+.form-label .req{color:var(--red)}
+.form-input{width:100%;padding:10px 12px;border-radius:var(--radius-sm);border:0.5px solid var(--border2);font-size:14px;background:var(--surface);color:var(--text);outline:none;transition:border 0.15s}
+.form-input:focus{border-color:var(--purple)}
+textarea.form-input{resize:vertical;min-height:120px;line-height:1.6}
+select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239e9b95'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.btn-submit{width:100%;padding:12px;border-radius:var(--radius-sm);border:none;background:var(--purple);color:#fff;font-size:15px;font-weight:500;margin-top:8px}
+.btn-submit:disabled{background:var(--border2);color:var(--text3)}
+.btn-submit:active:not(:disabled){opacity:0.85}
+
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;z-index:200;animation:fadeIn 0.2s;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
+.toast-success{background:var(--green);color:#fff}
+.toast-error{background:var(--red);color:#fff}
+
+.tip{margin-top:16px;padding:12px 14px;background:var(--surface);border-radius:var(--radius-sm);border:0.5px solid var(--border);font-size:12px;color:var(--text2);line-height:1.7}
+.tip strong{color:var(--text);font-weight:500}
+
+@media(min-width:768px){
+  .app{max-width:720px}
+  .modal{border-radius:var(--radius);max-height:80vh;position:relative;align-self:center}
+  .modal-overlay{align-items:center}
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="header">
+    <h1>TikTok 素材库</h1>
+    <p>停 → 病 → 药 → 信 → 买 · 智能分发系统</p>
+    <div class="header-actions">
+      <button class="btn-refresh" onclick="refreshAll()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        刷新
+      </button>
+      <button class="btn-add" onclick="showModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        投入素材
+      </button>
+    </div>
+  </div>
+
+  <div class="libs-scroll">
+    <div class="libs-row" id="libsRow"></div>
+  </div>
+
+  <div class="content">
+    <div class="table-header">
+      <span class="icon" id="tableIcon"></span>
+      <span class="title" id="tableTitle"></span>
+      <span class="num" id="tableCount"></span>
+    </div>
+    <div id="tableBody"></div>
+  </div>
+
+  <div class="tip">
+    <strong>使用说明：</strong>点击「投入素材」→ 粘贴内容 → 提交后AI自动分析并分发到对应子库。系统每分钟自动检查一次，通常1-2分钟内完成分发。点击上方卡片切换查看各素材库。
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" style="display:none" onclick="if(event.target===this)hideModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>投入新素材</h3>
+      <button class="modal-close" onclick="hideModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">素材内容 <span class="req">*</span></label>
+        <textarea class="form-input" id="fContent" placeholder="粘贴素材内容...&#10;&#10;支持类型：用户评论、竞品视频拆解、CTA话术、痛点场景、产品卖点、社会证明等，AI会自动识别并分发到对应素材库。"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">来源链接</label>
+        <input class="form-input" id="fUrl" type="url" placeholder="https://...">
+      </div>
+      <div style="display:flex;gap:10px">
+        <div class="form-group" style="flex:1">
+          <label class="form-label">来源平台</label>
+          <select class="form-input" id="fPlatform">
+            <option value="TikTok">TikTok</option>
+            <option value="Instagram">Instagram</option>
+            <option value="YouTube">YouTube</option>
+            <option value="小红书">小红书</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="form-group" style="flex:1">
+          <label class="form-label">提交人</label>
+          <input class="form-input" id="fSubmitter" type="text" placeholder="你的名字">
+        </div>
+      </div>
+      <button class="btn-submit" id="btnSubmit" onclick="submitMaterial()">提交素材（AI自动分发）</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastContainer"></div>
+
+<script>
+const SUPA_URL = "https://vjblxvebexpqlxfhwzlm.supabase.co";
+const SUPA_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZqYmx4dmViZXhwcWx4Zmh3emxtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQyNTg4MjMsImV4cCI6MjA1OTgzNDgyM30.A9GJBSPMXbMNSuBBSMr64jlCvE1EEY0GH-L9SERbvZE";
+const H = {"apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY,"Content-Type":"application/json"};
+
+const LIBS = [
+  {key:"material_intake",label:"素材总表",icon:"📥",color:"#534AB7"},
+  {key:"viral_comments",label:"爆款评论",icon:"💬",color:"#D85A30"},
+  {key:"pain_points",label:"痛点场景",icon:"🎯",color:"#E24B4A"},
+  {key:"cta_scripts",label:"CTA话术",icon:"📢",color:"#1D9E75"},
+  {key:"competitor_analysis",label:"竞品拆解",icon:"🔍",color:"#378ADD"},
+  {key:"visual_shots",label:"卖点画面",icon:"🎬",color:"#D4537E"},
+  {key:"social_proofs",label:"社会证明",icon:"⭐",color:"#BA7517"},
+  {key:"benefits",label:"权益库",icon:"🎁",color:"#639922"},
+  {key:"bgm_tracks",label:"BGM情绪",icon:"🎵",color:"#534AB7"},
+];
+
+const FIELDS = {
+  material_intake:{
+    fields:["raw_content","content_type","status","dispatched_to","source_platform","submitter"],
+    labels:{raw_content:"素材内容",content_type:"内容类型",status:"状态",dispatched_to:"分发到",source_platform:"来源平台",submitter:"提交人"}
+  },
+  viral_comments:{
+    fields:["comment_en","comment_cn","source_video_url"],
+    labels:{comment_en:"英文评论",comment_cn:"中文翻译",source_video_url:"来源视频"}
+  },
+  pain_points:{
+    fields:["scene_name","user_pain","product_angle","script_example_en","script_example_cn"],
+    labels:{scene_name:"场景名称",user_pain:"用户痛点",product_angle:"产品角度",script_example_en:"英文脚本",script_example_cn:"中文脚本"}
+  },
+  cta_scripts:{
+    fields:["script_en","script_cn","script_logic"],
+    labels:{script_en:"英文CTA",script_cn:"中文CTA",script_logic:"逻辑说明"}
+  },
+  competitor_analysis:{
+    fields:["title","account_name","view_count","like_count","hook_script","reusable_points","video_url"],
+    labels:{title:"标题",account_name:"账号",view_count:"播放量",like_count:"点赞",hook_script:"钩子脚本",reusable_points:"可复用要素",video_url:"视频链接"}
+  },
+  visual_shots:{
+    fields:["shot_description","purpose"],
+    labels:{shot_description:"画面描述",purpose:"用途"}
+  },
+  social_proofs:{
+    fields:["name","usage_note"],
+    labels:{name:"证明名称",usage_note:"使用说明"}
+  },
+  benefits:{
+    fields:["name","description"],
+    labels:{name:"权益名称",description:"描述"}
+  },
+  bgm_tracks:{
+    fields:["name","applicable_content"],
+    labels:{name:"BGM名称",applicable_content:"适用内容"}
+  },
+};
+
+let activeTab = "material_intake";
+let counts = {};
+
+function statusBadge(s) {
+  const map = {
+    "待处理":["badge-waiting","waiting"],
+    "处理中":["badge-processing","processing"],
+    "已分发":["badge-done","done"],
+    "已驳回":["badge-rejected","rejected"],
+  };
+  const [cls] = map[s] || ["badge-waiting"];
+  return `<span class="badge ${cls}"><span class="badge-dot"></span>${s||"未知"}</span>`;
+}
+
+function renderLibChips() {
+  const row = document.getElementById("libsRow");
+  row.innerHTML = LIBS.map(l => {
+    const active = activeTab === l.key ? " active" : "";
+    const c = counts[l.key] ?? "...";
+    return `<button class="lib-chip${active}" onclick="switchTab('${l.key}')">
+      <span class="icon">${l.icon}</span>
+      <span class="name">${l.label}</span>
+      <span class="count">${c}</span>
+    </button>`;
+  }).join("");
+}
+
+async function fetchCount(table) {
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?select=id&limit=0`, {headers:{...H,Prefer:"count=exact"}});
+    const range = r.headers.get("content-range");
+    return parseInt(range?.split("/")[1] || "0");
+  } catch { return 0; }
+}
+
+async function fetchRows(table) {
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?order=created_at.desc&limit=50`, {headers:H});
+    return await r.json();
+  } catch { return []; }
+}
+
+function renderCard(row, config) {
+  const table = activeTab;
+  let fieldsHtml = "";
+  config.fields.forEach(f => {
+    if (f === "status" || f === "dispatched_to") return;
+    const label = config.labels[f] || f;
+    let val = row[f];
+    if (!val && val !== 0) val = "-";
+    if ((f === "source_video_url" || f === "video_url") && val !== "-") {
+      val = `<a href="${val}" target="_blank" rel="noreferrer">查看链接 ↗</a>`;
+    } else if (f === "view_count" || f === "like_count") {
+      val = val !== "-" ? Number(val).toLocaleString() : "-";
+    } else {
+      val = String(val).length > 200 ? String(val).slice(0, 200) + "..." : String(val);
+    }
+    fieldsHtml += `<div class="card-field"><div class="card-label">${label}</div><div class="card-value">${val}</div></div>`;
+  });
+
+  let metaHtml = "";
+  if (table === "material_intake") {
+    metaHtml = `<div class="card-meta">${statusBadge(row.status)}`;
+    if (row.dispatched_to && row.dispatched_to.length) {
+      metaHtml += row.dispatched_to.map(t => `<span class="badge badge-lib">${t}</span>`).join("");
+    }
+    if (row.content_type) {
+      metaHtml += `<span style="margin-left:auto;font-size:11px;color:var(--text3)">${row.content_type}</span>`;
+    }
+    metaHtml += `</div>`;
+  }
+
+  return `<div class="card"><div class="card-body">${fieldsHtml}</div>${metaHtml}</div>`;
+}
+
+async function renderTable() {
+  const body = document.getElementById("tableBody");
+  const lib = LIBS.find(l => l.key === activeTab);
+  const config = FIELDS[activeTab];
+  
+  document.getElementById("tableIcon").textContent = lib.icon;
+  document.getElementById("tableTitle").textContent = lib.label;
+  document.getElementById("tableCount").textContent = `共 ${counts[activeTab] ?? "..."} 条`;
+  
+  body.innerHTML = `<div class="loading">加载中...</div>`;
+  const rows = await fetchRows(activeTab);
+  
+  if (!rows.length) {
+    body.innerHTML = `<div class="empty">暂无数据<br><span style="font-size:12px;margin-top:4px;display:block">投入素材后AI会自动分发到这里</span></div>`;
+    return;
+  }
+  body.innerHTML = rows.map(r => renderCard(r, config)).join("");
+}
+
+async function loadCounts() {
+  const promises = LIBS.map(async l => {
+    counts[l.key] = await fetchCount(l.key);
+  });
+  await Promise.all(promises);
+}
+
+async function refreshAll() {
+  await loadCounts();
+  renderLibChips();
+  await renderTable();
+  showToast("数据已刷新", "success");
+}
+
+function switchTab(key) {
+  activeTab = key;
+  renderLibChips();
+  renderTable();
+}
+
+function showModal() {
+  document.getElementById("modalOverlay").style.display = "flex";
+  document.getElementById("fContent").focus();
+}
+function hideModal() {
+  document.getElementById("modalOverlay").style.display = "none";
+  document.getElementById("fContent").value = "";
+  document.getElementById("fUrl").value = "";
+  document.getElementById("fSubmitter").value = "";
+}
+
+function showToast(msg, type) {
+  const c = document.getElementById("toastContainer");
+  const t = document.createElement("div");
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity = "0"; t.style.transition = "opacity 0.3s"; setTimeout(() => t.remove(), 300); }, 2500);
+}
+
+async function submitMaterial() {
+  const content = document.getElementById("fContent").value.trim();
+  if (!content) { showToast("请填写素材内容", "error"); return; }
+  
+  const btn = document.getElementById("btnSubmit");
+  btn.disabled = true;
+  btn.textContent = "提交中...";
+
+  const data = { raw_content: content };
+  const url = document.getElementById("fUrl").value.trim();
+  const platform = document.getElementById("fPlatform").value;
+  const submitter = document.getElementById("fSubmitter").value.trim();
+  if (url) data.source_url = url;
+  if (platform) data.source_platform = platform;
+  if (submitter) data.submitter = submitter;
+
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/material_intake`, {
+      method: "POST", headers: {...H, Prefer: "return=representation"}, body: JSON.stringify(data)
+    });
+    if (!r.ok) throw new Error(await r.text());
+    
+    hideModal();
+    showToast("素材已提交，AI正在分析中...", "success");
+    activeTab = "material_intake";
+    setTimeout(refreshAll, 1000);
+    // 自动60秒后再刷一次看结果
+    setTimeout(refreshAll, 60000);
+  } catch (e) {
+    showToast("提交失败：" + e.message, "error");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "提交素材（AI自动分发）";
+  }
+}
+
+// 保存提交人到本地
+const savedSubmitter = localStorage.getItem("submitter");
+if (savedSubmitter) document.getElementById("fSubmitter").value = savedSubmitter;
+document.getElementById("fSubmitter").addEventListener("change", function() {
+  localStorage.setItem("submitter", this.value);
+});
+
+// 初始化
+(async function init() {
+  await loadCounts();
+  renderLibChips();
+  renderTable();
+})();
+</script>
+</body>
+</html>
