@@ -49,6 +49,14 @@ tbody td{padding:10px 14px;color:var(--text);vertical-align:top;max-width:280px}
 .status-pending{background:var(--amber-light);color:var(--amber-text)}.status-processing{background:var(--sky-light);color:var(--sky-text)}.status-done{background:var(--emerald-light);color:var(--emerald-text)}.status-rejected{background:var(--rose-light);color:var(--rose-text)}
 .status-dot{width:6px;height:6px;border-radius:50%}.status-pending .status-dot{background:var(--amber)}.status-processing .status-dot{background:var(--sky)}.status-done .status-dot{background:var(--emerald)}.status-rejected .status-dot{background:var(--rose)}
 .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;margin:1px 2px;background:var(--surface2);color:var(--text2)}.tag-type{background:var(--violet-light);color:var(--violet-text)}
+.tag-emerald{background:var(--emerald-light);color:var(--emerald-text)}
+.tag-sky{background:var(--sky-light);color:var(--sky-text)}
+.tag-amber{background:var(--amber-light);color:var(--amber-text)}
+.tag-rose{background:var(--rose-light);color:var(--rose-text)}
+.tag-orange{background:var(--orange-light);color:var(--orange-text)}
+.tag-violet{background:var(--violet-light);color:var(--violet-text)}
+.tag-pink{background:var(--pink-light);color:var(--pink-text)}
+.tag-teal{background:var(--teal-light);color:var(--teal-text)}
 .empty{text-align:center;padding:60px 20px;color:var(--text3)}.empty-icon{margin-bottom:8px;opacity:0.3}.empty-icon svg{width:48px;height:48px}.empty-text{font-size:13px}
 .loading{text-align:center;padding:40px;color:var(--text3);font-size:13px}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.15s}
@@ -99,12 +107,7 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 <script>
 var SUPA_URL="https://vjblxvebexpqlxfhwzlm.supabase.co";
 var SUPA_KEY="sb_publishable_TAtVWHXtEycUHu1xwslZSw_JdFOOg5l";
-
-function apiUrl(t,e){
-  var u=SUPA_URL+"/rest/v1/"+t+"?apikey="+SUPA_KEY;
-  if(e)u+="&"+e;
-  return u;
-}
+function apiUrl(t,e){var u=SUPA_URL+"/rest/v1/"+t+"?apikey="+SUPA_KEY;if(e)u+="&"+e;return u}
 
 var ICONS={
   material_intake:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
@@ -151,41 +154,51 @@ var FIELDS={
     labels:{raw_content:"素材内容",content_type:"类型",status:"状态",dispatched_to:"分发到",source_platform:"平台",submitter:"提交人"}
   },
   viral_comments:{
-    cols:["comment_en","comment_cn","source_video_url"],
-    labels:{comment_en:"英文评论",comment_cn:"中文翻译",source_video_url:"来源"}
+    cols:["comment_en","comment_cn","convertible_to","emotion_tags","source_video_url","applicable_category"],
+    labels:{comment_en:"评论原文(英文)",comment_cn:"中文翻译",convertible_to:"可转化为",emotion_tags:"情绪标签",source_video_url:"来源视频",applicable_category:"适用品类"}
   },
   pain_points:{
-    cols:["scene_name","user_pain","product_angle","script_example_cn"],
-    labels:{scene_name:"场景",user_pain:"用户痛点",product_angle:"产品角度",script_example_cn:"脚本示例"}
+    cols:["scene_name","scene_category","user_pain","emotion_keywords","product_angle","content_angle","script_example_en","script_example_cn","source_origin","applicable_category"],
+    labels:{scene_name:"场景名称",scene_category:"场景分类",user_pain:"用户痛点",emotion_keywords:"情绪关键词",product_angle:"产品切入点",content_angle:"内容角度建议",script_example_en:"话术示例(英文)",script_example_cn:"中文翻译",source_origin:"来源",applicable_category:"适用品类"}
   },
   cta_scripts:{
-    cols:["script_en","script_cn","script_logic"],
-    labels:{script_en:"英文CTA",script_cn:"中文CTA",script_logic:"逻辑"}
+    cols:["script_en","script_cn","video_stage","action_type","script_logic","combo_benefit","combo_visual","applicable_category","reference_video_url"],
+    labels:{script_en:"CTA话术(英文)",script_cn:"中文翻译",video_stage:"视频阶段",action_type:"行动类型",script_logic:"话术逻辑",combo_benefit:"配合权益",combo_visual:"配合画面",applicable_category:"适用品类",reference_video_url:"参考视频"}
   },
   competitor_analysis:{
     cols:["title","account_name","view_count","like_count","video_url","hook_script","video_structure","bgm_used","reusable_points"],
     labels:{title:"视频标题",account_name:"账号",view_count:"播放量",like_count:"点赞",video_url:"视频链接",hook_script:"钩子话术",video_structure:"视频结构",bgm_used:"使用BGM",reusable_points:"可复用要素"}
   },
   visual_shots:{
-    cols:["shot_description","purpose"],
-    labels:{shot_description:"画面描述",purpose:"用途"}
+    cols:["shot_description","shot_type","purpose","video_stage","applicable_category"],
+    labels:{shot_description:"拍摄说明",shot_type:"画面类型",purpose:"作用",video_stage:"配合视频阶段",applicable_category:"适用品类"}
   },
   social_proofs:{
-    cols:["name","usage_note"],
-    labels:{name:"名称",usage_note:"使用说明"}
+    cols:["name","proof_type","material_source","usage_note","trust_level","notes"],
+    labels:{name:"素材名称",proof_type:"证明类型",material_source:"素材来源",usage_note:"使用场景说明",trust_level:"信任强度",notes:"备注"}
   },
   benefits:{
-    cols:["name","description"],
-    labels:{name:"权益名称",description:"描述"}
+    cols:["name","benefit_type","description","applicable_scene","cost_level","combo_suggestion","script_example","applicable_category"],
+    labels:{name:"权益名称",benefit_type:"权益类型",description:"权益描述",applicable_scene:"适用场景",cost_level:"成本等级",combo_suggestion:"组合建议",script_example:"话术示例",applicable_category:"适用品类"}
   },
   bgm_tracks:{
-    cols:["name","applicable_content"],
-    labels:{name:"BGM名称",applicable_content:"适用内容"}
+    cols:["name","emotion_type","applicable_content","features"],
+    labels:{name:"BGM名称",emotion_type:"情绪类型",applicable_content:"适用内容",features:"特征"}
   },
   frameworks:{
     cols:["formula","name","hook_type","core_logic","applicable_scene","content_tier","difficulty"],
     labels:{formula:"底层公式",name:"框架名称",hook_type:"钩子类型",core_logic:"核心逻辑",applicable_scene:"适用场景",content_tier:"内容层级",difficulty:"难度"}
   }
+};
+
+var TAG_FIELDS={
+  video_structure:"tag-sky",bgm_used:"tag-violet",hook_type:"tag-orange",
+  content_tier:"tag-sky",emotion_type:"tag-violet",proof_type:"tag-teal",
+  benefit_type:"tag-teal",shot_type:"tag-pink",action_type:"tag-orange",
+  video_stage:"tag-sky",scene_category:"tag-orange",convertible_to:"tag-emerald",
+  emotion_tags:"tag-pink",emotion_keywords:"tag-pink",material_source:"tag-sky",
+  applicable_scene:"tag-sky",applicable_category:"tag-teal",source_origin:"tag-sky",
+  cost_level:"tag-amber",trust_level:"tag-amber",content_type:"tag-type"
 };
 
 var activeTab="material_intake",counts={};
@@ -203,18 +216,13 @@ function cellVal(r,c){
     if(!Array.isArray(v)||!v.length) return '<span class="cell-empty">\u2014</span>';
     return v.map(function(t){return '<span class="tag">'+t+'</span>'}).join("");
   }
-  if(c==="content_type") return '<span class="tag tag-type">'+v+'</span>';
-  if(c==="source_video_url"||c==="video_url") return '<a class="cell-link" href="'+v+'" target="_blank">查看 \u2192</a>';
-  if(c==="video_structure") return '<span class="tag" style="background:var(--sky-light);color:var(--sky-text)">'+v+'</span>';
-  if(c==="bgm_used") return '<span class="tag" style="background:var(--violet-light);color:var(--violet-text)">'+v+'</span>';
-  if(c==="hook_type") return '<span class="tag" style="background:var(--orange-light);color:var(--orange-text)">'+v+'</span>';
-  if(c==="content_tier") return '<span class="tag" style="background:var(--sky-light);color:var(--sky-text)">'+v+'</span>';
-  if(c==="difficulty"){
-    var dc={"入门":{bg:"var(--emerald-light)",fg:"var(--emerald-text)"},"进阶":{bg:"var(--amber-light)",fg:"var(--amber-text)"},"高阶":{bg:"var(--rose-light)",fg:"var(--rose-text)"}};
-    var dd=dc[v]||{bg:"var(--surface2)",fg:"var(--text2)"};
-    return '<span class="tag" style="background:'+dd.bg+';color:'+dd.fg+'">'+v+'</span>';
-  }
+  if(c==="source_video_url"||c==="video_url"||c==="reference_video_url") return '<a class="cell-link" href="'+v+'" target="_blank">\u67E5\u770B \u2192</a>';
   if(c==="view_count"||c==="like_count") return '<span class="cell-num">'+Number(v).toLocaleString()+'</span>';
+  if(c==="difficulty"){
+    var dc={"入门":"tag-emerald","进阶":"tag-amber","高阶":"tag-rose"};
+    return '<span class="tag '+(dc[v]||"")+'">'+v+'</span>';
+  }
+  if(TAG_FIELDS[c]) return '<span class="tag '+TAG_FIELDS[c]+'">'+v+'</span>';
   var s=String(v);
   if(s.length>120) return '<div class="cell-text expandable" onclick="this.classList.toggle(\'expanded\')">'+s+'</div>';
   return '<div class="cell-text">'+s+'</div>';
@@ -228,32 +236,23 @@ function renderNav(){
     var cl=COLORS[l.key];
     h+='<button class="nav-item'+a+'" onclick="switchTab(\''+l.key+'\')">';
     h+='<span class="nav-icon" style="background:'+cl.bg+';color:'+cl.fg+'">'+ICONS[l.key]+'</span>';
-    h+=l.label;
-    h+='<span class="nav-count">'+c+'</span>';
-    h+='</button>';
+    h+=l.label+'<span class="nav-count">'+c+'</span></button>';
   });
   document.getElementById("navTabs").innerHTML=h;
 }
 
 async function fetchCount(t){
-  try{
-    var r=await fetch(apiUrl(t,"select=id&limit=0"),{headers:{"Prefer":"count=exact"}});
-    return parseInt(((r.headers.get("content-range")||"").split("/")[1])||"0");
-  }catch(e){return 0}
+  try{var r=await fetch(apiUrl(t,"select=id&limit=0"),{headers:{"Prefer":"count=exact"}});
+  return parseInt(((r.headers.get("content-range")||"").split("/")[1])||"0")}catch(e){return 0}
 }
-
 async function fetchRows(t){
-  try{
-    var r=await fetch(apiUrl(t,"order=created_at.desc&limit=50"));
-    if(!r.ok) return [];
-    return await r.json();
-  }catch(e){return []}
+  try{var r=await fetch(apiUrl(t,"order=created_at.desc&limit=50"));
+  if(!r.ok)return[];return await r.json()}catch(e){return[]}
 }
 
 async function renderTable(){
   var lib=LIBS.find(function(l){return l.key===activeTab});
-  var cfg=FIELDS[activeTab];
-  var clr=COLORS[activeTab];
+  var cfg=FIELDS[activeTab],clr=COLORS[activeTab];
   document.getElementById("tableTitle").innerHTML=
     '<span class="nav-icon" style="background:'+clr.bg+';color:'+clr.fg+';width:24px;height:24px;border-radius:6px">'+ICONS[activeTab]+'</span>'+
     lib.label+' <span class="count">'+(counts[activeTab]!=null?counts[activeTab]+"\u6761":"")+'</span>';
@@ -276,85 +275,34 @@ async function renderTable(){
   body.innerHTML=h;
 }
 
-async function loadCounts(){
-  await Promise.all(LIBS.map(async function(l){
-    counts[l.key]=await fetchCount(l.key);
-  }));
-}
-
-async function refreshAll(){
-  await loadCounts();
-  renderNav();
-  await renderTable();
-  showToast("\u6570\u636E\u5DF2\u5237\u65B0","success");
-}
-
+async function loadCounts(){await Promise.all(LIBS.map(async function(l){counts[l.key]=await fetchCount(l.key)}))}
+async function refreshAll(){await loadCounts();renderNav();await renderTable();showToast("\u6570\u636E\u5DF2\u5237\u65B0","success")}
 function switchTab(k){activeTab=k;renderNav();renderTable()}
-
-function showModal(){
-  document.getElementById("modalOverlay").style.display="flex";
-  setTimeout(function(){document.getElementById("fContent").focus()},100);
-}
-
-function hideModal(){
-  document.getElementById("modalOverlay").style.display="none";
-  document.getElementById("fContent").value="";
-  document.getElementById("fUrl").value="";
-}
-
-function showToast(m,t){
-  var c=document.getElementById("toastContainer");
-  var e=document.createElement("div");
-  e.className="toast toast-"+t;
-  e.textContent=m;
-  c.appendChild(e);
-  setTimeout(function(){e.style.opacity="0";e.style.transition="opacity 0.3s";setTimeout(function(){e.remove()},300)},2500);
-}
+function showModal(){document.getElementById("modalOverlay").style.display="flex";setTimeout(function(){document.getElementById("fContent").focus()},100)}
+function hideModal(){document.getElementById("modalOverlay").style.display="none";document.getElementById("fContent").value="";document.getElementById("fUrl").value=""}
+function showToast(m,t){var c=document.getElementById("toastContainer"),e=document.createElement("div");e.className="toast toast-"+t;e.textContent=m;c.appendChild(e);setTimeout(function(){e.style.opacity="0";e.style.transition="opacity 0.3s";setTimeout(function(){e.remove()},300)},2500)}
 
 async function submitMaterial(){
   var content=document.getElementById("fContent").value.trim();
   if(!content){showToast("\u8BF7\u586B\u5199\u7D20\u6750\u5185\u5BB9","error");return}
-  var btn=document.getElementById("btnSubmit");
-  btn.disabled=true;
-  btn.textContent="\u63D0\u4EA4\u4E2D...";
+  var btn=document.getElementById("btnSubmit");btn.disabled=true;btn.textContent="\u63D0\u4EA4\u4E2D...";
   var data={raw_content:content};
   var url=document.getElementById("fUrl").value.trim();
   var platform=document.getElementById("fPlatform").value;
   var submitter=document.getElementById("fSubmitter").value.trim();
-  if(url) data.source_url=url;
-  if(platform) data.source_platform=platform;
-  if(submitter) data.submitter=submitter;
+  if(url)data.source_url=url;if(platform)data.source_platform=platform;if(submitter)data.submitter=submitter;
   try{
-    var r=await fetch(apiUrl("material_intake"),{
-      method:"POST",
-      headers:{"Content-Type":"application/json","Prefer":"return=representation"},
-      body:JSON.stringify(data)
-    });
-    if(!r.ok) throw new Error(await r.text());
-    hideModal();
-    showToast("\u7D20\u6750\u5DF2\u63D0\u4EA4\uFF0CAI \u6B63\u5728\u5206\u6790\u4E2D...","success");
-    activeTab="material_intake";
-    setTimeout(refreshAll,1000);
-    setTimeout(refreshAll,70000);
-  }catch(e){
-    showToast("\u63D0\u4EA4\u5931\u8D25\uFF1A"+e.message,"error");
-  }finally{
-    btn.disabled=false;
-    btn.textContent="\u63D0\u4EA4\u7D20\u6750 \u00B7 AI \u81EA\u52A8\u5206\u53D1";
-  }
+    var r=await fetch(apiUrl("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation"},body:JSON.stringify(data)});
+    if(!r.ok)throw new Error(await r.text());
+    hideModal();showToast("\u7D20\u6750\u5DF2\u63D0\u4EA4\uFF0CAI \u6B63\u5728\u5206\u6790\u4E2D...","success");
+    activeTab="material_intake";setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
+  }catch(e){showToast("\u63D0\u4EA4\u5931\u8D25\uFF1A"+e.message,"error")}
+  finally{btn.disabled=false;btn.textContent="\u63D0\u4EA4\u7D20\u6750 \u00B7 AI \u81EA\u52A8\u5206\u53D1"}
 }
 
-var ss=localStorage.getItem("submitter");
-if(ss) document.getElementById("fSubmitter").value=ss;
-document.getElementById("fSubmitter").addEventListener("change",function(){
-  localStorage.setItem("submitter",this.value);
-});
-
-(async function(){
-  await loadCounts();
-  renderNav();
-  renderTable();
-})();
+var ss=localStorage.getItem("submitter");if(ss)document.getElementById("fSubmitter").value=ss;
+document.getElementById("fSubmitter").addEventListener("change",function(){localStorage.setItem("submitter",this.value)});
+(async function(){await loadCounts();renderNav();renderTable()})();
 </script>
 </body>
 </html>
