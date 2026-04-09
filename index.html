@@ -188,7 +188,12 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 <script>
 const SUPA_URL = "https://vjblxvebexpqlxfhwzlm.supabase.co";
 const SUPA_KEY = "sb_publishable_TAtVWHXtEycUHu1xwslZSw_JdFOOg5l";
-const H = {"apikey":SUPA_KEY,"Authorization":"Bearer "+SUPA_KEY,"Content-Type":"application/json"};
+
+function apiUrl(table, extra) {
+  let url = SUPA_URL + "/rest/v1/" + table + "?apikey=" + SUPA_KEY;
+  if (extra) url += "&" + extra;
+  return url;
+}
 
 const LIBS = [
   {key:"material_intake",label:"素材总表",icon:"📥",color:"#534AB7"},
@@ -246,97 +251,99 @@ let counts = {};
 
 function statusBadge(s) {
   const map = {
-    "待处理":["badge-waiting","waiting"],
-    "处理中":["badge-processing","processing"],
-    "已分发":["badge-done","done"],
-    "已驳回":["badge-rejected","rejected"],
+    "待处理":["badge-waiting"],
+    "处理中":["badge-processing"],
+    "已分发":["badge-done"],
+    "已驳回":["badge-rejected"],
   };
   const [cls] = map[s] || ["badge-waiting"];
-  return `<span class="badge ${cls}"><span class="badge-dot"></span>${s||"未知"}</span>`;
+  return '<span class="badge '+cls+'"><span class="badge-dot"></span>'+(s||"未知")+'</span>';
 }
 
 function renderLibChips() {
   const row = document.getElementById("libsRow");
-  row.innerHTML = LIBS.map(l => {
+  row.innerHTML = LIBS.map(function(l) {
     const active = activeTab === l.key ? " active" : "";
-    const c = counts[l.key] ?? "...";
-    return `<button class="lib-chip${active}" onclick="switchTab('${l.key}')">
-      <span class="icon">${l.icon}</span>
-      <span class="name">${l.label}</span>
-      <span class="count">${c}</span>
-    </button>`;
+    const c = counts[l.key] != null ? counts[l.key] : "...";
+    return '<button class="lib-chip'+active+'" onclick="switchTab(\''+l.key+'\')">'
+      +'<span class="icon">'+l.icon+'</span>'
+      +'<span class="name">'+l.label+'</span>'
+      +'<span class="count">'+c+'</span>'
+      +'</button>';
   }).join("");
 }
 
 async function fetchCount(table) {
   try {
-    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?select=id&limit=0`, {headers:{...H,Prefer:"count=exact"}});
+    const r = await fetch(apiUrl(table, "select=id&limit=0"), {headers:{"Prefer":"count=exact"}});
     const range = r.headers.get("content-range");
-    return parseInt(range?.split("/")[1] || "0");
-  } catch { return 0; }
+    return parseInt((range||"").split("/")[1] || "0");
+  } catch(e) { return 0; }
 }
 
 async function fetchRows(table) {
   try {
-    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?order=created_at.desc&limit=50`, {headers:H});
+    const r = await fetch(apiUrl(table, "order=created_at.desc&limit=50"));
+    if (!r.ok) return [];
     return await r.json();
-  } catch { return []; }
+  } catch(e) { return []; }
 }
 
 function renderCard(row, config) {
-  const table = activeTab;
-  let fieldsHtml = "";
-  config.fields.forEach(f => {
+  var fieldsHtml = "";
+  config.fields.forEach(function(f) {
     if (f === "status" || f === "dispatched_to") return;
-    const label = config.labels[f] || f;
-    let val = row[f];
+    var label = config.labels[f] || f;
+    var val = row[f];
     if (!val && val !== 0) val = "-";
     if ((f === "source_video_url" || f === "video_url") && val !== "-") {
-      val = `<a href="${val}" target="_blank" rel="noreferrer">查看链接 ↗</a>`;
+      val = '<a href="'+val+'" target="_blank" rel="noreferrer">查看链接 ↗</a>';
     } else if (f === "view_count" || f === "like_count") {
       val = val !== "-" ? Number(val).toLocaleString() : "-";
     } else {
       val = String(val).length > 200 ? String(val).slice(0, 200) + "..." : String(val);
     }
-    fieldsHtml += `<div class="card-field"><div class="card-label">${label}</div><div class="card-value">${val}</div></div>`;
+    fieldsHtml += '<div class="card-field"><div class="card-label">'+label+'</div><div class="card-value">'+val+'</div></div>';
   });
 
-  let metaHtml = "";
-  if (table === "material_intake") {
-    metaHtml = `<div class="card-meta">${statusBadge(row.status)}`;
+  var metaHtml = "";
+  if (activeTab === "material_intake") {
+    metaHtml = '<div class="card-meta">'+statusBadge(row.status);
     if (row.dispatched_to && row.dispatched_to.length) {
-      metaHtml += row.dispatched_to.map(t => `<span class="badge badge-lib">${t}</span>`).join("");
+      row.dispatched_to.forEach(function(t) {
+        metaHtml += '<span class="badge badge-lib">'+t+'</span>';
+      });
     }
     if (row.content_type) {
-      metaHtml += `<span style="margin-left:auto;font-size:11px;color:var(--text3)">${row.content_type}</span>`;
+      metaHtml += '<span style="margin-left:auto;font-size:11px;color:var(--text3)">'+row.content_type+'</span>';
     }
-    metaHtml += `</div>`;
+    metaHtml += '</div>';
   }
 
-  return `<div class="card"><div class="card-body">${fieldsHtml}</div>${metaHtml}</div>`;
+  return '<div class="card"><div class="card-body">'+fieldsHtml+'</div>'+metaHtml+'</div>';
 }
 
 async function renderTable() {
-  const body = document.getElementById("tableBody");
-  const lib = LIBS.find(l => l.key === activeTab);
-  const config = FIELDS[activeTab];
+  var body = document.getElementById("tableBody");
+  var lib = LIBS.find(function(l){return l.key===activeTab});
+  var config = FIELDS[activeTab];
   
   document.getElementById("tableIcon").textContent = lib.icon;
   document.getElementById("tableTitle").textContent = lib.label;
-  document.getElementById("tableCount").textContent = `共 ${counts[activeTab] ?? "..."} 条`;
+  document.getElementById("tableCount").textContent = "共 " + (counts[activeTab] != null ? counts[activeTab] : "...") + " 条";
   
-  body.innerHTML = `<div class="loading">加载中...</div>`;
-  const rows = await fetchRows(activeTab);
+  body.innerHTML = '<div class="loading">加载中...</div>';
+  var rows = await fetchRows(activeTab);
   
   if (!rows.length) {
-    body.innerHTML = `<div class="empty">暂无数据<br><span style="font-size:12px;margin-top:4px;display:block">投入素材后AI会自动分发到这里</span></div>`;
+    body.innerHTML = '<div class="empty">暂无数据<br><span style="font-size:12px;margin-top:4px;display:block">投入素材后AI会自动分发到这里</span></div>';
     return;
   }
-  body.innerHTML = rows.map(r => renderCard(r, config)).join("");
+  body.innerHTML = rows.map(function(r){return renderCard(r, config)}).join("");
 }
 
 async function loadCounts() {
-  const promises = LIBS.map(async l => {
+  var promises = LIBS.map(async function(l) {
     counts[l.key] = await fetchCount(l.key);
   });
   await Promise.all(promises);
@@ -357,7 +364,7 @@ function switchTab(key) {
 
 function showModal() {
   document.getElementById("modalOverlay").style.display = "flex";
-  document.getElementById("fContent").focus();
+  setTimeout(function(){document.getElementById("fContent").focus()}, 100);
 }
 function hideModal() {
   document.getElementById("modalOverlay").style.display = "none";
@@ -367,33 +374,35 @@ function hideModal() {
 }
 
 function showToast(msg, type) {
-  const c = document.getElementById("toastContainer");
-  const t = document.createElement("div");
-  t.className = `toast toast-${type}`;
+  var c = document.getElementById("toastContainer");
+  var t = document.createElement("div");
+  t.className = "toast toast-" + type;
   t.textContent = msg;
   c.appendChild(t);
-  setTimeout(() => { t.style.opacity = "0"; t.style.transition = "opacity 0.3s"; setTimeout(() => t.remove(), 300); }, 2500);
+  setTimeout(function() { t.style.opacity = "0"; t.style.transition = "opacity 0.3s"; setTimeout(function(){t.remove()}, 300); }, 2500);
 }
 
 async function submitMaterial() {
-  const content = document.getElementById("fContent").value.trim();
+  var content = document.getElementById("fContent").value.trim();
   if (!content) { showToast("请填写素材内容", "error"); return; }
   
-  const btn = document.getElementById("btnSubmit");
+  var btn = document.getElementById("btnSubmit");
   btn.disabled = true;
   btn.textContent = "提交中...";
 
-  const data = { raw_content: content };
-  const url = document.getElementById("fUrl").value.trim();
-  const platform = document.getElementById("fPlatform").value;
-  const submitter = document.getElementById("fSubmitter").value.trim();
+  var data = { raw_content: content };
+  var url = document.getElementById("fUrl").value.trim();
+  var platform = document.getElementById("fPlatform").value;
+  var submitter = document.getElementById("fSubmitter").value.trim();
   if (url) data.source_url = url;
   if (platform) data.source_platform = platform;
   if (submitter) data.submitter = submitter;
 
   try {
-    const r = await fetch(`${SUPA_URL}/rest/v1/material_intake`, {
-      method: "POST", headers: {...H, Prefer: "return=representation"}, body: JSON.stringify(data)
+    var r = await fetch(apiUrl("material_intake"), {
+      method: "POST",
+      headers: {"Content-Type":"application/json","Prefer":"return=representation"},
+      body: JSON.stringify(data)
     });
     if (!r.ok) throw new Error(await r.text());
     
@@ -401,7 +410,6 @@ async function submitMaterial() {
     showToast("素材已提交，AI正在分析中...", "success");
     activeTab = "material_intake";
     setTimeout(refreshAll, 1000);
-    // 自动60秒后再刷一次看结果
     setTimeout(refreshAll, 60000);
   } catch (e) {
     showToast("提交失败：" + e.message, "error");
@@ -411,14 +419,12 @@ async function submitMaterial() {
   }
 }
 
-// 保存提交人到本地
-const savedSubmitter = localStorage.getItem("submitter");
+var savedSubmitter = localStorage.getItem("submitter");
 if (savedSubmitter) document.getElementById("fSubmitter").value = savedSubmitter;
 document.getElementById("fSubmitter").addEventListener("change", function() {
   localStorage.setItem("submitter", this.value);
 });
 
-// 初始化
 (async function init() {
   await loadCounts();
   renderLibChips();
