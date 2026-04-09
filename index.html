@@ -168,6 +168,7 @@ function renderRows(rows){
   var cfg=FD[at];
   if(!rows.length) return '<div class="empty"><div class="empty-text">'+(searchTerm?'\u672A\u627E\u5230\u5339\u914D\u7ED3\u679C':'\u6682\u65E0\u6570\u636E')+'</div></div>';
   var canDel=at!=="frameworks";
+  var me=localStorage.getItem("submitter")||"";
   var h='<table><thead><tr><th style="width:36px">#</th>';
   cfg.c.forEach(function(c){h+='<th>'+cfg.n[c]+'</th>'});
   if(canDel)h+='<th style="width:50px"></th>';
@@ -175,7 +176,13 @@ function renderRows(rows){
   rows.forEach(function(r,i){
     h+='<tr><td style="color:var(--text3);font-size:12px">'+(i+1)+'</td>';
     cfg.c.forEach(function(c){h+='<td>'+cV(r,c)+'</td>'});
-    if(canDel)h+='<td><button class="del-btn" onclick="confirmDel(\''+r.id+'\')">删除</button></td>';
+    if(canDel){
+      if(me && r.submitter && r.submitter===me){
+        h+='<td><button class="del-btn" onclick="confirmDel(\''+r.id+'\')">删除</button></td>';
+      }else{
+        h+='<td></td>';
+      }
+    }
     h+='</tr>';
   });
   h+='</tbody></table>';
