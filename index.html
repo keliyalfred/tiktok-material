@@ -14,8 +14,7 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--bg:#f9fafb;--surface:#fff;--surface2:#f3f4f6;--surface3:#e5e7eb;--text:#111827;--text2:#6b7280;--text3:#9ca3af;--border:#e5e7eb;--border2:#d1d5db;--indigo:#4F46E5;--indigo-light:#EEF2FF;--indigo-text:#3730A3;--emerald:#059669;--emerald-light:#ECFDF5;--emerald-text:#065F46;--rose:#E11D48;--rose-light:#FFF1F2;--rose-text:#9F1239;--sky:#0284C7;--sky-light:#F0F9FF;--sky-text:#075985;--amber:#D97706;--amber-light:#FFFBEB;--amber-text:#92400E;--violet:#7C3AED;--violet-light:#F5F3FF;--violet-text:#5B21B6;--pink:#DB2777;--pink-light:#FDF2F8;--pink-text:#9D174D;--teal:#0D9488;--teal-light:#F0FDFA;--teal-text:#115E59;--orange:#EA580C;--orange-light:#FFF7ED;--orange-text:#9A3412;--radius:10px;--radius-sm:6px;--shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04)}
 body{font-family:'Inter','Noto Sans SC',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;font-size:14px}
-button{font-family:inherit;cursor:pointer;border:none;background:none}
-input,textarea,select{font-family:inherit}
+button{font-family:inherit;cursor:pointer;border:none;background:none}input,textarea,select{font-family:inherit}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:4px}
 .app{max-width:960px;margin:0 auto;padding:0 0 40px}
 .header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 20px;position:sticky;top:0;z-index:50}
@@ -23,19 +22,18 @@ input,textarea,select{font-family:inherit}
 .header-brand{display:flex;align-items:center;gap:10px}
 .header-logo{width:32px;height:32px;background:linear-gradient(135deg,#4F46E5,#7C3AED);border-radius:8px;display:flex;align-items:center;justify-content:center}
 .header-logo svg{width:18px;height:18px}
-.header h1{font-size:16px;font-weight:700;letter-spacing:-0.3px}
-.header-sub{font-size:11px;color:var(--text3);font-weight:400}
+.header h1{font-size:16px;font-weight:700;letter-spacing:-0.3px}.header-sub{font-size:11px;color:var(--text3);font-weight:400}
 .header-actions{display:flex;gap:8px}
 .btn{padding:7px 14px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:5px;transition:all 0.15s}
-.btn-ghost{color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{background:var(--surface2)}.btn-ghost:active{background:var(--surface3)}
-.btn-primary{background:var(--indigo);color:#fff}.btn-primary:hover{background:#4338CA}.btn-primary:active{background:#3730A3}
+.btn-ghost{color:var(--text2);border:1px solid var(--border)}.btn-ghost:hover{background:var(--surface2)}
+.btn-primary{background:var(--indigo);color:#fff}.btn-primary:hover{background:#4338CA}
 .btn svg{width:14px;height:14px}
 .nav{display:flex;gap:2px;padding:8px 20px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap}.nav::-webkit-scrollbar{display:none}
 .nav-item{display:flex;align-items:center;gap:6px;padding:8px 12px;font-size:13px;font-weight:500;color:var(--text2);white-space:nowrap;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;border-radius:var(--radius-sm) var(--radius-sm) 0 0}
 .nav-item:hover{color:var(--text);background:var(--surface2)}.nav-item.active{color:var(--indigo);border-bottom-color:var(--indigo);background:transparent}
 .nav-icon{width:18px;height:18px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}.nav-icon svg{width:12px;height:12px}
 .nav-count{font-size:11px;background:var(--surface2);color:var(--text3);padding:1px 6px;border-radius:10px;font-weight:600}.nav-item.active .nav-count{background:var(--indigo-light);color:var(--indigo)}
-.table-wrap{padding:16px 20px}.table-info{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.table-wrap{padding:16px 20px}.table-info{display:flex;align-items:center;margin-bottom:12px}
 .table-title{font-size:14px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:8px}.table-title .count{font-weight:400;color:var(--text3);font-size:13px}
 .table-container{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.table-scroll{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:13px}
@@ -45,18 +43,12 @@ tbody td{padding:10px 14px;color:var(--text);vertical-align:top;min-width:80px}
 .cell-text{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;line-height:1.55;cursor:pointer}.cell-text.expanded{-webkit-line-clamp:unset}
 .cell-link{color:var(--sky);text-decoration:none;font-weight:500;font-size:12px}.cell-link:hover{text-decoration:underline}
 .cell-num{font-variant-numeric:tabular-nums;font-weight:500}.cell-empty{color:var(--text3);font-style:italic;font-size:12px}
-.status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:0.2px}
+.status{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
 .status-pending{background:var(--amber-light);color:var(--amber-text)}.status-processing{background:var(--sky-light);color:var(--sky-text)}.status-done{background:var(--emerald-light);color:var(--emerald-text)}.status-rejected{background:var(--rose-light);color:var(--rose-text)}
 .status-dot{width:6px;height:6px;border-radius:50%}.status-pending .status-dot{background:var(--amber)}.status-processing .status-dot{background:var(--sky)}.status-done .status-dot{background:var(--emerald)}.status-rejected .status-dot{background:var(--rose)}
-.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;margin:1px 2px;background:var(--surface2);color:var(--text2)}.tag-type{background:var(--violet-light);color:var(--violet-text)}
-.tag-emerald{background:var(--emerald-light);color:var(--emerald-text)}
-.tag-sky{background:var(--sky-light);color:var(--sky-text)}
-.tag-amber{background:var(--amber-light);color:var(--amber-text)}
-.tag-rose{background:var(--rose-light);color:var(--rose-text)}
-.tag-orange{background:var(--orange-light);color:var(--orange-text)}
-.tag-violet{background:var(--violet-light);color:var(--violet-text)}
-.tag-pink{background:var(--pink-light);color:var(--pink-text)}
-.tag-teal{background:var(--teal-light);color:var(--teal-text)}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;margin:1px 2px;background:var(--surface2);color:var(--text2)}
+.tag-type{background:var(--violet-light);color:var(--violet-text)}
+.tag-emerald{background:var(--emerald-light);color:var(--emerald-text)}.tag-sky{background:var(--sky-light);color:var(--sky-text)}.tag-amber{background:var(--amber-light);color:var(--amber-text)}.tag-rose{background:var(--rose-light);color:var(--rose-text)}.tag-orange{background:var(--orange-light);color:var(--orange-text)}.tag-violet{background:var(--violet-light);color:var(--violet-text)}.tag-pink{background:var(--pink-light);color:var(--pink-text)}.tag-teal{background:var(--teal-light);color:var(--teal-text)}.tag-indigo{background:var(--indigo-light);color:var(--indigo-text)}
 .empty{text-align:center;padding:60px 20px;color:var(--text3)}.empty-icon{margin-bottom:8px;opacity:0.3}.empty-icon svg{width:48px;height:48px}.empty-text{font-size:13px}
 .loading{text-align:center;padding:40px;color:var(--text3);font-size:13px}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn 0.15s}
@@ -68,13 +60,13 @@ tbody td{padding:10px 14px;color:var(--text);vertical-align:top;min-width:80px}
 .form-input{width:100%;padding:9px 12px;border-radius:var(--radius-sm);border:1px solid var(--border);font-size:14px;background:var(--surface);color:var(--text);outline:none;transition:all 0.15s}.form-input:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(79,70,229,0.1)}
 textarea.form-input{resize:vertical;min-height:120px;line-height:1.6}
 select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%239ca3af'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
-.btn-submit{width:100%;padding:11px;border-radius:var(--radius-sm);border:none;background:var(--indigo);color:#fff;font-size:14px;font-weight:600;margin-top:8px;transition:all 0.15s;cursor:pointer}.btn-submit:hover{background:#4338CA}.btn-submit:disabled{background:var(--surface3);color:var(--text3)}.btn-submit:active:not(:disabled){background:#3730A3}
+.btn-submit{width:100%;padding:11px;border-radius:var(--radius-sm);border:none;background:var(--indigo);color:#fff;font-size:14px;font-weight:600;margin-top:8px;transition:all 0.15s;cursor:pointer}.btn-submit:hover{background:#4338CA}.btn-submit:disabled{background:var(--surface3);color:var(--text3)}
 .toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;z-index:200;animation:fadeIn 0.2s;box-shadow:0 8px 30px rgba(0,0,0,0.12)}.toast-success{background:var(--emerald);color:#fff}.toast-error{background:var(--rose);color:#fff}
-@media(max-width:640px){.app{padding-bottom:20px}.header{padding:12px 16px}.nav{padding:6px 16px 0}.table-wrap{padding:12px 16px}thead th,tbody td{padding:8px 10px}.modal{max-height:90vh;border-radius:var(--radius) var(--radius) 0 0;align-self:flex-end}.modal-overlay{align-items:flex-end;padding:0}}
+@media(max-width:640px){.header{padding:12px 16px}.nav{padding:6px 16px 0}.table-wrap{padding:12px 16px}thead th,tbody td{padding:8px 10px}.modal{max-height:90vh;border-radius:var(--radius) var(--radius) 0 0;align-self:flex-end}.modal-overlay{align-items:flex-end;padding:0}}
 </style>
 </head>
 <body>
-<div class="app" id="app">
+<div class="app">
   <div class="header"><div class="header-top">
     <div class="header-brand">
       <div class="header-logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
@@ -86,15 +78,12 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
     </div>
   </div></div>
   <div class="nav" id="navTabs"></div>
-  <div class="table-wrap">
-    <div class="table-info"><div class="table-title" id="tableTitle"></div></div>
-    <div class="table-container"><div class="table-scroll" id="tableBody"></div></div>
-  </div>
+  <div class="table-wrap"><div class="table-info"><div class="table-title" id="tableTitle"></div></div><div class="table-container"><div class="table-scroll" id="tableBody"></div></div></div>
 </div>
 <div class="modal-overlay" id="modalOverlay" style="display:none" onclick="if(event.target===this)hideModal()">
   <div class="modal"><div class="modal-header"><h3>投入新素材</h3><button class="modal-close" onclick="hideModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="modal-body">
-    <div class="form-group"><label class="form-label">素材内容 <span class="req">*</span></label><textarea class="form-input" id="fContent" placeholder="粘贴素材内容...&#10;&#10;支持：用户评论、竞品拆解、CTA话术、痛点场景、卖点、社会证明等&#10;AI 会自动识别类型并分发到对应素材库"></textarea></div>
+    <div class="form-group"><label class="form-label">素材内容 <span class="req">*</span></label><textarea class="form-input" id="fContent" placeholder="粘贴素材内容...&#10;&#10;支持：评论、竞品拆解、CTA话术、痛点、卖点画面、拍摄参数、节奏模板等&#10;AI 会自动识别并分发到对应库"></textarea></div>
     <div class="form-group"><label class="form-label">来源链接</label><input class="form-input" id="fUrl" type="url" placeholder="https://..."></div>
     <div style="display:flex;gap:10px">
       <div class="form-group" style="flex:1"><label class="form-label">来源平台</label><select class="form-input" id="fPlatform"><option value="TikTok">TikTok</option><option value="Instagram">Instagram</option><option value="YouTube">YouTube</option><option value="小红书">小红书</option><option value="其他">其他</option></select></div>
@@ -105,203 +94,42 @@ select.form-input{appearance:none;background-image:url("data:image/svg+xml,%3Csv
 </div>
 <div id="toastContainer"></div>
 <script>
-var SUPA_URL="https://vjblxvebexpqlxfhwzlm.supabase.co";
-var SUPA_KEY="sb_publishable_TAtVWHXtEycUHu1xwslZSw_JdFOOg5l";
-function apiUrl(t,e){var u=SUPA_URL+"/rest/v1/"+t+"?apikey="+SUPA_KEY;if(e)u+="&"+e;return u}
-
-var ICONS={
-  material_intake:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',
-  viral_comments:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.4 8.4 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.4 8.4 0 013.8-.9h.5a8.5 8.5 0 018 8v.5z"/></svg>',
-  pain_points:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
-  cta_scripts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>',
-  competitor_analysis:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>',
-  visual_shots:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="2.2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',
-  social_proofs:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',
-  benefits:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>',
-  bgm_tracks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',
-  frameworks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>'
+var SU="https://vjblxvebexpqlxfhwzlm.supabase.co",SK="sb_publishable_TAtVWHXtEycUHu1xwslZSw_JdFOOg5l";
+function api(t,e){var u=SU+"/rest/v1/"+t+"?apikey="+SK;if(e)u+="&"+e;return u}
+var IC={material_intake:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',viral_comments:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.4 8.4 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.4 8.4 0 013.8-.9h.5a8.5 8.5 0 018 8v.5z"/></svg>',pain_points:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',cta_scripts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>',competitor_analysis:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/><line x1="11" y1="8" x2="11" y2="14"/></svg>',visual_shots:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="2.2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',social_proofs:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',benefits:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z"/></svg>',bgm_tracks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',frameworks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',shooting_params:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',rhythm_templates:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>'};
+var CL={material_intake:{bg:"var(--indigo-light)",fg:"var(--indigo)"},viral_comments:{bg:"var(--orange-light)",fg:"var(--orange)"},pain_points:{bg:"var(--rose-light)",fg:"var(--rose)"},cta_scripts:{bg:"var(--emerald-light)",fg:"var(--emerald)"},competitor_analysis:{bg:"var(--sky-light)",fg:"var(--sky)"},visual_shots:{bg:"var(--pink-light)",fg:"var(--pink)"},social_proofs:{bg:"var(--amber-light)",fg:"var(--amber)"},benefits:{bg:"var(--teal-light)",fg:"var(--teal)"},bgm_tracks:{bg:"var(--violet-light)",fg:"var(--violet)"},frameworks:{bg:"var(--amber-light)",fg:"var(--amber)"},shooting_params:{bg:"var(--pink-light)",fg:"var(--pink)"},rhythm_templates:{bg:"var(--indigo-light)",fg:"var(--indigo)"}};
+var LIBS=[{k:"material_intake",l:"素材总表"},{k:"viral_comments",l:"爆款评论"},{k:"pain_points",l:"痛点场景"},{k:"cta_scripts",l:"CTA话术"},{k:"competitor_analysis",l:"竞品拆解"},{k:"visual_shots",l:"卖点画面"},{k:"social_proofs",l:"社会证明"},{k:"benefits",l:"权益库"},{k:"bgm_tracks",l:"BGM情绪"},{k:"frameworks",l:"框架结构"},{k:"shooting_params",l:"拍摄参数"},{k:"rhythm_templates",l:"节奏模板"}];
+var FD={
+  material_intake:{c:["raw_content","content_type","status","dispatched_to","source_platform","submitter"],n:{raw_content:"素材内容",content_type:"类型",status:"状态",dispatched_to:"分发到",source_platform:"平台",submitter:"提交人"}},
+  viral_comments:{c:["comment_en","comment_cn","convertible_to","emotion_tags","source_video_url","applicable_category"],n:{comment_en:"评论原文",comment_cn:"中文翻译",convertible_to:"可转化为",emotion_tags:"情绪标签",source_video_url:"来源视频",applicable_category:"适用品类"}},
+  pain_points:{c:["scene_name","scene_category","user_pain","emotion_keywords","product_angle","content_angle","script_example_en","script_example_cn","source_origin","applicable_category"],n:{scene_name:"场景名称",scene_category:"场景分类",user_pain:"用户痛点",emotion_keywords:"情绪关键词",product_angle:"产品切入点",content_angle:"内容角度",script_example_en:"话术(英文)",script_example_cn:"中文翻译",source_origin:"来源",applicable_category:"适用品类"}},
+  cta_scripts:{c:["script_en","script_cn","video_stage","action_type","script_logic","combo_benefit","combo_visual","applicable_category","reference_video_url"],n:{script_en:"CTA(英文)",script_cn:"中文翻译",video_stage:"视频阶段",action_type:"行动类型",script_logic:"话术逻辑",combo_benefit:"配合权益",combo_visual:"配合画面",applicable_category:"适用品类",reference_video_url:"参考视频"}},
+  competitor_analysis:{c:["title","account_name","view_count","like_count","video_url","hook_script","video_structure","bgm_used","reusable_points"],n:{title:"视频标题",account_name:"账号",view_count:"播放量",like_count:"点赞",video_url:"视频链接",hook_script:"钩子话术",video_structure:"视频结构",bgm_used:"使用BGM",reusable_points:"可复用要素"}},
+  visual_shots:{c:["shot_description","shot_type","purpose","video_stage","applicable_category"],n:{shot_description:"拍摄说明",shot_type:"画面类型",purpose:"作用",video_stage:"视频阶段",applicable_category:"适用品类"}},
+  social_proofs:{c:["name","proof_type","material_source","usage_note","trust_level","notes"],n:{name:"素材名称",proof_type:"证明类型",material_source:"素材来源",usage_note:"使用场景",trust_level:"信任强度",notes:"备注"}},
+  benefits:{c:["name","benefit_type","description","applicable_scene","cost_level","combo_suggestion","script_example","applicable_category"],n:{name:"权益名称",benefit_type:"权益类型",description:"权益描述",applicable_scene:"适用场景",cost_level:"成本等级",combo_suggestion:"组合建议",script_example:"话术示例",applicable_category:"适用品类"}},
+  bgm_tracks:{c:["name","emotion_type","applicable_content","features"],n:{name:"BGM名称",emotion_type:"情绪类型",applicable_content:"适用内容",features:"特征"}},
+  frameworks:{c:["formula","name","hook_type","core_logic","applicable_scene","content_tier","difficulty"],n:{formula:"底层公式",name:"框架名称",hook_type:"钩子类型",core_logic:"核心逻辑",applicable_scene:"适用场景",content_tier:"内容层级",difficulty:"难度"}},
+  shooting_params:{c:["shot_name","shot_category","framing","camera_angle","camera_movement","lighting","background","props","duration_seconds","shooting_tips","example_description","video_stage","applicable_category"],n:{shot_name:"镜头名称",shot_category:"镜头分类",framing:"景别",camera_angle:"机位角度",camera_movement:"运镜方式",lighting:"光线要求",background:"背景",props:"道具",duration_seconds:"建议时长",shooting_tips:"拍摄要点",example_description:"画面效果",video_stage:"视频阶段",applicable_category:"适用品类"}},
+  rhythm_templates:{c:["template_name","total_duration","target_framework","beat_structure","hook_duration","hook_content","middle_duration","middle_content","cta_duration","cta_content","transition_style","sound_design","bgm_tempo","difficulty","applicable_category"],n:{template_name:"模板名称",total_duration:"总时长",target_framework:"适用框架",beat_structure:"节奏结构",hook_duration:"钩子时长",hook_content:"钩子内容",middle_duration:"中间时长",middle_content:"中间内容",cta_duration:"CTA时长",cta_content:"CTA内容",transition_style:"转场风格",sound_design:"音效设计",bgm_tempo:"BGM节奏",difficulty:"难度",applicable_category:"适用品类"}}
 };
-
-var COLORS={
-  material_intake:{bg:"var(--indigo-light)",fg:"var(--indigo)"},
-  viral_comments:{bg:"var(--orange-light)",fg:"var(--orange)"},
-  pain_points:{bg:"var(--rose-light)",fg:"var(--rose)"},
-  cta_scripts:{bg:"var(--emerald-light)",fg:"var(--emerald)"},
-  competitor_analysis:{bg:"var(--sky-light)",fg:"var(--sky)"},
-  visual_shots:{bg:"var(--pink-light)",fg:"var(--pink)"},
-  social_proofs:{bg:"var(--amber-light)",fg:"var(--amber)"},
-  benefits:{bg:"var(--teal-light)",fg:"var(--teal)"},
-  bgm_tracks:{bg:"var(--violet-light)",fg:"var(--violet)"},
-  frameworks:{bg:"var(--amber-light)",fg:"var(--amber)"}
-};
-
-var LIBS=[
-  {key:"material_intake",label:"素材总表"},
-  {key:"viral_comments",label:"爆款评论"},
-  {key:"pain_points",label:"痛点场景"},
-  {key:"cta_scripts",label:"CTA话术"},
-  {key:"competitor_analysis",label:"竞品拆解"},
-  {key:"visual_shots",label:"卖点画面"},
-  {key:"social_proofs",label:"社会证明"},
-  {key:"benefits",label:"权益库"},
-  {key:"bgm_tracks",label:"BGM情绪"},
-  {key:"frameworks",label:"框架结构"}
-];
-
-var FIELDS={
-  material_intake:{
-    cols:["raw_content","content_type","status","dispatched_to","source_platform","submitter"],
-    labels:{raw_content:"素材内容",content_type:"类型",status:"状态",dispatched_to:"分发到",source_platform:"平台",submitter:"提交人"}
-  },
-  viral_comments:{
-    cols:["comment_en","comment_cn","convertible_to","emotion_tags","source_video_url","applicable_category"],
-    labels:{comment_en:"评论原文(英文)",comment_cn:"中文翻译",convertible_to:"可转化为",emotion_tags:"情绪标签",source_video_url:"来源视频",applicable_category:"适用品类"}
-  },
-  pain_points:{
-    cols:["scene_name","scene_category","user_pain","emotion_keywords","product_angle","content_angle","script_example_en","script_example_cn","source_origin","applicable_category"],
-    labels:{scene_name:"场景名称",scene_category:"场景分类",user_pain:"用户痛点",emotion_keywords:"情绪关键词",product_angle:"产品切入点",content_angle:"内容角度建议",script_example_en:"话术示例(英文)",script_example_cn:"中文翻译",source_origin:"来源",applicable_category:"适用品类"}
-  },
-  cta_scripts:{
-    cols:["script_en","script_cn","video_stage","action_type","script_logic","combo_benefit","combo_visual","applicable_category","reference_video_url"],
-    labels:{script_en:"CTA话术(英文)",script_cn:"中文翻译",video_stage:"视频阶段",action_type:"行动类型",script_logic:"话术逻辑",combo_benefit:"配合权益",combo_visual:"配合画面",applicable_category:"适用品类",reference_video_url:"参考视频"}
-  },
-  competitor_analysis:{
-    cols:["title","account_name","view_count","like_count","video_url","hook_script","video_structure","bgm_used","reusable_points"],
-    labels:{title:"视频标题",account_name:"账号",view_count:"播放量",like_count:"点赞",video_url:"视频链接",hook_script:"钩子话术",video_structure:"视频结构",bgm_used:"使用BGM",reusable_points:"可复用要素"}
-  },
-  visual_shots:{
-    cols:["shot_description","shot_type","purpose","video_stage","applicable_category"],
-    labels:{shot_description:"拍摄说明",shot_type:"画面类型",purpose:"作用",video_stage:"配合视频阶段",applicable_category:"适用品类"}
-  },
-  social_proofs:{
-    cols:["name","proof_type","material_source","usage_note","trust_level","notes"],
-    labels:{name:"素材名称",proof_type:"证明类型",material_source:"素材来源",usage_note:"使用场景说明",trust_level:"信任强度",notes:"备注"}
-  },
-  benefits:{
-    cols:["name","benefit_type","description","applicable_scene","cost_level","combo_suggestion","script_example","applicable_category"],
-    labels:{name:"权益名称",benefit_type:"权益类型",description:"权益描述",applicable_scene:"适用场景",cost_level:"成本等级",combo_suggestion:"组合建议",script_example:"话术示例",applicable_category:"适用品类"}
-  },
-  bgm_tracks:{
-    cols:["name","emotion_type","applicable_content","features"],
-    labels:{name:"BGM名称",emotion_type:"情绪类型",applicable_content:"适用内容",features:"特征"}
-  },
-  frameworks:{
-    cols:["formula","name","hook_type","core_logic","applicable_scene","content_tier","difficulty"],
-    labels:{formula:"底层公式",name:"框架名称",hook_type:"钩子类型",core_logic:"核心逻辑",applicable_scene:"适用场景",content_tier:"内容层级",difficulty:"难度"}
-  }
-};
-
-var TAG_FIELDS={
-  video_structure:"tag-sky",bgm_used:"tag-violet",hook_type:"tag-orange",
-  content_tier:"tag-sky",emotion_type:"tag-violet",proof_type:"tag-teal",
-  benefit_type:"tag-teal",shot_type:"tag-pink",action_type:"tag-orange",
-  video_stage:"tag-sky",scene_category:"tag-orange",convertible_to:"tag-emerald",
-  emotion_tags:"tag-pink",emotion_keywords:"tag-pink",material_source:"tag-sky",
-  applicable_scene:"tag-sky",applicable_category:"tag-teal",source_origin:"tag-sky",
-  cost_level:"tag-amber",trust_level:"tag-amber",content_type:"tag-type"
-};
-
-var activeTab="material_intake",counts={};
-
-function statusHtml(s){
-  var m={"待处理":"pending","处理中":"processing","已分发":"done","已驳回":"rejected"};
-  return '<span class="status status-'+(m[s]||"pending")+'"><span class="status-dot"></span>'+(s||"未知")+'</span>';
-}
-
-function cellVal(r,c){
-  var v=r[c];
-  if(v===null||v===undefined||v==="") return '<span class="cell-empty">\u2014</span>';
-  if(c==="status") return statusHtml(v);
-  if(c==="dispatched_to"){
-    if(!Array.isArray(v)||!v.length) return '<span class="cell-empty">\u2014</span>';
-    return v.map(function(t){return '<span class="tag">'+t+'</span>'}).join("");
-  }
-  if(c==="source_video_url"||c==="video_url"||c==="reference_video_url") return '<a class="cell-link" href="'+v+'" target="_blank">\u67E5\u770B \u2192</a>';
-  if(c==="view_count"||c==="like_count") return '<span class="cell-num">'+Number(v).toLocaleString()+'</span>';
-  if(c==="difficulty"){
-    var dc={"入门":"tag-emerald","进阶":"tag-amber","高阶":"tag-rose"};
-    return '<span class="tag '+(dc[v]||"")+'">'+v+'</span>';
-  }
-  if(TAG_FIELDS[c]) return '<span class="tag '+TAG_FIELDS[c]+'">'+v+'</span>';
-  var s=String(v);
-  return '<div class="cell-text" onclick="this.classList.toggle(\'expanded\')">'+s+'</div>';
-}
-
-function renderNav(){
-  var h="";
-  LIBS.forEach(function(l){
-    var a=activeTab===l.key?" active":"";
-    var c=counts[l.key]!=null?counts[l.key]:"\u00B7";
-    var cl=COLORS[l.key];
-    h+='<button class="nav-item'+a+'" onclick="switchTab(\''+l.key+'\')">';
-    h+='<span class="nav-icon" style="background:'+cl.bg+';color:'+cl.fg+'">'+ICONS[l.key]+'</span>';
-    h+=l.label+'<span class="nav-count">'+c+'</span></button>';
-  });
-  document.getElementById("navTabs").innerHTML=h;
-}
-
-async function fetchCount(t){
-  try{var r=await fetch(apiUrl(t,"select=id&limit=0"),{headers:{"Prefer":"count=exact"}});
-  return parseInt(((r.headers.get("content-range")||"").split("/")[1])||"0")}catch(e){return 0}
-}
-async function fetchRows(t){
-  try{var r=await fetch(apiUrl(t,"order=created_at.desc&limit=50"));
-  if(!r.ok)return[];return await r.json()}catch(e){return[]}
-}
-
-async function renderTable(){
-  var lib=LIBS.find(function(l){return l.key===activeTab});
-  var cfg=FIELDS[activeTab],clr=COLORS[activeTab];
-  document.getElementById("tableTitle").innerHTML=
-    '<span class="nav-icon" style="background:'+clr.bg+';color:'+clr.fg+';width:24px;height:24px;border-radius:6px">'+ICONS[activeTab]+'</span>'+
-    lib.label+' <span class="count">'+(counts[activeTab]!=null?counts[activeTab]+"\u6761":"")+'</span>';
-  var body=document.getElementById("tableBody");
-  body.innerHTML='<div class="loading">\u52A0\u8F7D\u4E2D...</div>';
-  var rows=await fetchRows(activeTab);
-  if(!rows.length){
-    body.innerHTML='<div class="empty"><div class="empty-icon">'+ICONS[activeTab]+'</div><div class="empty-text">\u6682\u65E0\u6570\u636E\uFF0C\u6295\u5165\u7D20\u6750\u540E AI \u4F1A\u81EA\u52A8\u5206\u53D1\u5230\u8FD9\u91CC</div></div>';
-    return;
-  }
-  var h='<table><thead><tr><th style="width:40px">#</th>';
-  cfg.cols.forEach(function(c){h+='<th>'+cfg.labels[c]+'</th>'});
-  h+='</tr></thead><tbody>';
-  rows.forEach(function(r,i){
-    h+='<tr><td style="color:var(--text3);font-size:12px">'+(i+1)+'</td>';
-    cfg.cols.forEach(function(c){h+='<td>'+cellVal(r,c)+'</td>'});
-    h+='</tr>';
-  });
-  h+='</tbody></table>';
-  body.innerHTML=h;
-}
-
-async function loadCounts(){await Promise.all(LIBS.map(async function(l){counts[l.key]=await fetchCount(l.key)}))}
-async function refreshAll(){await loadCounts();renderNav();await renderTable();showToast("\u6570\u636E\u5DF2\u5237\u65B0","success")}
-function switchTab(k){activeTab=k;renderNav();renderTable()}
+var TF={video_structure:"tag-sky",bgm_used:"tag-violet",hook_type:"tag-orange",content_tier:"tag-sky",emotion_type:"tag-violet",proof_type:"tag-teal",benefit_type:"tag-teal",shot_type:"tag-pink",action_type:"tag-orange",video_stage:"tag-sky",scene_category:"tag-orange",convertible_to:"tag-emerald",emotion_tags:"tag-pink",emotion_keywords:"tag-pink",material_source:"tag-sky",applicable_scene:"tag-sky",applicable_category:"tag-teal",source_origin:"tag-sky",cost_level:"tag-amber",trust_level:"tag-amber",content_type:"tag-type",shot_category:"tag-pink",framing:"tag-indigo",camera_angle:"tag-sky",camera_movement:"tag-violet",lighting:"tag-amber",total_duration:"tag-sky",beat_structure:"tag-violet",transition_style:"tag-orange",bgm_tempo:"tag-violet",target_framework:"tag-teal"};
+var at="material_intake",ct={};
+function sH(s){var m={"待处理":"pending","处理中":"processing","已分发":"done","已驳回":"rejected"};return '<span class="status status-'+(m[s]||"pending")+'"><span class="status-dot"></span>'+(s||"未知")+'</span>'}
+function cV(r,c){var v=r[c];if(v===null||v===undefined||v==="")return '<span class="cell-empty">\u2014</span>';if(c==="status")return sH(v);if(c==="dispatched_to"){if(!Array.isArray(v)||!v.length)return '<span class="cell-empty">\u2014</span>';return v.map(function(t){return '<span class="tag">'+t+'</span>'}).join("")}if(c==="source_video_url"||c==="video_url"||c==="reference_video_url")return '<a class="cell-link" href="'+v+'" target="_blank">\u67E5\u770B \u2192</a>';if(c==="view_count"||c==="like_count")return '<span class="cell-num">'+Number(v).toLocaleString()+'</span>';if(c==="difficulty"){var dc={"入门":"tag-emerald","进阶":"tag-amber","高阶":"tag-rose"};return '<span class="tag '+(dc[v]||"")+'">'+v+'</span>'}if(TF[c])return '<span class="tag '+TF[c]+'">'+v+'</span>';return '<div class="cell-text" onclick="this.classList.toggle(\'expanded\')">'+String(v)+'</div>'}
+function rN(){var h="";LIBS.forEach(function(l){var a=at===l.k?" active":"",c=ct[l.k]!=null?ct[l.k]:"\u00B7",cl=CL[l.k];h+='<button class="nav-item'+a+'" onclick="sT(\''+l.k+'\')"><span class="nav-icon" style="background:'+cl.bg+';color:'+cl.fg+'">'+IC[l.k]+'</span>'+l.l+'<span class="nav-count">'+c+'</span></button>'});document.getElementById("navTabs").innerHTML=h}
+async function fC(t){try{var r=await fetch(api(t,"select=id&limit=0"),{headers:{"Prefer":"count=exact"}});return parseInt(((r.headers.get("content-range")||"").split("/")[1])||"0")}catch(e){return 0}}
+async function fR(t){try{var r=await fetch(api(t,"order=created_at.desc&limit=50"));if(!r.ok)return[];return await r.json()}catch(e){return[]}}
+async function rT(){var lib=LIBS.find(function(l){return l.k===at}),cfg=FD[at],clr=CL[at];document.getElementById("tableTitle").innerHTML='<span class="nav-icon" style="background:'+clr.bg+';color:'+clr.fg+';width:24px;height:24px;border-radius:6px">'+IC[at]+'</span>'+lib.l+' <span class="count">'+(ct[at]!=null?ct[at]+"\u6761":"")+'</span>';var b=document.getElementById("tableBody");b.innerHTML='<div class="loading">\u52A0\u8F7D\u4E2D...</div>';var rows=await fR(at);if(!rows.length){b.innerHTML='<div class="empty"><div class="empty-icon">'+IC[at]+'</div><div class="empty-text">\u6682\u65E0\u6570\u636E</div></div>';return}var h='<table><thead><tr><th style="width:40px">#</th>';cfg.c.forEach(function(c){h+='<th>'+cfg.n[c]+'</th>'});h+='</tr></thead><tbody>';rows.forEach(function(r,i){h+='<tr><td style="color:var(--text3);font-size:12px">'+(i+1)+'</td>';cfg.c.forEach(function(c){h+='<td>'+cV(r,c)+'</td>'});h+='</tr>'});h+='</tbody></table>';b.innerHTML=h}
+async function lC(){await Promise.all(LIBS.map(async function(l){ct[l.k]=await fC(l.k)}))}
+async function refreshAll(){await lC();rN();await rT();sT2("\u6570\u636E\u5DF2\u5237\u65B0","success")}
+function sT(k){at=k;rN();rT()}
 function showModal(){document.getElementById("modalOverlay").style.display="flex";setTimeout(function(){document.getElementById("fContent").focus()},100)}
 function hideModal(){document.getElementById("modalOverlay").style.display="none";document.getElementById("fContent").value="";document.getElementById("fUrl").value=""}
-function showToast(m,t){var c=document.getElementById("toastContainer"),e=document.createElement("div");e.className="toast toast-"+t;e.textContent=m;c.appendChild(e);setTimeout(function(){e.style.opacity="0";e.style.transition="opacity 0.3s";setTimeout(function(){e.remove()},300)},2500)}
-
-async function submitMaterial(){
-  var content=document.getElementById("fContent").value.trim();
-  if(!content){showToast("\u8BF7\u586B\u5199\u7D20\u6750\u5185\u5BB9","error");return}
-  var btn=document.getElementById("btnSubmit");btn.disabled=true;btn.textContent="\u63D0\u4EA4\u4E2D...";
-  var data={raw_content:content};
-  var url=document.getElementById("fUrl").value.trim();
-  var platform=document.getElementById("fPlatform").value;
-  var submitter=document.getElementById("fSubmitter").value.trim();
-  if(url)data.source_url=url;if(platform)data.source_platform=platform;if(submitter)data.submitter=submitter;
-  try{
-    var r=await fetch(apiUrl("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation"},body:JSON.stringify(data)});
-    if(!r.ok)throw new Error(await r.text());
-    hideModal();showToast("\u7D20\u6750\u5DF2\u63D0\u4EA4\uFF0CAI \u6B63\u5728\u5206\u6790\u4E2D...","success");
-    activeTab="material_intake";setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
-  }catch(e){showToast("\u63D0\u4EA4\u5931\u8D25\uFF1A"+e.message,"error")}
-  finally{btn.disabled=false;btn.textContent="\u63D0\u4EA4\u7D20\u6750 \u00B7 AI \u81EA\u52A8\u5206\u53D1"}
-}
-
-var ss=localStorage.getItem("submitter");if(ss)document.getElementById("fSubmitter").value=ss;
-document.getElementById("fSubmitter").addEventListener("change",function(){localStorage.setItem("submitter",this.value)});
-(async function(){await loadCounts();renderNav();renderTable()})();
+function sT2(m,t){var c=document.getElementById("toastContainer"),e=document.createElement("div");e.className="toast toast-"+t;e.textContent=m;c.appendChild(e);setTimeout(function(){e.style.opacity="0";e.style.transition="opacity 0.3s";setTimeout(function(){e.remove()},300)},2500)}
+async function submitMaterial(){var content=document.getElementById("fContent").value.trim();if(!content){sT2("\u8BF7\u586B\u5199\u7D20\u6750\u5185\u5BB9","error");return}var btn=document.getElementById("btnSubmit");btn.disabled=true;btn.textContent="\u63D0\u4EA4\u4E2D...";var data={raw_content:content},url=document.getElementById("fUrl").value.trim(),pf=document.getElementById("fPlatform").value,sb=document.getElementById("fSubmitter").value.trim();if(url)data.source_url=url;if(pf)data.source_platform=pf;if(sb)data.submitter=sb;try{var r=await fetch(api("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation"},body:JSON.stringify(data)});if(!r.ok)throw new Error(await r.text());hideModal();sT2("\u7D20\u6750\u5DF2\u63D0\u4EA4\uFF0CAI\u6B63\u5728\u5206\u6790...","success");at="material_intake";setTimeout(refreshAll,1000);setTimeout(refreshAll,70000)}catch(e){sT2("\u63D0\u4EA4\u5931\u8D25\uFF1A"+e.message,"error")}finally{btn.disabled=false;btn.textContent="\u63D0\u4EA4\u7D20\u6750 \u00B7 AI \u81EA\u52A8\u5206\u53D1"}}
+var ss=localStorage.getItem("submitter");if(ss)document.getElementById("fSubmitter").value=ss;document.getElementById("fSubmitter").addEventListener("change",function(){localStorage.setItem("submitter",this.value)});
+(async function(){await lC();rN();rT()})();
 </script>
 </body>
 </html>
