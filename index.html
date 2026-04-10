@@ -233,6 +233,7 @@ var at="material_intake",ct={},allRows=[],sortDir="desc",searchTerm="",colFilter
 // ==================== 素材库表格渲染 ====================
 function sH(s){var m={"待处理":"sp","处理中":"si","已分发":"sd","已驳回":"sr"};return '<span class="st '+(m[s]||"sp")+'"><span class="dot" style="background:currentColor"></span>'+(s||"未知")+'</span>'}
 function fmtTime(t){if(!t)return "";try{var d=new Date(t);return (d.getMonth()+1)+"/"+d.getDate()+" "+d.getHours()+":"+String(d.getMinutes()).padStart(2,"0")}catch(e){return ""}}
+function fmtNum(n){n=Number(n)||0;if(n>=100000000)return (n/100000000).toFixed(1).replace(/\.0$/,"")+"亿";if(n>=10000){var w=n/10000;return (w>=100?Math.round(w):w.toFixed(1).replace(/\.0$/,""))+"W"}if(n>=1000)return (n/1000).toFixed(1).replace(/\.0$/,"")+"K";return String(n)}
 function starsHtml(id,val){var h='<span class="stars">';for(var i=1;i<=5;i++){h+='<span class="star'+(i<=val?" on":"")+'" onclick="setRating(\''+id+'\','+i+')">★</span>'}return h+"</span>"}
 function cV(r,c){
   var v=r[c];
@@ -254,8 +255,8 @@ function cV(r,c){
   if((c==="music_title"||c==="bgm_title")&&r.music_play_url){
     return '<div style="display:flex;align-items:center;gap:4px"><div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="flex:1">'+String(v)+'</div><button class="retire-btn" style="color:var(--violet);border-color:var(--violet-light);background:var(--violet-light);font-size:9px" onclick="event.stopPropagation();playMusic(\''+r.music_play_url.replace(/'/g,"\\'")+'\')">\u266B听</button></div>';
   }
-  if(c==="view_count"||c==="like_count"||c==="comment_count"||c==="share_count"||c==="collect_count"||c==="creator_followers"||c==="usage_count"||c==="total_views"||c==="video_count"||c==="total_likes")return '<span class="cn">'+Number(v).toLocaleString()+'</span>';
-  if(c==="heat_score")return '<span class="cn" style="color:var(--rose);font-weight:700">'+Math.round(Number(v)).toLocaleString()+'</span>';
+  if(c==="view_count"||c==="like_count"||c==="comment_count"||c==="share_count"||c==="collect_count"||c==="creator_followers"||c==="usage_count"||c==="total_views"||c==="video_count"||c==="total_likes")return '<span class="cn">'+fmtNum(v)+'</span>';
+  if(c==="heat_score")return '<span class="cn" style="color:var(--rose);font-weight:700">'+fmtNum(v)+'</span>';
   if(c==="hashtags"||c==="top_video_ids"||c==="top_creator_usernames"){if(Array.isArray(v)&&v.length)return v.slice(0,4).map(function(t){return '<span class="tag ti">'+t+'</span>'}).join("");return '<span class="ce">—</span>'}
   if(c==="tag_name")return '<span class="tag ti" style="font-size:12px;font-weight:600">#'+v+'</span>';
   if(c==="difficulty"){var dc={"入门":"te","进阶":"ta","高阶":"tr"};return '<span class="tag '+(dc[v]||"")+'">'+v+'</span>'}
@@ -575,8 +576,8 @@ function renderAsmTable(stepId,items,tableName,multi){
       cfg.cols.forEach(function(c){
         var v=r[c];
         if(v===null||v===undefined||v==="")v='<span class="ce">—</span>';
-        else if(c==="heat_score")v='<span class="cn" style="color:var(--rose);font-weight:700">'+Math.round(Number(v)).toLocaleString()+'</span>';
-        else if(c==="view_count"||c==="like_count"||c==="comment_count"||c==="share_count"||c==="creator_followers"||c==="usage_count"||c==="total_views")v='<span class="cn">'+Number(v).toLocaleString()+'</span>';
+        else if(c==="heat_score")v='<span class="cn" style="color:var(--rose);font-weight:700">'+fmtNum(v)+'</span>';
+        else if(c==="view_count"||c==="like_count"||c==="comment_count"||c==="share_count"||c==="creator_followers"||c==="usage_count"||c==="total_views")v='<span class="cn">'+fmtNum(v)+'</span>';
         else if(c==="video_url")v=v?'<a class="cl" href="'+v+'" target="_blank" onclick="event.stopPropagation()">查看</a>':'<span class="ce">—</span>';
         else if(Array.isArray(v))v=v.length?v.slice(0,3).map(function(t){return '<span class="tag ti">'+t+'</span>'}).join(""):'<span class="ce">—</span>';
         else if(c==="difficulty"){var dc={"入门":"te","进阶":"ta","高阶":"tr"};v='<span class="tag '+(dc[v]||"")+'">'+v+'</span>'}
