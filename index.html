@@ -182,7 +182,8 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">提交人</label><input class="finp" id="linkSubmitter" type="text" placeholder="你的名字"></div>
     </div>
-    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">自动抓取视频标题、描述、播放量、评论等数据，AI拆解入库</p>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">前端直连TikAPI → 抓取视频+评论 → 写入素材库 → AI自动拆解入库</p>
+    <div id="linkProgress" style="display:none;margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--sky-light);font-size:11px;color:var(--sky-text)"></div>
     <button class="bs" id="linkBtn" onclick="doLinkSubmit()">自动抓取 · AI 分发入库</button>
   </div></div>
 </div>
@@ -190,8 +191,7 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 <div id="toastW"></div>
 <script>
 var U="https://vjblxvebexpqlxfhwzlm.supabase.co",K="sb_publishable_TAtVWHXtEycUHu1xwslZSw_JdFOOg5l";
-// n8n webhook地址（本地Docker）
-var N8N_WEBHOOK="http://localhost:5679/webhook/tiktok-link";
+// TikAPI直连模式（不依赖n8n）
 function qa(t,e){var u=U+"/rest/v1/"+t+"?apikey="+K;if(e)u+="&"+e;return u}
 
 var LN={material_intake:"素材总表",viral_comments:"爆款评论",pain_points:"痛点场景",cta_scripts:"CTA话术",competitor_analysis:"竞品拆解",visual_shots:"卖点画面",social_proofs:"社会证明",benefits:"权益库",bgm_tracks:"BGM情绪",frameworks:"框架结构",shooting_params:"拍摄参数",rhythm_templates:"节奏模板",trending_tags:"热门标签",posting_strategies:"发布策略","__assemble__":"组装成片"};
@@ -313,17 +313,98 @@ async function doSubmit(){
   if(!r.ok)throw new Error(await r.text());hideModal();toast("AI分析中...","tgs");at="material_intake";setTimeout(refreshAll,1000);setTimeout(refreshAll,70000)}
   catch(e){toast("失败:"+e.message,"tge")}finally{btn.disabled=false;btn.textContent="提交素材 · AI 自动分发"}
 }
-// 贴链接提交（直接写入Supabase，不经n8n，因为n8n需从外部网络调用webhook）
+// TikAPI直连抓取（前端直接调用TikAPI，不经n8n）
+var TIKAPI_KEY="4uPGIf0xppX1TmMIJOeLKwEAiAHsLd6PXTPguCFU6BPI36mA";
+
+function setLinkProgress(msg){var el=document.getElementById("linkProgress");if(el){el.style.display=msg?"block":"none";el.textContent=msg||""}}
+
+function extractVideoId(url){
+  var m=url.match(/video\/(\d+)/);
+  if(m)return m[1];
+  // 从分享链接中提取（如 https://www.tiktok.com/t/ZS2xxxxx/）
+  m=url.match(/tiktok\.com\/t\/(\w+)/);
+  if(m)return null; // 短链接无法直接提取ID
+  return null;
+}
+
 async function doLinkSubmit(){
-  var url=document.getElementById("linkUrl").value.trim();if(!url){toast("请粘贴链接","tge");return}
-  if(!url.includes("tiktok.com")){toast("请粘贴TikTok链接","tge");return}
-  var btn=document.getElementById("linkBtn");btn.disabled=true;btn.textContent="提交中...";
+  var url=document.getElementById("linkUrl").value.trim();
+  if(!url){toast("请粘贴链接","tge");return}
+  if(!url.includes("tiktok.com")&&!url.includes("douyin.com")){toast("请粘贴TikTok链接","tge");return}
+  var btn=document.getElementById("linkBtn");btn.disabled=true;btn.textContent="抓取中...";
   var sb=document.getElementById("linkSubmitter").value.trim()||"运营";
   localStorage.setItem("submitter",sb);
-  var data={raw_content:"【TikTok视频链接抓取】\n链接: "+url+"\n\n请根据此链接分析该视频的内容结构、钩子话术、评论区热度等信息。",source_url:url,source_platform:"TikTok",submitter:sb,content_type:"link_scrape"};
-  try{var r=await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(data)});
-  if(!r.ok)throw new Error(await r.text());hideLinkModal();toast("链接已提交，AI分析中...","tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000)}
-  catch(e){toast("失败:"+e.message,"tge")}finally{btn.disabled=false;btn.textContent="自动抓取 · AI 分发入库"}
+
+  try{
+    var videoId=extractVideoId(url);
+
+    // 如果无法从URL提取ID，直接用链接作为素材提交给AI分析
+    if(!videoId){
+      btn.textContent="无法解析短链接，直接提交AI...";
+      var fallbackData={raw_content:"【TikTok视频链接】\n链接: "+url+"\n\n请分析此TikTok视频链接对应的视频内容。",source_url:url,source_platform:"TikTok",submitter:sb,content_type:"link_scrape"};
+      await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(fallbackData)});
+      hideLinkModal();toast("链接已提交，AI分析中...","tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
+      return;
+    }
+
+    // 第一步：调TikAPI获取视频信息
+    btn.textContent="正在抓取视频信息...";
+    setLinkProgress("⏳ 步骤 1/4：正在调用TikAPI获取视频数据...");
+    var videoResp=await fetch("https://api.tikapi.io/public/video?id="+videoId,{headers:{"X-API-KEY":TIKAPI_KEY}});
+    var videoJson=await videoResp.json();
+    if(videoJson.status==="error"){throw new Error("TikAPI: "+(videoJson.message||"视频不存在"))}
+
+    var item=videoJson.itemInfo?videoJson.itemInfo.itemStruct:(videoJson.itemStruct||{});
+    var author=item.author||{};
+    var stats=item.stats||{};
+    var music=item.music||{};
+    var tags=(item.textExtra||[]).filter(function(t){return t.hashtagName}).map(function(t){return "#"+t.hashtagName}).join(" ");
+
+    // 第二步：抓取评论（容错，失败不影响）
+    btn.textContent="正在抓取评论...";
+    setLinkProgress("⏳ 步骤 2/4：正在抓取热门评论...");
+    var commentTexts="暂无评论数据";
+    try{
+      var cmtResp=await fetch("https://api.tikapi.io/public/comment?media_id="+videoId+"&count=30",{headers:{"X-API-KEY":TIKAPI_KEY}});
+      var cmtJson=await cmtResp.json();
+      var comments=(cmtJson.comments||[]).slice(0,20);
+      if(comments.length){
+        commentTexts=comments.map(function(c){return "["+(c.digg_count||0)+"赞] "+c.text}).join("\n");
+      }
+    }catch(ce){commentTexts="评论抓取失败: "+ce.message}
+
+    // 第三步：拼装素材文本
+    setLinkProgress("⏳ 步骤 3/4：正在拼装素材文本...");
+    var fmt=function(n){return n?Number(n).toLocaleString():"0"};
+    var materialText="【TikTok爆款视频拆解】\n\n"+
+      "📹 视频标题: "+(item.desc||"无标题")+"\n"+
+      "👤 作者: @"+(author.uniqueId||author.nickname||"未知")+" (粉丝: "+fmt(author.followerCount)+")\n"+
+      "📊 数据: 播放 "+fmt(stats.playCount)+" | 点赞 "+fmt(stats.diggCount)+" | 评论 "+fmt(stats.commentCount)+" | 分享 "+fmt(stats.shareCount)+" | 收藏 "+fmt(stats.collectCount)+"\n"+
+      "🎵 BGM: "+(music.title||"N/A")+" - "+(music.authorName||"N/A")+"\n"+
+      "🏷️ 标签: "+(tags||"无")+"\n"+
+      "🔗 链接: "+url+"\n\n"+
+      "📝 视频描述:\n"+(item.desc||"无")+"\n\n"+
+      "💬 热门评论 (前"+Math.min(20,(cmtJson&&cmtJson.comments?cmtJson.comments.length:0))+"条):\n"+commentTexts;
+
+    // 第四步：写入Supabase，触发AI自动分发
+    btn.textContent="正在写入数据库...";
+    setLinkProgress("⏳ 步骤 4/4：写入素材库，等待AI分发...");
+    var intakeData={raw_content:materialText,source_url:url,source_platform:"TikTok",submitter:sb,content_type:"competitor_video"};
+    var r=await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(intakeData)});
+    if(!r.ok)throw new Error("写入失败: "+await r.text());
+
+    hideLinkModal();
+    toast("抓取成功！AI正在分析入库...","tgs");
+    at="material_intake";rN();
+    setTimeout(refreshAll,2000);
+    setTimeout(refreshAll,70000);
+
+  }catch(e){
+    toast("抓取失败: "+e.message,"tge");
+    console.error("TikAPI抓取错误:",e);
+  }finally{
+    btn.disabled=false;btn.textContent="自动抓取 · AI 分发入库";setLinkProgress("");
+  }
 }
 
 // ==================== 成片组装模块 ====================
