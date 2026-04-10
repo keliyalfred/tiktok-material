@@ -224,8 +224,8 @@ var FD={
   trending_tags:{c:["sku","tag_name","tag_category","current_heat","view_volume","related_tags","best_use_scenario","combo_suggestion","source_link","rating","user_notes","created_at"],n:{sku:"编码",tag_name:"标签",tag_category:"分类",current_heat:"热度",view_volume:"浏览量",related_tags:"关联标签",best_use_scenario:"场景",combo_suggestion:"组合",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
   posting_strategies:{c:["sku","strategy_name","strategy_type","target_audience","best_posting_time","posting_frequency","title_template","cover_strategy","engagement_tips","source_link","rating","user_notes","created_at"],n:{sku:"编码",strategy_name:"策略",strategy_type:"类型",target_audience:"受众",best_posting_time:"时间",posting_frequency:"频率",title_template:"标题模板",cover_strategy:"封面",engagement_tips:"互动",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
   trending_videos:{c:["heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","rating","user_notes","created_at"],n:{heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","rating","user_notes","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"达人",category:"类目",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","rating","user_notes","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",rating:"评分",user_notes:"备注",created_at:"时间"}}
+  trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","source_keyword","rating","user_notes","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"关联达人",category:"类目",source_keyword:"来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
+  trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","top_video_ids","rating","user_notes","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",top_video_ids:"关联视频",rating:"评分",user_notes:"备注",created_at:"时间"}}
 };
 var TG={video_structure:"ts2",bgm_used:"tv",hook_type:"to",content_tier:"ts2",emotion_type:"tv",proof_type:"tt2",benefit_type:"tt2",shot_type:"tp",action_type:"to",video_stage:"ts2",scene_category:"to",convertible_to:"te",emotion_tags:"tp",emotion_keywords:"tp",material_source:"ts2",applicable_scene:"ts2",applicable_category:"tt2",source_origin:"ts2",cost_level:"ta",trust_level:"ta",content_type:"tv",shot_category:"tp",framing:"ti",camera_angle:"ts2",camera_movement:"tv",lighting:"ta",total_duration:"ts2",beat_structure:"tv",transition_style:"to",bgm_tempo:"tv",target_framework:"tt2",tag_category:"to",current_heat:"ta",view_volume:"ti",strategy_type:"ts2",posting_frequency:"ta",heat_score:"tr",usage_count:"to",creator_followers:"ti",music_title:"tv",music_author:"ts2"};
 var at="material_intake",ct={},allRows=[],sortDir="desc",searchTerm="",colFilter={};
@@ -291,7 +291,7 @@ async function fR(t){
     }else{
       o=sortDir==="asc"?"order=created_at.asc":"order=created_at.desc";
     }
-    var r=await fetch(qa(t,o+"&limit=100"));if(!r.ok)return[];return await r.json();
+    var r=await fetch(qa(t,o+"&limit=500"));if(!r.ok)return[];return await r.json();
   }catch(e){return[]}
 }
 function filterRows(rows){
