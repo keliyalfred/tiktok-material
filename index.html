@@ -327,7 +327,12 @@ function renderRows(rows){
   var h='<table><thead><tr>';cfg.c.forEach(function(c){h+='<th>'+cfg.n[c]+'</th>'});if(canOp)h+='<th>操作</th>';h+='</tr>';
   h+='<tr class="col-filter-row">';cfg.c.forEach(function(c){if(c==="rating"||c==="user_notes"){h+='<td></td>'}else{var curVal=colFilter[c]||"";var hasClass=curVal?" has-value":"";h+='<td><input class="col-filter-input'+hasClass+'" data-col="'+c+'" value="'+curVal.replace(/"/g,"&quot;")+'" placeholder="筛选" oninput="onColFilter(this,\''+c+'\')"></td>'}});if(canOp)h+='<td></td>';h+='</tr></thead>';
   if(!rows.length)return h+'<tbody><tr><td colspan="'+(cfg.c.length+(canOp?1:0))+'" style="text-align:center;padding:40px;color:var(--text3)">'+(searchTerm||Object.keys(colFilter).length?"未找到匹配结果":"暂无数据")+'</td></tr></tbody></table>';
-  h+='<tbody>';pageRows.forEach(function(r){var ret=r.is_retired;h+='<tr'+(ret?' class="retired"':'')+'>';cfg.c.forEach(function(c){h+='<td>'+cV(r,c)+'</td>'});if(canOp){if(!ret){h+='<td><button class="retire-btn" onclick="doRetire(\''+r.id+'\')">作废</button></td>'}else{h+='<td><span class="ce" style="font-size:10px">已作废</span></td>'}}h+='</tr>'});
+  h+='<tbody>';pageRows.forEach(function(r){var ret=r.is_retired;h+='<tr'+(ret?' class="retired"':'')+'>';cfg.c.forEach(function(c){h+='<td>'+cV(r,c)+'</td>'});if(canOp){if(!ret){
+    var btns='<button class="retire-btn" onclick="doRetire(\''+r.id+'\')">作废</button>';
+    // 爆款视频加"投入拆解"按钮
+    if(at==="trending_videos"&&r.video_url){btns='<button class="retire-btn" style="color:var(--indigo);border-color:var(--indigo-light);background:var(--indigo-light);margin-bottom:3px" onclick="event.stopPropagation();dispatchTrending(\''+r.id+'\')">投入拆解</button>'+btns}
+    h+='<td style="white-space:nowrap">'+btns+'</td>';
+  }else{h+='<td><span class="ce" style="font-size:10px">已作废</span></td>'}}h+='</tr>'});
   h+='</tbody></table>';
   // 翻页器
   h+='<div class="pager">';
@@ -363,6 +368,35 @@ async function rT(){
 function doSearch(){searchTerm=document.getElementById("sI").value.trim();curPage=1;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters()}
 function toggleSort(){sortDir=sortDir==="desc"?"asc":"desc";curPage=1;rT()}
 async function doRetire(id){if(!confirm("确定要作废这条素材吗？"))return;try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({is_retired:true})});toast("已作废","tgs");setTimeout(refreshAll,300)}catch(e){toast("失败","tge")}}
+
+// 把爆款视频投入素材总表进行AI拆解
+async function dispatchTrending(id){
+  var row=allRows.find(function(r){return r.id===id});
+  if(!row){toast("未找到数据","tge");return}
+  if(!confirm("确定要把这条爆款视频投入素材库进行AI拆解？\n\n"+row.title))return;
+  var fmt=function(n){return n?Number(n).toLocaleString():"0"};
+  var tags=(row.hashtags||[]).map(function(t){return "#"+t}).join(" ");
+  var material="【TikTok爆款视频拆解】\n\n"+
+    "📹 视频标题: "+(row.title||"无标题")+"\n"+
+    "👤 作者: @"+(row.creator_username||"未知")+" (粉丝: "+fmt(row.creator_followers)+")\n"+
+    "📊 数据: 播放 "+fmt(row.view_count)+" | 点赞 "+fmt(row.like_count)+" | 评论 "+fmt(row.comment_count)+" | 分享 "+fmt(row.share_count)+"\n"+
+    "🎵 BGM: "+(row.bgm_title||"N/A")+" - "+(row.bgm_author||"N/A")+"\n"+
+    "🏷️ 标签: "+(tags||"无")+"\n"+
+    "🔗 链接: "+(row.video_url||"")+"\n\n"+
+    "📝 视频描述:\n"+(row.title||"无");
+  try{
+    var r=await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify({
+      raw_content:material,
+      source_url:row.video_url||"",
+      source_platform:"TikTok",
+      submitter:"爆款投入",
+      content_type:"competitor_video"
+    })});
+    if(!r.ok)throw new Error(await r.text());
+    toast("已投入素材库！AI正在拆解分发...","tgs");
+    setTimeout(refreshAll,2000);setTimeout(refreshAll,70000);
+  }catch(e){toast("投入失败: "+e.message,"tge")}
+}
 async function setRating(id,val){try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({rating:val})});allRows.forEach(function(r){if(r.id===id)r.rating=val});toast("评分已保存","tgs")}catch(e){toast("评分保存失败","tge")}}
 async function saveNote(id,val){try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({user_notes:val})})}catch(e){}}
 async function lC(){await Promise.all(LL.filter(function(k){return k!=="__assemble__"}).map(async function(k){ct[k]=await fC(k)}))}
