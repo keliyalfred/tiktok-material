@@ -407,22 +407,36 @@ async function doLinkSubmit(){
   }
 }
 
-// ==================== 成片组装模块 ====================
+// ==================== 成片组装模块（表格多选版） ====================
 var asmStep=0;
-var asmData={framework:null,stop:null,pain:null,visual:null,proof:null,buy:null,bgm:null,rhythm:null};
+// 改为数组支持多选，framework保持单选
+var asmData={framework:null,stop:[],pain:[],visual:[],proof:[],buy:[],bgm:[],rhythm:[]};
 var asmCache={};
 
 var ASM_STEPS=[
-  {id:"framework",label:"选框架",emoji:"📐",desc:"选择视频框架结构"},
-  {id:"stop",label:"停·钩子",emoji:"🛑",desc:"从CTA/评论中选开头钩子"},
-  {id:"pain",label:"病·痛点",emoji:"💢",desc:"从痛点库选场景痛点"},
-  {id:"visual",label:"药·卖点",emoji:"💊",desc:"从卖点画面库选展示"},
-  {id:"proof",label:"信·证明",emoji:"⭐",desc:"从社会证明库选信任背书"},
-  {id:"buy",label:"买·促单",emoji:"🛒",desc:"从CTA/权益库选促单话术"},
-  {id:"bgm",label:"选BGM",emoji:"🎵",desc:"选择背景音乐"},
-  {id:"rhythm",label:"选节奏",emoji:"⚡",desc:"选择节奏模板"},
+  {id:"framework",label:"选框架",emoji:"📐",desc:"选择视频框架结构",table:"frameworks",multi:false},
+  {id:"stop",label:"停·钩子",emoji:"🛑",desc:"从CTA/评论中选开头钩子",table:"cta_scripts",multi:true,filter:function(r){return !r.video_stage||r.video_stage.includes("开头")||r.video_stage.includes("hook")||r.video_stage.includes("开场")},extra:{table:"viral_comments",label:"爆款评论（可做钩子）",limit:15}},
+  {id:"pain",label:"病·痛点",emoji:"💢",desc:"从痛点库选场景痛点",table:"pain_points",multi:true},
+  {id:"visual",label:"药·卖点",emoji:"💊",desc:"从卖点画面库选展示",table:"visual_shots",multi:true},
+  {id:"proof",label:"信·证明",emoji:"⭐",desc:"从社会证明库选信任背书",table:"social_proofs",multi:true},
+  {id:"buy",label:"买·促单",emoji:"🛒",desc:"从CTA/权益库选促单话术",table:"cta_scripts",multi:true,filter:function(r){return !r.video_stage||r.video_stage.includes("结尾")||r.video_stage.includes("cta")||r.video_stage.includes("促单")},extra:{table:"benefits",label:"权益促单"}},
+  {id:"bgm",label:"选BGM",emoji:"🎵",desc:"选择背景音乐",table:"bgm_tracks",multi:true},
+  {id:"rhythm",label:"选节奏",emoji:"⚡",desc:"选择节奏模板",table:"rhythm_templates",multi:true},
   {id:"preview",label:"方案预览",emoji:"📋",desc:"预览并保存成片方案"}
 ];
+
+// 每个表的显示列配置（用于组装表格）
+var ASM_COLS={
+  frameworks:{cols:["name","formula","difficulty","core_logic"],names:["框架","公式","难度","逻辑"]},
+  cta_scripts:{cols:["script_cn","video_stage","action_type","script_logic"],names:["话术","阶段","类型","逻辑"]},
+  viral_comments:{cols:["comment_cn","comment_en","emotion_tags","convertible_to"],names:["中文","原文","情绪","可转化"]},
+  pain_points:{cols:["scene_name","scene_category","user_pain","product_angle"],names:["场景","分类","痛点","切入"]},
+  visual_shots:{cols:["shot_description","shot_type","purpose","video_stage"],names:["拍摄说明","类型","作用","阶段"]},
+  social_proofs:{cols:["name","proof_type","trust_level","usage_note"],names:["名称","类型","信任度","场景"]},
+  benefits:{cols:["name","benefit_type","description","applicable_scene"],names:["权益","类型","描述","场景"]},
+  bgm_tracks:{cols:["name","emotion_type","applicable_content","features"],names:["BGM","情绪","适用内容","特征"]},
+  rhythm_templates:{cols:["template_name","total_duration","beat_structure","hook_content"],names:["模板","时长","节奏","钩子"]}
+};
 
 function initAssemble(){asmStep=0;renderAsmSteps();renderAsmPanel()}
 
@@ -430,8 +444,13 @@ function renderAsmSteps(){
   var h="";ASM_STEPS.forEach(function(s,i){
     var cls="asm-step";
     if(i===asmStep)cls+=" active";
-    else if(i<asmStep&&asmData[s.id])cls+=" done";
-    h+='<button class="'+cls+'" onclick="goAsmStep('+i+')"><span class="step-num">'+(i+1)+'</span>'+s.emoji+" "+s.label+'</button>';
+    else if(i<asmStep){
+      var hasData=s.multi?(asmData[s.id]&&asmData[s.id].length>0):!!asmData[s.id];
+      if(hasData)cls+=" done";
+    }
+    var count="";
+    if(s.multi&&asmData[s.id]&&asmData[s.id].length>0)count=' <span style="background:var(--indigo);color:#fff;padding:0 5px;border-radius:8px;font-size:9px">'+asmData[s.id].length+'</span>';
+    h+='<button class="'+cls+'" onclick="goAsmStep('+i+')"><span class="step-num">'+(i+1)+'</span>'+s.emoji+" "+s.label+count+'</button>';
   });
   document.getElementById("asmSteps").innerHTML=h;
 }
@@ -440,7 +459,58 @@ function goAsmStep(i){asmStep=i;renderAsmSteps();renderAsmPanel()}
 
 async function loadAsmData(table){
   if(asmCache[table])return asmCache[table];
-  try{var r=await fetch(qa(table,"is_retired=eq.false&order=rating.desc.nullslast,created_at.desc&limit=50"));if(!r.ok)return[];var d=await r.json();asmCache[table]=d;return d}catch(e){return[]}
+  try{var r=await fetch(qa(table,"is_retired=eq.false&order=rating.desc.nullslast,created_at.desc&limit=80"));if(!r.ok)return[];var d=await r.json();asmCache[table]=d;return d}catch(e){return[]}
+}
+
+function isAsmSelected(stepId,rowId){
+  var step=ASM_STEPS[asmStep];
+  if(!step.multi){return asmData[stepId]&&asmData[stepId].id===rowId}
+  return (asmData[stepId]||[]).some(function(r){return r.id===rowId});
+}
+
+function toggleAsmSelect(stepId,rowId,multi){
+  var found=null;
+  Object.values(asmCache).forEach(function(arr){arr.forEach(function(r){if(r.id===rowId)found=r})});
+  if(!found)return;
+  if(!multi){
+    // 单选：toggle
+    if(asmData[stepId]&&asmData[stepId].id===rowId){asmData[stepId]=null}
+    else{asmData[stepId]=found}
+  }else{
+    // 多选：toggle in array
+    if(!asmData[stepId])asmData[stepId]=[];
+    var idx=asmData[stepId].findIndex(function(r){return r.id===rowId});
+    if(idx>=0){asmData[stepId].splice(idx,1)}
+    else{asmData[stepId].push(found)}
+  }
+  renderAsmSteps();renderAsmPanel();
+}
+
+function renderAsmTable(stepId,items,tableName,multi){
+  var cfg=ASM_COLS[tableName];if(!cfg)return '<div class="empty">未定义列配置</div>';
+  var h='<div class="tsc"><table><thead><tr><th style="width:30px">选</th>';
+  cfg.cols.forEach(function(c,i){h+='<th>'+cfg.names[i]+'</th>'});
+  h+='</tr></thead><tbody>';
+  if(!items.length){
+    h+='<tr><td colspan="'+(cfg.cols.length+1)+'" style="text-align:center;padding:30px;color:var(--text3)">暂无数据</td></tr>';
+  }else{
+    items.forEach(function(r){
+      var sel=isAsmSelected(stepId,r.id);
+      h+='<tr style="cursor:pointer;'+(sel?'background:var(--indigo-light);':'')+'" onclick="toggleAsmSelect(\''+stepId+'\',\''+r.id+'\','+multi+')">';
+      h+='<td style="text-align:center"><div style="width:16px;height:16px;border-radius:'+(multi?'3px':'50%')+';border:2px solid '+(sel?'var(--indigo)':'var(--border)')+';display:inline-flex;align-items:center;justify-content:center;background:'+(sel?'var(--indigo)':'var(--surface)')+'"><span style="color:#fff;font-size:10px;font-weight:700">'+(sel?'✓':'')+'</span></div></td>';
+      cfg.cols.forEach(function(c){
+        var v=r[c];
+        if(v===null||v===undefined||v==="")v='<span class="ce">—</span>';
+        else if(c==="difficulty"){var dc={"入门":"te","进阶":"ta","高阶":"tr"};v='<span class="tag '+(dc[v]||"")+'">'+v+'</span>'}
+        else if(TG[c])v='<span class="tag '+TG[c]+'">'+v+'</span>';
+        else v='<div class="ct2" style="-webkit-line-clamp:2">'+String(v)+'</div>';
+        h+='<td>'+v+'</td>';
+      });
+      h+='</tr>';
+    });
+  }
+  h+='</tbody></table></div>';
+  return h;
 }
 
 async function renderAsmPanel(){
@@ -449,67 +519,28 @@ async function renderAsmPanel(){
 
   if(step.id==="preview"){renderPreview(panel);return}
 
-  var items=[];var renderCard;
+  var items=await loadAsmData(step.table);
+  if(step.filter)items=items.filter(step.filter);
 
-  if(step.id==="framework"){
-    items=await loadAsmData("frameworks");
-    renderCard=function(r){
-      var sel=asmData.framework&&asmData.framework.id===r.id;
-      return '<div class="asm-card'+(sel?" selected":"")+'" onclick="selectAsm(\'framework\',\''+r.id+'\')"><div class="card-check">'+(sel?"✓":"")+'</div><div class="card-title">'+r.name+'</div><div class="card-sub"><span class="tag '+({"入门":"te","进阶":"ta","高阶":"tr"}[r.difficulty]||"")+'">'+r.difficulty+'</span></div><div class="card-preview">'+r.formula+'</div><div class="card-preview" style="margin-top:2px;color:var(--text2)">'+r.core_logic+'</div></div>'};
-  }
-  else if(step.id==="stop"){
-    var ctaItems=await loadAsmData("cta_scripts");
-    var commentItems=await loadAsmData("viral_comments");
-    items=[{_section:"CTA开头话术",_items:ctaItems.filter(function(r){return !r.video_stage||r.video_stage.includes("开头")||r.video_stage.includes("hook")||r.video_stage.includes("开场")})},{_section:"爆款评论（可做钩子）",_items:commentItems.slice(0,15)}];
-    panel.innerHTML=renderSectionCards(step,items,"stop");return;
-  }
-  else if(step.id==="pain"){
-    items=await loadAsmData("pain_points");
-    renderCard=function(r){var sel=asmData.pain&&asmData.pain.id===r.id;return '<div class="asm-card'+(sel?" selected":"")+'" onclick="selectAsm(\'pain\',\''+r.id+'\')"><div class="card-check">'+(sel?"✓":"")+'</div><div class="card-title">'+r.scene_name+'</div><div class="card-sub"><span class="tag to">'+(r.scene_category||"通用")+'</span></div><div class="card-preview">痛点: '+(r.user_pain||"—")+'</div><div class="card-preview">切入: '+(r.product_angle||"—")+'</div></div>'};
-  }
-  else if(step.id==="visual"){
-    items=await loadAsmData("visual_shots");
-    renderCard=function(r){var sel=asmData.visual&&asmData.visual.id===r.id;return '<div class="asm-card'+(sel?" selected":"")+'" onclick="selectAsm(\'visual\',\''+r.id+'\')"><div class="card-check">'+(sel?"✓":"")+'</div><div class="card-title">'+(r.shot_description||"—")+'</div><div class="card-sub"><span class="tag tp">'+(r.shot_type||"—")+'</span> <span class="tag ts2">'+(r.video_stage||"—")+'</span></div><div class="card-preview">作用: '+(r.purpose||"—")+'</div></div>'};
-  }
-  else if(step.id==="proof"){
-    items=await loadAsmData("social_proofs");
-    renderCard=function(r){var sel=asmData.proof&&asmData.proof.id===r.id;return '<div class="asm-card'+(sel?" selected":"")+'" onclick="selectAsm(\'proof\',\''+r.id+'\')"><div class="card-check">'+(sel?"✓":"")+'</div><div class="card-title">'+(r.name||"—")+'</div><div class="card-sub"><span class="tag tt2">'+(r.proof_type||"—")+'</span> <span class="tag ta">'+(r.trust_level||"—")+'</span></div><div class="card-preview">'+(r.usage_note||"—")+'</div></div>'};
-  }
-  else if(step.id==="buy"){
-    var ctaEnd=await loadAsmData("cta_scripts");
-    var benefitItems=await loadAsmData("benefits");
-    items=[{_section:"CTA促单话术",_items:ctaEnd.filter(function(r){return !r.video_stage||r.video_stage.includes("结尾")||r.video_stage.includes("cta")||r.video_stage.includes("促单")})},{_section:"权益促单",_items:benefitItems}];
-    panel.innerHTML=renderSectionCards(step,items,"buy");return;
-  }
-  else if(step.id==="bgm"){
-    items=await loadAsmData("bgm_tracks");
-    renderCard=function(r){var sel=asmData.bgm&&asmData.bgm.id===r.id;return '<div class="asm-card'+(sel?" selected":"")+'" onclick="selectAsm(\'bgm\',\''+r.id+'\')"><div class="card-check">'+(sel?"✓":"")+'</div><div class="card-title">🎵 '+(r.name||"—")+'</div><div class="card-sub"><span class="tag tv">'+(r.emotion_type||"—")+'</span></div><div class="card-preview">'+(r.applicable_content||"—")+'</div></div>'};
-  }
-  else if(step.id==="rhythm"){
-    items=await loadAsmData("rhythm_templates");
-    renderCard=function(r){var sel=asmData.rhythm&&asmData.rhythm.id===r.id;return '<div class="asm-card'+(sel?" selected":"")+'" onclick="selectAsm(\'rhythm\',\''+r.id+'\')"><div class="card-check">'+(sel?"✓":"")+'</div><div class="card-title">⚡ '+(r.template_name||"—")+'</div><div class="card-sub"><span class="tag ts2">'+(r.total_duration||"—")+'</span> <span class="tag tv">'+(r.beat_structure||"—")+'</span></div><div class="card-preview">钩子: '+(r.hook_content||"—")+' | CTA: '+(r.cta_content||"—")+'</div></div>'};
+  // 已选数量
+  var selCount=step.multi?(asmData[step.id]||[]).length:(asmData[step.id]?1:0);
+  var h='<h4>'+step.emoji+' '+step.label+' <span style="font-size:11px;font-weight:400;color:var(--text3)">— '+step.desc+'</span>';
+  if(selCount>0)h+=' <span style="font-size:11px;font-weight:600;color:var(--indigo);margin-left:8px">已选 '+selCount+' 条</span>';
+  h+='</h4>';
+
+  // 主表格
+  h+='<div class="tc" style="margin-bottom:12px">'+renderAsmTable(step.id,items,step.table,step.multi)+'</div>';
+
+  // 额外表（如CTA步骤还有评论表/权益表）
+  if(step.extra){
+    var extraItems=await loadAsmData(step.extra.table);
+    if(step.extra.limit)extraItems=extraItems.slice(0,step.extra.limit);
+    h+='<div class="asm-section-title" style="margin:12px 0 8px">'+step.extra.label+' ('+extraItems.length+')</div>';
+    h+='<div class="tc">'+renderAsmTable(step.id,extraItems,step.extra.table,step.multi)+'</div>';
   }
 
-  var h='<h4>'+step.emoji+' '+step.label+' <span style="font-size:11px;font-weight:400;color:var(--text3)">— '+step.desc+'</span></h4>';
-  if(!items.length){h+='<div class="empty">该库暂无数据，请先投入素材</div>'}
-  else{h+='<div class="asm-grid">';items.forEach(function(r){h+=renderCard(r)});h+='</div>'}
   h+=asmNavBtns();
   panel.innerHTML=h;
-}
-
-function renderSectionCards(step,sections,key){
-  var h='<h4>'+step.emoji+' '+step.label+' <span style="font-size:11px;font-weight:400;color:var(--text3)">— '+step.desc+'</span></h4>';
-  sections.forEach(function(sec){
-    h+='<div class="asm-section"><div class="asm-section-title">'+sec._section+' ('+sec._items.length+')</div>';
-    if(!sec._items.length){h+='<div style="font-size:11px;color:var(--text3);padding:8px">暂无匹配数据</div>'}
-    else{h+='<div class="asm-grid">';sec._items.forEach(function(r){
-      var sel=asmData[key]&&asmData[key].id===r.id;
-      var title=r.script_cn||r.script_en||r.comment_cn||r.comment_en||r.name||"—";
-      var sub=r.video_stage||r.action_type||r.convertible_to||r.benefit_type||"";
-      h+='<div class="asm-card'+(sel?" selected":"")+'" onclick="selectAsm(\''+key+'\',\''+r.id+'\')"><div class="card-check">'+(sel?"✓":"")+'</div><div class="card-title">'+title+'</div>'+(sub?'<div class="card-sub"><span class="tag">'+sub+'</span></div>':'')+'<div class="card-preview">'+(r.script_logic||r.combo_benefit||r.description||r.applicable_scene||r.emotion_tags||"")+'</div></div>';
-    });h+='</div>'}h+='</div>';
-  });
-  h+=asmNavBtns();return h;
 }
 
 function asmNavBtns(){
@@ -519,37 +550,30 @@ function asmNavBtns(){
   h+='</div>';return h;
 }
 
-function selectAsm(key,id){
-  // 从缓存中找到完整数据
-  var tables={framework:"frameworks",stop:"cta_scripts",pain:"pain_points",visual:"visual_shots",proof:"social_proofs",buy:"cta_scripts",bgm:"bgm_tracks",rhythm:"rhythm_templates"};
-  var found=null;
-  // 搜索所有缓存
-  Object.values(asmCache).forEach(function(arr){arr.forEach(function(r){if(r.id===id)found=r})});
-  if(found){
-    if(asmData[key]&&asmData[key].id===id){asmData[key]=null}else{asmData[key]=found}
-    renderAsmSteps();renderAsmPanel();
-  }
-}
-
 function renderPreview(panel){
   var h='<h4>📋 方案预览</h4>';
   var fields=[
-    {key:"framework",label:"📐 框架",display:function(d){return d.name+" — "+d.formula}},
-    {key:"stop",label:"🛑 停·钩子",display:function(d){return d.script_cn||d.script_en||d.comment_cn||d.comment_en||d.name||"—"}},
-    {key:"pain",label:"💢 病·痛点",display:function(d){return d.scene_name+" / "+d.user_pain}},
-    {key:"visual",label:"💊 药·卖点",display:function(d){return d.shot_description||"—"}},
-    {key:"proof",label:"⭐ 信·证明",display:function(d){return d.name+" ("+d.proof_type+")"}},
-    {key:"buy",label:"🛒 买·促单",display:function(d){return d.script_cn||d.script_en||d.name||"—"}},
-    {key:"bgm",label:"🎵 BGM",display:function(d){return d.name+" ("+d.emotion_type+")"}},
-    {key:"rhythm",label:"⚡ 节奏",display:function(d){return d.template_name+" "+d.total_duration}}
+    {key:"framework",label:"📐 框架",multi:false,display:function(d){return d.name+" — "+d.formula}},
+    {key:"stop",label:"🛑 停·钩子",multi:true,display:function(d){return d.script_cn||d.script_en||d.comment_cn||d.comment_en||d.name||"—"}},
+    {key:"pain",label:"💢 病·痛点",multi:true,display:function(d){return (d.scene_name||"")+" / "+(d.user_pain||"")}},
+    {key:"visual",label:"💊 药·卖点",multi:true,display:function(d){return d.shot_description||"—"}},
+    {key:"proof",label:"⭐ 信·证明",multi:true,display:function(d){return (d.name||"—")+(d.proof_type?" ("+d.proof_type+")":"")}},
+    {key:"buy",label:"🛒 买·促单",multi:true,display:function(d){return d.script_cn||d.script_en||d.name||"—"}},
+    {key:"bgm",label:"🎵 BGM",multi:true,display:function(d){return (d.name||"—")+(d.emotion_type?" ("+d.emotion_type+")":"")}},
+    {key:"rhythm",label:"⚡ 节奏",multi:true,display:function(d){return (d.template_name||"—")+" "+(d.total_duration||"")}}
   ];
   fields.forEach(function(f){
     h+='<div class="preview-card"><h5>'+f.label+'</h5>';
-    if(asmData[f.key]){h+='<div class="pv-content">'+f.display(asmData[f.key])+'</div>'}
-    else{h+='<div class="pv-empty">未选择 — <a href="#" onclick="goAsmStep('+ASM_STEPS.findIndex(function(s){return s.id===f.key})+');return false" style="color:var(--indigo)">去选择</a></div>'}
+    if(f.multi){
+      var arr=asmData[f.key]||[];
+      if(arr.length){h+='<div class="pv-content">'+arr.map(function(d,i){return '<div style="margin-bottom:3px">'+(i+1)+'. '+f.display(d)+'</div>'}).join("")+'</div>'}
+      else{h+='<div class="pv-empty">未选择 — <a href="#" onclick="goAsmStep('+ASM_STEPS.findIndex(function(s){return s.id===f.key})+');return false" style="color:var(--indigo)">去选择</a></div>'}
+    }else{
+      if(asmData[f.key]){h+='<div class="pv-content">'+f.display(asmData[f.key])+'</div>'}
+      else{h+='<div class="pv-empty">未选择 — <a href="#" onclick="goAsmStep('+ASM_STEPS.findIndex(function(s){return s.id===f.key})+');return false" style="color:var(--indigo)">去选择</a></div>'}
+    }
     h+='</div>';
   });
-  // 保存按钮
   var hasFramework=!!asmData.framework;
   h+='<div class="asm-nav-btns"><button class="btn bg" onclick="goAsmStep('+(asmStep-1)+')">← 上一步</button>';
   h+='<button class="btn bv" onclick="saveProduction()"'+(hasFramework?'':' disabled style="opacity:0.5"')+'>💾 保存成片方案</button></div>';
@@ -562,18 +586,18 @@ async function saveProduction(){
     title:(fw.name||"方案")+" — "+new Date().toLocaleDateString("zh-CN"),
     framework_id:fw.id,
     formula:fw.formula,
-    stop_cta_id:asmData.stop?asmData.stop.id:null,
-    pain_point_id:asmData.pain?asmData.pain.id:null,
-    visual_shot_id:asmData.visual?asmData.visual.id:null,
-    social_proof_id:asmData.proof?asmData.proof.id:null,
-    benefit_id:asmData.buy?asmData.buy.id:null,
-    bgm_id:asmData.bgm?asmData.bgm.id:null
+    stop_cta_id:(asmData.stop&&asmData.stop[0])?asmData.stop[0].id:null,
+    pain_point_id:(asmData.pain&&asmData.pain[0])?asmData.pain[0].id:null,
+    visual_shot_id:(asmData.visual&&asmData.visual[0])?asmData.visual[0].id:null,
+    social_proof_id:(asmData.proof&&asmData.proof[0])?asmData.proof[0].id:null,
+    benefit_id:(asmData.buy&&asmData.buy[0])?asmData.buy[0].id:null,
+    bgm_id:(asmData.bgm&&asmData.bgm[0])?asmData.bgm[0].id:null
   };
   try{
     var r=await fetch(qa("productions"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(data)});
     if(!r.ok)throw new Error(await r.text());
     toast("成片方案已保存！","tgs");
-    asmData={framework:null,stop:null,pain:null,visual:null,proof:null,buy:null,bgm:null,rhythm:null};
+    asmData={framework:null,stop:[],pain:[],visual:[],proof:[],buy:[],bgm:[],rhythm:[]};
     asmStep=0;renderAsmSteps();renderAsmPanel();
   }catch(e){toast("保存失败: "+e.message,"tge")}
 }
