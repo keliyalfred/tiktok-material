@@ -59,8 +59,8 @@ table{width:100%;border-collapse:collapse;font-size:12px}
 thead{background:var(--surface2)}thead th{padding:8px 10px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none}
 tbody tr{border-bottom:1px solid var(--border)}tbody tr:last-child{border-bottom:none}tbody tr:hover{background:#FAFBFC}
 tbody tr.retired{opacity:0.4}tbody tr.retired td{text-decoration:line-through;color:var(--text3)}
-tbody td{padding:8px 10px;color:var(--text);vertical-align:top;min-width:60px}
-.ct2{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5;cursor:pointer}.ct2.expanded{-webkit-line-clamp:unset}
+tbody td{padding:8px 10px;color:var(--text);vertical-align:top;min-width:40px;max-width:200px}
+.ct2{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5;cursor:pointer;word-break:break-all}.ct2.expanded{-webkit-line-clamp:unset}
 .cl{color:var(--sky);text-decoration:none;font-weight:500;font-size:11px}.cl:hover{text-decoration:underline}
 .cn{font-variant-numeric:tabular-nums;font-weight:500}.ce{color:var(--text3);font-size:11px}
 .sku-cell{font-family:'Inter',monospace;font-size:10px;color:var(--indigo);font-weight:600;white-space:nowrap}
@@ -120,6 +120,13 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 .asm-nav-btns .btn{padding:8px 20px;font-size:13px}
 .preview-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
 .preview-card h5{font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text2)}
+.detail-row{display:none;background:var(--surface2)}
+.detail-row.show{display:table-row}
+.detail-row td{padding:8px 10px !important;border-bottom:2px solid var(--border)}
+.detail-inner{display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:var(--text2)}
+.detail-inner .di{display:flex;flex-direction:column;gap:2px;min-width:80px}
+.detail-inner .di label{font-size:9px;color:var(--text3);text-transform:uppercase;font-weight:600;letter-spacing:0.3px}
+.detail-inner .di span{font-size:12px;color:var(--text)}
 .preview-card .pv-content{font-size:12px;line-height:1.6;color:var(--text)}
 .preview-card .pv-empty{font-size:11px;color:var(--text3);font-style:italic}
 
@@ -216,8 +223,8 @@ var FD={
   rhythm_templates:{c:["sku","template_name","total_duration","target_framework","beat_structure","hook_content","middle_content","cta_content","transition_style","bgm_tempo","difficulty","source_link","rating","user_notes","created_at"],n:{sku:"编码",template_name:"模板",total_duration:"时长",target_framework:"框架",beat_structure:"节奏",hook_content:"钩子",middle_content:"中间",cta_content:"CTA",transition_style:"转场",bgm_tempo:"BGM",difficulty:"难度",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
   trending_tags:{c:["sku","tag_name","tag_category","current_heat","view_volume","related_tags","best_use_scenario","combo_suggestion","source_link","rating","user_notes","created_at"],n:{sku:"编码",tag_name:"标签",tag_category:"分类",current_heat:"热度",view_volume:"浏览量",related_tags:"关联标签",best_use_scenario:"场景",combo_suggestion:"组合",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
   posting_strategies:{c:["sku","strategy_name","strategy_type","target_audience","best_posting_time","posting_frequency","title_template","cover_strategy","engagement_tips","source_link","rating","user_notes","created_at"],n:{sku:"编码",strategy_name:"策略",strategy_type:"类型",target_audience:"受众",best_posting_time:"时间",posting_frequency:"频率",title_template:"标题模板",cover_strategy:"封面",engagement_tips:"互动",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  trending_videos:{c:["heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","category","hashtags","video_url","source_keyword","rating","user_notes","created_at"],n:{heat_score:"🔥热度",title:"视频标题",creator_username:"达人",creator_followers:"粉丝数",view_count:"播放量",like_count:"点赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",category:"类目",hashtags:"标签",video_url:"视频链接",source_keyword:"来源词",rating:"评分",user_notes:"备注",created_at:"抓取时间"}},
-  trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","source_keyword","rating","user_notes","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用次数",total_views:"总播放量",top_creator_usernames:"关联达人",category:"类目",source_keyword:"来源词",rating:"评分",user_notes:"备注",created_at:"抓取时间"}}
+  trending_videos:{c:["heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","rating","user_notes","created_at"],n:{heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",rating:"评分",user_notes:"备注",created_at:"时间"}},
+  trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","rating","user_notes","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"达人",category:"类目",rating:"评分",user_notes:"备注",created_at:"时间"}}
 };
 var TG={video_structure:"ts2",bgm_used:"tv",hook_type:"to",content_tier:"ts2",emotion_type:"tv",proof_type:"tt2",benefit_type:"tt2",shot_type:"tp",action_type:"to",video_stage:"ts2",scene_category:"to",convertible_to:"te",emotion_tags:"tp",emotion_keywords:"tp",material_source:"ts2",applicable_scene:"ts2",applicable_category:"tt2",source_origin:"ts2",cost_level:"ta",trust_level:"ta",content_type:"tv",shot_category:"tp",framing:"ti",camera_angle:"ts2",camera_movement:"tv",lighting:"ta",total_duration:"ts2",beat_structure:"tv",transition_style:"to",bgm_tempo:"tv",target_framework:"tt2",tag_category:"to",current_heat:"ta",view_volume:"ti",strategy_type:"ts2",posting_frequency:"ta",heat_score:"tr",usage_count:"to",creator_followers:"ti",music_title:"tv",music_author:"ts2"};
 var at="material_intake",ct={},allRows=[],sortDir="desc",searchTerm="",colFilter={};
