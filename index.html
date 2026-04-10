@@ -43,7 +43,7 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}input,text
 .sort-btn:hover{background:var(--surface2)}
 .sort-btn.active{border-color:var(--indigo);color:var(--indigo)}
 .sort-btn svg{width:11px;height:11px}
-.col-filter-row td{padding:4px 6px !important;background:var(--surface2);border-bottom:2px solid var(--border)}
+.col-filter-row td{padding:4px 6px !important;background:var(--surface2);border-bottom:2px solid var(--border);position:sticky;top:33px;z-index:2}
 .col-filter-input{width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:3px;font-size:10px;background:var(--surface);color:var(--text);outline:none;min-width:50px}
 .col-filter-input:focus{border-color:var(--indigo);box-shadow:0 0 0 2px var(--indigo-light)}
 .col-filter-input::placeholder{color:var(--text3);font-size:10px}
@@ -54,9 +54,9 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}input,text
 .active-filter-tag .remove-filter:hover{opacity:1}
 .clear-all-filters{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:500;color:var(--rose);border:1px solid var(--rose-light);background:var(--rose-light);cursor:pointer}
 .clear-all-filters:hover{background:var(--rose);color:#fff}
-.tc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.tsc{overflow-x:auto}
+.tc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.tsc{overflow-x:auto;max-height:75vh;overflow-y:auto;position:relative}
 table{width:100%;border-collapse:collapse;font-size:12px}
-thead{background:var(--surface2)}thead th{padding:8px 10px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none}
+thead{background:var(--surface2)}thead th{padding:8px 10px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none;position:sticky;top:0;z-index:3;background:var(--surface2)}
 tbody tr{border-bottom:1px solid var(--border)}tbody tr:last-child{border-bottom:none}tbody tr:hover{background:#FAFBFC}
 tbody tr.retired{opacity:0.4}tbody tr.retired td{text-decoration:line-through;color:var(--text3)}
 tbody td{padding:8px 10px;color:var(--text);vertical-align:top;min-width:40px;max-width:200px}
@@ -120,6 +120,12 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 .asm-nav-btns .btn{padding:8px 20px;font-size:13px}
 .preview-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
 .preview-card h5{font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text2)}
+.pager{display:flex;align-items:center;justify-content:center;gap:4px;padding:10px;font-size:12px;flex-wrap:wrap}
+.pager button{padding:4px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:11px;cursor:pointer;min-width:32px}
+.pager button:hover{background:var(--surface2);border-color:var(--indigo)}
+.pager button.active{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.pager button:disabled{opacity:0.4;cursor:default}
+.pager .pg-info{color:var(--text3);font-size:11px;margin:0 8px}
 .detail-row{display:none;background:var(--surface2)}
 .detail-row.show{display:table-row}
 .detail-row td{padding:8px 10px !important;border-bottom:2px solid var(--border)}
@@ -228,7 +234,7 @@ var FD={
   trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","top_video_ids","rating","user_notes","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",top_video_ids:"关联视频",rating:"评分",user_notes:"备注",created_at:"时间"}}
 };
 var TG={video_structure:"ts2",bgm_used:"tv",hook_type:"to",content_tier:"ts2",emotion_type:"tv",proof_type:"tt2",benefit_type:"tt2",shot_type:"tp",action_type:"to",video_stage:"ts2",scene_category:"to",convertible_to:"te",emotion_tags:"tp",emotion_keywords:"tp",material_source:"ts2",applicable_scene:"ts2",applicable_category:"tt2",source_origin:"ts2",cost_level:"ta",trust_level:"ta",content_type:"tv",shot_category:"tp",framing:"ti",camera_angle:"ts2",camera_movement:"tv",lighting:"ta",total_duration:"ts2",beat_structure:"tv",transition_style:"to",bgm_tempo:"tv",target_framework:"tt2",tag_category:"to",current_heat:"ta",view_volume:"ti",strategy_type:"ts2",posting_frequency:"ta",heat_score:"tr",usage_count:"to",creator_followers:"ti",music_title:"tv",music_author:"ts2"};
-var at="material_intake",ct={},allRows=[],sortDir="desc",searchTerm="",colFilter={};
+var at="material_intake",ct={},allRows=[],sortDir="desc",searchTerm="",colFilter={},curPage=1,pageSize=20;
 
 // ==================== 素材库表格渲染 ====================
 function sH(s){var m={"待处理":"sp","处理中":"si","已分发":"sd","已驳回":"sr"};return '<span class="st '+(m[s]||"sp")+'"><span class="dot" style="background:currentColor"></span>'+(s||"未知")+'</span>'}
@@ -312,20 +318,41 @@ function removeFilter(col){delete colFilter[col];var inp=document.querySelector(
 function clearAllFilters(){colFilter={};document.querySelectorAll(".col-filter-input").forEach(function(inp){inp.value="";inp.classList.remove("has-value")});updateActiveFiltersBar();document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows))}
 function renderRows(rows){
   var cfg=FD[at];var canOp=at!=="frameworks";
+  var total=rows.length;
+  var totalPages=Math.ceil(total/pageSize)||1;
+  if(curPage>totalPages)curPage=totalPages;
+  var start=(curPage-1)*pageSize;
+  var pageRows=rows.slice(start,start+pageSize);
+
   var h='<table><thead><tr>';cfg.c.forEach(function(c){h+='<th>'+cfg.n[c]+'</th>'});if(canOp)h+='<th>操作</th>';h+='</tr>';
   h+='<tr class="col-filter-row">';cfg.c.forEach(function(c){if(c==="rating"||c==="user_notes"){h+='<td></td>'}else{var curVal=colFilter[c]||"";var hasClass=curVal?" has-value":"";h+='<td><input class="col-filter-input'+hasClass+'" data-col="'+c+'" value="'+curVal.replace(/"/g,"&quot;")+'" placeholder="筛选" oninput="onColFilter(this,\''+c+'\')"></td>'}});if(canOp)h+='<td></td>';h+='</tr></thead>';
   if(!rows.length)return h+'<tbody><tr><td colspan="'+(cfg.c.length+(canOp?1:0))+'" style="text-align:center;padding:40px;color:var(--text3)">'+(searchTerm||Object.keys(colFilter).length?"未找到匹配结果":"暂无数据")+'</td></tr></tbody></table>';
-  h+='<tbody>';rows.forEach(function(r){var ret=r.is_retired;h+='<tr'+(ret?' class="retired"':'')+'>';cfg.c.forEach(function(c){h+='<td>'+cV(r,c)+'</td>'});if(canOp){if(!ret){h+='<td><button class="retire-btn" onclick="doRetire(\''+r.id+'\')">作废</button></td>'}else{h+='<td><span class="ce" style="font-size:10px">已作废</span></td>'}}h+='</tr>'});
-  h+='</tbody></table>';return h;
+  h+='<tbody>';pageRows.forEach(function(r){var ret=r.is_retired;h+='<tr'+(ret?' class="retired"':'')+'>';cfg.c.forEach(function(c){h+='<td>'+cV(r,c)+'</td>'});if(canOp){if(!ret){h+='<td><button class="retire-btn" onclick="doRetire(\''+r.id+'\')">作废</button></td>'}else{h+='<td><span class="ce" style="font-size:10px">已作废</span></td>'}}h+='</tr>'});
+  h+='</tbody></table>';
+  // 翻页器
+  h+='<div class="pager">';
+  h+='<span class="pg-info">共'+total+'条</span>';
+  h+='<select onchange="changePageSize(this.value)" style="padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;background:var(--surface);color:var(--text)">';
+  [10,20,50,100].forEach(function(n){h+='<option value="'+n+'"'+(pageSize===n?' selected':'')+'>'+n+'条/页</option>'});
+  h+='</select>';
+  h+='<button onclick="goPage(1)"'+(curPage<=1?' disabled':'')+'>首页</button>';
+  h+='<button onclick="goPage('+(curPage-1)+')"'+(curPage<=1?' disabled':'')+'>上一页</button>';
+  // 页码按钮（最多显示7个）
+  var pStart=Math.max(1,curPage-3),pEnd=Math.min(totalPages,curPage+3);
+  for(var p=pStart;p<=pEnd;p++){h+='<button class="'+(p===curPage?'active':'')+'" onclick="goPage('+p+')">'+p+'</button>'}
+  h+='<button onclick="goPage('+(curPage+1)+')"'+(curPage>=totalPages?' disabled':'')+'>下一页</button>';
+  h+='<button onclick="goPage('+totalPages+')"'+(curPage>=totalPages?' disabled':'')+'>末页</button>';
+  h+='<span class="pg-info">'+curPage+'/'+totalPages+'页</span>';
+  h+='</div>';
+  return h;
 }
+function goPage(p){curPage=p;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters()}
+function changePageSize(v){pageSize=parseInt(v);curPage=1;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters()}
+function restoreFilters(){Object.keys(colFilter).forEach(function(c2){var inp2=document.querySelector('.col-filter-input[data-col="'+c2+'"]');if(inp2){inp2.value=colFilter[c2];inp2.classList.add("has-value")}})}
 function onColFilter(el,col){
   var val=el.value.trim();if(val){colFilter[col]=val;el.classList.add("has-value")}else{delete colFilter[col];el.classList.remove("has-value")}
-  updateActiveFiltersBar();
-  var filtered=filterRows(allRows);var cfg=FD[at];var canOp=at!=="frameworks";var tbody=document.querySelector("#tBody table tbody");
-  if(tbody){
-    if(!filtered.length){tbody.innerHTML='<tr><td colspan="'+(cfg.c.length+(canOp?1:0))+'" style="text-align:center;padding:40px;color:var(--text3)">未找到匹配结果</td></tr>'}
-    else{var bh="";filtered.forEach(function(r){var ret=r.is_retired;bh+='<tr'+(ret?' class="retired"':'')+'>';cfg.c.forEach(function(c){bh+='<td>'+cV(r,c)+'</td>'});if(canOp){if(!ret){bh+='<td><button class="retire-btn" onclick="doRetire(\''+r.id+'\')">作废</button></td>'}else{bh+='<td><span class="ce" style="font-size:10px">已作废</span></td>'}}bh+='</tr>'});tbody.innerHTML=bh}
-  } else {document.getElementById("tBody").innerHTML=renderRows(filtered);Object.keys(colFilter).forEach(function(c2){var inp2=document.querySelector('.col-filter-input[data-col="'+c2+'"]');if(inp2){inp2.value=colFilter[c2];inp2.classList.add("has-value")}})}
+  updateActiveFiltersBar();curPage=1;
+  document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters();
 }
 async function rT(){
   var clr=CL[at];document.getElementById("tTitle").innerHTML='<span class="nc" style="background:'+clr.b+';color:'+clr.f+';width:20px;height:20px;border-radius:4px">'+IC[at]+'</span>'+LN[at]+' <span class="ct">'+(ct[at]!=null?ct[at]+"条":"")+'</span>';
@@ -333,8 +360,8 @@ async function rT(){
   var b=document.getElementById("tBody");b.innerHTML='<div class="loading">加载中...</div>';
   allRows=await fR(at);updateActiveFiltersBar();b.innerHTML=renderRows(filterRows(allRows));
 }
-function doSearch(){searchTerm=document.getElementById("sI").value.trim();document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows))}
-function toggleSort(){sortDir=sortDir==="desc"?"asc":"desc";rT()}
+function doSearch(){searchTerm=document.getElementById("sI").value.trim();curPage=1;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters()}
+function toggleSort(){sortDir=sortDir==="desc"?"asc":"desc";curPage=1;rT()}
 async function doRetire(id){if(!confirm("确定要作废这条素材吗？"))return;try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({is_retired:true})});toast("已作废","tgs");setTimeout(refreshAll,300)}catch(e){toast("失败","tge")}}
 async function setRating(id,val){try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({rating:val})});allRows.forEach(function(r){if(r.id===id)r.rating=val});toast("评分已保存","tgs")}catch(e){toast("评分保存失败","tge")}}
 async function saveNote(id,val){try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({user_notes:val})})}catch(e){}}
@@ -358,7 +385,7 @@ async function doTriggerScrape(){
   }catch(e){toast("抓取失败: "+e.message,"tge");console.error(e)}
   finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>抓爆款'}
 }
-function sT(k){at=k;searchTerm="";colFilter={};if(document.getElementById("sI"))document.getElementById("sI").value="";rN();
+function sT(k){at=k;searchTerm="";colFilter={};curPage=1;if(document.getElementById("sI"))document.getElementById("sI").value="";rN();
   if(k==="__assemble__"){document.getElementById("tableView").style.display="none";document.getElementById("assembleView").style.display="block";initAssemble()}
   else{document.getElementById("tableView").style.display="block";document.getElementById("assembleView").style.display="none";rT()}
 }
