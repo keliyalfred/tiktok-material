@@ -192,11 +192,11 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 <div class="mo" id="linkMO" style="display:none" onclick="if(event.target===this)hideLinkModal()">
   <div class="modal"><div class="mh"><h3>🔗 贴链接自动抓取</h3><button class="mx" onclick="hideLinkModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="mbo">
-    <div class="fg"><label class="fl">TikTok视频链接 <span class="rq">*</span></label><input class="finp" id="linkUrl" type="url" placeholder="粘贴TikTok链接，支持长链接和短链接 vm.tiktok.com/..."></div>
+    <div class="fg"><label class="fl">TikTok / 抖音 视频链接 <span class="rq">*</span></label><input class="finp" id="linkUrl" type="url" placeholder="粘贴TikTok或抖音链接，支持长链接和短链接"></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">提交人</label><input class="finp" id="linkSubmitter" type="text" placeholder="你的名字"></div>
     </div>
-    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">前端直连TikAPI → 抓取视频+评论 → 写入素材库 → AI自动拆解入库</p>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">TikTok链接：自动抓取视频数据+评论 → AI拆解入库<br>抖音链接：直接提交AI分析拆解（不抓取数据）</p>
     <div id="linkProgress" style="display:none;margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--sky-light);font-size:11px;color:var(--sky-text)"></div>
     <button class="bs" id="linkBtn" onclick="doLinkSubmit()">自动抓取 · AI 分发入库</button>
   </div></div>
@@ -470,13 +470,26 @@ function setLinkProgress(msg){var el=document.getElementById("linkProgress");if(
 async function doLinkSubmit(){
   var url=document.getElementById("linkUrl").value.trim();
   if(!url){toast("请粘贴链接","tge");return}
-  if(!url.includes("tiktok.com")&&!url.includes("douyin.com")){toast("请粘贴TikTok链接","tge");return}
+  if(!url.includes("tiktok.com")&&!url.includes("douyin.com")&&!url.includes("iesdouyin.com")){toast("请粘贴TikTok或抖音链接","tge");return}
   var btn=document.getElementById("linkBtn");btn.disabled=true;btn.textContent="抓取中...";
   var sb=document.getElementById("linkSubmitter").value.trim()||"运营";
   localStorage.setItem("submitter",sb);
 
   try{
-    // 检查是否是长链接（包含video/数字）
+    // 判断是否是抖音链接
+    var isDouyin=url.includes("douyin.com")||url.includes("iesdouyin.com");
+
+    if(isDouyin){
+      // 抖音链接：TikAPI不支持抖音，直接提交AI分析
+      btn.textContent="抖音链接，提交AI分析...";
+      setLinkProgress("⏳ 抖音链接不支持数据抓取，将直接提交AI进行内容分析...");
+      var douyinData={raw_content:"【抖音视频拆解】\n链接: "+url+"\n\n请根据此抖音视频链接，分析该视频的内容结构、钩子话术、拍摄手法、CTA策略、痛点切入等信息，拆解为可复用的素材。",source_url:url,source_platform:"抖音",submitter:sb,content_type:"competitor_video"};
+      await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(douyinData)});
+      hideLinkModal();toast("抖音链接已提交，AI分析中...","tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
+      return;
+    }
+
+    // TikTok链接处理
     var hasVideoId=/video\/\d+/.test(url);
     if(!hasVideoId){
       // 短链接：直接提交给AI分析
