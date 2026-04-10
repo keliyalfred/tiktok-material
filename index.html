@@ -255,7 +255,8 @@ function cV(r,c){
   if((c==="music_title"||c==="bgm_title")&&r.music_play_url){
     return '<div style="display:flex;align-items:center;gap:4px"><div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="flex:1">'+String(v)+'</div><button class="retire-btn" style="color:var(--violet);border-color:var(--violet-light);background:var(--violet-light);font-size:9px" onclick="event.stopPropagation();playMusic(\''+r.music_play_url.replace(/'/g,"\\'")+'\')">\u266B听</button></div>';
   }
-  if(c==="view_count"||c==="like_count"||c==="comment_count"||c==="share_count"||c==="collect_count"||c==="creator_followers"||c==="usage_count"||c==="total_views"||c==="video_count"||c==="total_likes")return '<span class="cn">'+fmtNum(v)+'</span>';
+  if(c==="view_count"||c==="like_count"||c==="comment_count"||c==="share_count"||c==="collect_count"||c==="usage_count"||c==="total_views"||c==="video_count"||c==="total_likes")return '<span class="cn">'+fmtNum(v)+'</span>';
+  if(c==="creator_followers")return v&&Number(v)>0?'<span class="cn">'+fmtNum(v)+'</span>':'<span class="ce">—</span>';
   if(c==="heat_score")return '<span class="cn" style="color:var(--rose);font-weight:700">'+fmtNum(v)+'</span>';
   if(c==="hashtags"||c==="top_video_ids"||c==="top_creator_usernames"){if(Array.isArray(v)&&v.length)return v.slice(0,4).map(function(t){return '<span class="tag ti">'+t+'</span>'}).join("");return '<span class="ce">—</span>'}
   if(c==="tag_name")return '<span class="tag ti" style="font-size:12px;font-weight:600">#'+v+'</span>';
