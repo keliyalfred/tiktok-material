@@ -42,14 +42,25 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}input,text
 .sort-btn:hover{background:var(--surface2)}
 .sort-btn.active{border-color:var(--indigo);color:var(--indigo)}
 .sort-btn svg{width:11px;height:11px}
-.filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.filter-chip{padding:3px 8px;border-radius:12px;font-size:10px;font-weight:500;border:1px solid var(--border);color:var(--text2);background:var(--surface);cursor:pointer}
-.filter-chip:hover{background:var(--surface2)}
-.filter-chip.active{background:var(--indigo-light);color:var(--indigo);border-color:var(--indigo)}
+
+/* === 新增：Excel风格列筛选 === */
+.col-filter-row td{padding:4px 6px !important;background:var(--surface2);border-bottom:2px solid var(--border)}
+.col-filter-input{width:100%;padding:3px 6px;border:1px solid var(--border);border-radius:3px;font-size:10px;background:var(--surface);color:var(--text);outline:none;min-width:50px}
+.col-filter-input:focus{border-color:var(--indigo);box-shadow:0 0 0 2px var(--indigo-light)}
+.col-filter-input::placeholder{color:var(--text3);font-size:10px}
+.col-filter-input.has-value{border-color:var(--indigo);background:var(--indigo-light)}
+.filter-clear-btn{padding:2px 8px;border-radius:3px;font-size:10px;color:var(--indigo);border:1px solid var(--indigo);background:var(--indigo-light);cursor:pointer;white-space:nowrap;margin-left:4px}
+.filter-clear-btn:hover{background:var(--indigo);color:#fff}
+.active-filters-bar{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.active-filter-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:500;background:var(--indigo-light);color:var(--indigo);border:1px solid var(--indigo)}
+.active-filter-tag .remove-filter{cursor:pointer;font-weight:700;margin-left:2px;opacity:0.6}
+.active-filter-tag .remove-filter:hover{opacity:1}
+.clear-all-filters{padding:2px 8px;border-radius:12px;font-size:10px;font-weight:500;color:var(--rose);border:1px solid var(--rose-light);background:var(--rose-light);cursor:pointer}
+.clear-all-filters:hover{background:var(--rose);color:#fff}
+
 .tc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.tsc{overflow-x:auto}
 table{width:100%;border-collapse:collapse;font-size:12px}
-thead{background:var(--surface2)}thead th{padding:8px 10px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none}
-thead th:hover{background:var(--surface3)}
+thead{background:var(--surface2)}thead th{padding:8px 10px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none}
 tbody tr{border-bottom:1px solid var(--border)}tbody tr:last-child{border-bottom:none}tbody tr:hover{background:#FAFBFC}
 tbody tr.retired{opacity:0.4}
 tbody tr.retired td{text-decoration:line-through;color:var(--text3)}
@@ -64,8 +75,8 @@ tbody td{padding:8px 10px;color:var(--text);vertical-align:top;min-width:60px}
 .dot{width:4px;height:4px;border-radius:50%;display:inline-block}
 .tag{display:inline-block;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:500;margin:1px;background:var(--surface2);color:var(--text2)}
 .te{background:var(--emerald-light);color:var(--emerald-text)}.ts2{background:var(--sky-light);color:var(--sky-text)}.ta{background:var(--amber-light);color:var(--amber-text)}.tr{background:var(--rose-light);color:var(--rose-text)}.to{background:var(--orange-light);color:var(--orange-text)}.tv{background:var(--violet-light);color:var(--violet-text)}.tp{background:var(--pink-light);color:var(--pink-text)}.tt2{background:var(--teal-light);color:var(--teal-text)}.ti{background:var(--indigo-light);color:var(--indigo-text)}
-.retire-btn{padding:2px 6px;border-radius:3px;font-size:10px;color:var(--text3);border:1px solid var(--border);background:var(--surface);cursor:pointer;white-space:nowrap}
-.retire-btn:hover{background:var(--surface2);color:var(--text2)}
+.retire-btn{padding:2px 6px;border-radius:3px;font-size:10px;color:var(--rose);border:1px solid var(--rose-light);background:var(--rose-light);cursor:pointer;white-space:nowrap}
+.retire-btn:hover{background:var(--rose);color:#fff}
 .stars{display:inline-flex;gap:1px;cursor:pointer}.star{font-size:14px;color:var(--border);transition:color 0.1s}.star.on{color:var(--amber)}
 .note-input{width:100%;min-width:80px;padding:3px 6px;border:1px solid transparent;border-radius:3px;font-size:11px;background:transparent;color:var(--text);outline:none}
 .note-input:focus{border-color:var(--indigo);background:var(--surface)}
@@ -101,7 +112,7 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
       <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="sI" placeholder="搜索..." oninput="doSearch()"></div>
       <button class="sort-btn" id="sB" onclick="toggleSort()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"/></svg><span id="sL">最新</span></button>
     </div>
-    <div id="filterRow" class="filter-row" style="display:none"></div>
+    <div id="activeFiltersBar" class="active-filters-bar" style="display:none"></div>
     <div class="tc"><div class="tsc" id="tBody"></div></div>
   </div>
 </div>
@@ -177,60 +188,151 @@ async function fR(t){try{var o=sortDir==="asc"?"order=created_at.asc":"order=cre
 
 function filterRows(rows){
   var res=rows;
+  // 全局搜索
   if(searchTerm){var s=searchTerm.toLowerCase();res=res.filter(function(r){return Object.values(r).some(function(v){return v&&String(v).toLowerCase().indexOf(s)!==-1})})}
-  Object.keys(colFilter).forEach(function(col){var fv=colFilter[col];if(fv){res=res.filter(function(r){return r[col]&&String(r[col]).indexOf(fv)!==-1})}});
+  // 列筛选（Excel风格：输入框模糊匹配）
+  Object.keys(colFilter).forEach(function(col){
+    var fv=colFilter[col];
+    if(fv){
+      var fvl=fv.toLowerCase();
+      res=res.filter(function(r){
+        var val=r[col];
+        if(val===null||val===undefined)return false;
+        // 数组类型（如dispatched_to）
+        if(Array.isArray(val)){
+          return val.some(function(item){
+            var display=LN[item]||item;
+            return String(display).toLowerCase().indexOf(fvl)!==-1;
+          });
+        }
+        return String(val).toLowerCase().indexOf(fvl)!==-1;
+      });
+    }
+  });
+  // 作废的排到最后
   var active=res.filter(function(r){return !r.is_retired});
   var retired=res.filter(function(r){return r.is_retired});
   return active.concat(retired);
 }
 
-function buildFilters(){
+// 更新激活筛选标签栏
+function updateActiveFiltersBar(){
   var cfg=FD[at];if(!cfg)return;
-  var tagCols=cfg.c.filter(function(c){return TG[c]||c==="status"||c==="difficulty"});
-  if(!tagCols.length){document.getElementById("filterRow").style.display="none";return}
+  var keys=Object.keys(colFilter).filter(function(k){return colFilter[k]});
+  var bar=document.getElementById("activeFiltersBar");
+  if(!keys.length){bar.style.display="none";return}
   var h="";
-  tagCols.forEach(function(col){
-    var vals={};allRows.forEach(function(r){if(r[col])vals[r[col]]=1});
-    var keys=Object.keys(vals).sort();
-    if(keys.length>0&&keys.length<=15){
-      keys.forEach(function(v){
-        var active=colFilter[col]===v?" active":"";
-        h+='<button class="filter-chip'+active+'" onclick="toggleFilter(\''+col+'\',\''+v.replace(/'/g,"\\'")+'\')">'+cfg.n[col]+': '+(LN[v]||v)+'</button>';
-      });
-    }
+  keys.forEach(function(col){
+    h+='<span class="active-filter-tag">'+cfg.n[col]+': '+colFilter[col]+' <span class="remove-filter" onclick="removeFilter(\''+col+'\')">\u00D7</span></span>';
   });
-  var el=document.getElementById("filterRow");
-  if(h){el.innerHTML=h;el.style.display="flex"}else{el.style.display="none"}
+  h+='<button class="clear-all-filters" onclick="clearAllFilters()">清除全部</button>';
+  bar.innerHTML=h;
+  bar.style.display="flex";
 }
-
-function toggleFilter(col,val){
-  if(colFilter[col]===val){delete colFilter[col]}else{colFilter[col]=val}
-  buildFilters();
+function removeFilter(col){
+  delete colFilter[col];
+  // 清空对应输入框
+  var inp=document.querySelector('.col-filter-input[data-col="'+col+'"]');
+  if(inp){inp.value="";inp.classList.remove("has-value")}
+  updateActiveFiltersBar();
+  document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
+}
+function clearAllFilters(){
+  colFilter={};
+  document.querySelectorAll(".col-filter-input").forEach(function(inp){inp.value="";inp.classList.remove("has-value")});
+  updateActiveFiltersBar();
   document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
 }
 
 function renderRows(rows){
   var cfg=FD[at];
-  if(!rows.length)return '<div class="empty">'+(searchTerm?"\u672A\u627E\u5230":"\u6682\u65E0\u6570\u636E")+'</div>';
   var canOp=at!=="frameworks";
-  var me=localStorage.getItem("submitter")||"";
+  // 表头
   var h='<table><thead><tr>';
   cfg.c.forEach(function(c){h+='<th>'+cfg.n[c]+'</th>'});
-  if(canOp)h+='<th></th>';
-  h+='</tr></thead><tbody>';
+  if(canOp)h+='<th>操作</th>';
+  h+='</tr>';
+  // === Excel风格筛选行 ===
+  h+='<tr class="col-filter-row">';
+  cfg.c.forEach(function(c){
+    // 不对某些列加筛选
+    if(c==="rating"||c==="user_notes"){
+      h+='<td></td>';
+    } else {
+      var curVal=colFilter[c]||"";
+      var hasClass=curVal?" has-value":"";
+      h+='<td><input class="col-filter-input'+hasClass+'" data-col="'+c+'" value="'+curVal.replace(/"/g,"&quot;")+'" placeholder="筛选" oninput="onColFilter(this,\''+c+'\')"></td>';
+    }
+  });
+  if(canOp)h+='<td></td>';
+  h+='</tr></thead>';
+
+  if(!rows.length)return h+'<tbody><tr><td colspan="'+(cfg.c.length+(canOp?1:0))+'" style="text-align:center;padding:40px;color:var(--text3)">'+(searchTerm||Object.keys(colFilter).length?"\u672A\u627E\u5230\u5339\u914D\u7ED3\u679C":"\u6682\u65E0\u6570\u636E")+'</td></tr></tbody></table>';
+
+  h+='<tbody>';
   rows.forEach(function(r){
     var ret=r.is_retired;
     h+='<tr'+(ret?' class="retired"':'')+'>';
     cfg.c.forEach(function(c){h+='<td>'+cV(r,c)+'</td>'});
+    // 【修复1】作废按钮：所有未作废的记录都显示，不再限制提交人
     if(canOp){
-      if(!ret&&me&&r.submitter&&r.submitter===me){
+      if(!ret){
         h+='<td><button class="retire-btn" onclick="doRetire(\''+r.id+'\')">\u4F5C\u5E9F</button></td>';
-      }else{h+='<td></td>'}
+      }else{
+        h+='<td><span class="ce" style="font-size:10px">\u5DF2\u4F5C\u5E9F</span></td>';
+      }
     }
     h+='</tr>';
   });
   h+='</tbody></table>';
   return h;
+}
+
+// Excel风格列筛选：输入时实时过滤
+function onColFilter(el,col){
+  var val=el.value.trim();
+  if(val){
+    colFilter[col]=val;
+    el.classList.add("has-value");
+  }else{
+    delete colFilter[col];
+    el.classList.remove("has-value");
+  }
+  updateActiveFiltersBar();
+  // 重新渲染数据行（保留筛选输入框状态）
+  var filtered=filterRows(allRows);
+  var cfg=FD[at];
+  var canOp=at!=="frameworks";
+  var tbody=document.querySelector("#tBody table tbody");
+  if(tbody){
+    if(!filtered.length){
+      tbody.innerHTML='<tr><td colspan="'+(cfg.c.length+(canOp?1:0))+'" style="text-align:center;padding:40px;color:var(--text3)">\u672A\u627E\u5230\u5339\u914D\u7ED3\u679C</td></tr>';
+    }else{
+      var bh="";
+      filtered.forEach(function(r){
+        var ret=r.is_retired;
+        bh+='<tr'+(ret?' class="retired"':'')+'>';
+        cfg.c.forEach(function(c){bh+='<td>'+cV(r,c)+'</td>'});
+        if(canOp){
+          if(!ret){
+            bh+='<td><button class="retire-btn" onclick="doRetire(\''+r.id+'\')">\u4F5C\u5E9F</button></td>';
+          }else{
+            bh+='<td><span class="ce" style="font-size:10px">\u5DF2\u4F5C\u5E9F</span></td>';
+          }
+        }
+        bh+='</tr>';
+      });
+      tbody.innerHTML=bh;
+    }
+  }else{
+    // fallback: 完整重渲染
+    document.getElementById("tBody").innerHTML=renderRows(filtered);
+    // 恢复筛选框的值
+    Object.keys(colFilter).forEach(function(c2){
+      var inp2=document.querySelector('.col-filter-input[data-col="'+c2+'"]');
+      if(inp2){inp2.value=colFilter[c2];inp2.classList.add("has-value")}
+    });
+  }
 }
 
 async function rT(){
@@ -241,7 +343,7 @@ async function rT(){
   var b=document.getElementById("tBody");
   b.innerHTML='<div class="loading">\u52A0\u8F7D\u4E2D...</div>';
   allRows=await fR(at);
-  buildFilters();
+  updateActiveFiltersBar();
   b.innerHTML=renderRows(filterRows(allRows));
 }
 
@@ -249,14 +351,18 @@ function doSearch(){searchTerm=document.getElementById("sI").value.trim();docume
 function toggleSort(){sortDir=sortDir==="desc"?"asc":"desc";rT()}
 
 async function doRetire(id){
-  try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({is_retired:true})});
+  if(!confirm("确定要作废这条素材吗？作废后将灰色沉底显示。"))return;
+  try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({is_retired:true})});
   toast("\u5DF2\u4F5C\u5E9F","tgs");setTimeout(refreshAll,300)}catch(e){toast("\u5931\u8D25","tge")}
 }
 async function setRating(id,val){
-  try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({rating:val})})}catch(e){}
+  try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({rating:val})});
+  // 更新本地数据并重渲染该行的星星
+  allRows.forEach(function(r){if(r.id===id)r.rating=val});
+  toast("\u8BC4\u5206\u5DF2\u4FDD\u5B58","tgs")}catch(e){toast("\u8BC4\u5206\u4FDD\u5B58\u5931\u8D25","tge")}
 }
 async function saveNote(id,val){
-  try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({user_notes:val})})}catch(e){}
+  try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({user_notes:val})})}catch(e){}
 }
 
 async function lC(){await Promise.all(LL.map(async function(k){ct[k]=await fC(k)}))}
@@ -270,7 +376,7 @@ async function doSubmit(){
   var btn=document.getElementById("bS");btn.disabled=true;btn.textContent="\u63D0\u4EA4\u4E2D...";
   var data={raw_content:content},url=document.getElementById("fU").value.trim(),pf=document.getElementById("fP").value,sb=document.getElementById("fS").value.trim();
   if(url)data.source_url=url;if(pf)data.source_platform=pf;if(sb)data.submitter=sb;
-  try{var r=await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation"},body:JSON.stringify(data)});
+  try{var r=await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(data)});
   if(!r.ok)throw new Error(await r.text());hideModal();toast("AI\u5206\u6790\u4E2D...","tgs");at="material_intake";setTimeout(refreshAll,1000);setTimeout(refreshAll,70000)}
   catch(e){toast("\u5931\u8D25:"+e.message,"tge")}
   finally{btn.disabled=false;btn.textContent="\u63D0\u4EA4\u7D20\u6750 \u00B7 AI \u81EA\u52A8\u5206\u53D1"}
