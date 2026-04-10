@@ -183,7 +183,7 @@ function cV(r,c){
 
 function rN(){var h="";LL.forEach(function(k){var a=at===k?" active":"",c=ct[k]!=null?ct[k]:"\u00B7",cl=CL[k];h+='<button class="ni'+a+'" onclick="sT(\''+k+'\')"><span class="nc" style="background:'+cl.b+';color:'+cl.f+'">'+IC[k]+'</span>'+LN[k]+'<span class="nn">'+c+'</span></button>'});document.getElementById("navTabs").innerHTML=h}
 
-async function fC(t){try{var r=await fetch(qa(t,"select=id&limit=0"),{headers:{"Prefer":"count=exact"}});return parseInt(((r.headers.get("content-range")||"").split("/")[1])||"0")}catch(e){return 0}}
+async function fC(t){try{var r=await fetch(qa(t,"select=id&is_retired=eq.false&limit=0"),{headers:{"Prefer":"count=exact"}});return parseInt(((r.headers.get("content-range")||"").split("/")[1])||"0")}catch(e){return 0}}
 async function fR(t){try{var o=sortDir==="asc"?"order=created_at.asc":"order=created_at.desc";var r=await fetch(qa(t,o+"&limit=100"));if(!r.ok)return[];return await r.json()}catch(e){return[]}}
 
 function filterRows(rows){
