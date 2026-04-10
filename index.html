@@ -432,7 +432,16 @@ function goAsmStep(i){asmStep=i;renderAsmSteps();renderAsmPanel()}
 
 async function loadAsmData(table){
   if(asmCache[table])return asmCache[table];
-  try{var r=await fetch(qa(table,"is_retired=eq.false&order=rating.desc.nullslast,created_at.desc&limit=80"));if(!r.ok)return[];var d=await r.json();asmCache[table]=d;return d}catch(e){return[]}
+  try{
+    var params;
+    if(table==="frameworks"){
+      // frameworks表没有is_retired和rating字段
+      params="order=created_at.desc&limit=80";
+    }else{
+      params="is_retired=eq.false&order=rating.desc.nullslast,created_at.desc&limit=80";
+    }
+    var r=await fetch(qa(table,params));if(!r.ok)return[];var d=await r.json();asmCache[table]=d;return d;
+  }catch(e){return[]}
 }
 
 function isAsmSelected(stepId,rowId){
