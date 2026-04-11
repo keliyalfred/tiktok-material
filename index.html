@@ -857,6 +857,11 @@ function renderPreview(panel){
     h+='</div>';
   });
   var hasFramework=!!asmData.framework;
+  h+='<div class="preview-card" style="margin-bottom:10px"><h5>📝 方案信息</h5>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:6px">';
+  h+='<div style="flex:1"><label class="fl">方案编码 (SKU)</label><input class="finp" id="prodSku" placeholder="如：WD-2026-001" value="'+(localStorage.getItem("last_prod_sku_prefix")||"")+'"></div>';
+  h+='<div style="flex:1"><label class="fl">提交人</label><input class="finp" id="prodSubmitter" placeholder="你的名字" value="'+(localStorage.getItem("submitter")||"")+'"></div>';
+  h+='</div></div>';
   h+='<div class="asm-nav-btns"><button class="btn bg" onclick="goAsmStep('+(asmStep-1)+')">← 上一步</button>';
   h+='<div style="display:flex;gap:8px">';
   h+='<button class="btn bp" onclick="generateShootingGuide(\'photo\')" id="genGuideBtn"'+(hasFramework?'':' disabled style="opacity:0.5"')+'>📷 照片拍摄指导</button>';
@@ -889,11 +894,18 @@ async function saveProduction(){
     rhythm:(asmData.rhythm||[]).map(function(d){return {id:d.id,name:d.template_name||"",duration:d.total_duration||"",beat:d.beat_structure||""}})
   };
 
+  var prodSku=document.getElementById("prodSku")?document.getElementById("prodSku").value.trim():"";
+  var prodSubmitter=document.getElementById("prodSubmitter")?document.getElementById("prodSubmitter").value.trim():"";
+  if(prodSubmitter)localStorage.setItem("submitter",prodSubmitter);
+  if(prodSku){var prefix=prodSku.replace(/\d+$/,"");if(prefix)localStorage.setItem("last_prod_sku_prefix",prefix)}
+
   var data={
-    title:(fw.name||"方案")+" — "+new Date().toLocaleDateString("zh-CN"),
+    title:(prodSku?prodSku+" — ":"")+(fw.name||"方案")+" — "+new Date().toLocaleDateString("zh-CN"),
     framework_id:fw.id,
     formula:fw.formula,
-    selected_materials:selectedMaterials
+    selected_materials:selectedMaterials,
+    sku:prodSku||null,
+    submitter:prodSubmitter||null
   };
   try{
     var r=await fetch(qa("productions"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(data)});
@@ -1237,19 +1249,37 @@ function renderProdList(prods){
     var fwName=mat&&mat.framework?mat.framework.name:"未知框架";
     var clipCount=p.clip_count||0;
 
-    h+='<div class="preview-card" style="cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor=\'var(--indigo)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="openProduction(\''+p.id+'\')">';
+    h+='<div class="preview-card" style="transition:all .15s" onmouseover="this.style.borderColor=\'var(--indigo)\'" onmouseout="this.style.borderColor=\'var(--border)\'">';
     h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
-    h+='<div style="font-size:13px;font-weight:600">'+( p.title||"未命名方案")+'</div>';
-    h+='<span class="st '+stClass+'"><span class="dot" style="background:currentColor"></span>'+stLabel+'</span>';
+    h+='<div style="display:flex;align-items:center;gap:8px;cursor:pointer;flex:1" onclick="openProduction(\''+p.id+'\')">';
+    if(p.sku)h+='<span class="sku-cell">'+p.sku+'</span>';
+    h+='<span style="font-size:13px;font-weight:600">'+(p.title||"未命名方案")+'</span>';
     h+='</div>';
-    h+='<div style="font-size:11px;color:var(--text2);display:flex;gap:12px;flex-wrap:wrap">';
+    h+='<div style="display:flex;align-items:center;gap:6px">';
+    h+='<span class="st '+stClass+'"><span class="dot" style="background:currentColor"></span>'+stLabel+'</span>';
+    h+='<button class="retire-btn" onclick="event.stopPropagation();deleteProduction(\''+p.id+'\')">删除</button>';
+    h+='</div></div>';
+    h+='<div style="font-size:11px;color:var(--text2);display:flex;gap:12px;flex-wrap:wrap;cursor:pointer" onclick="openProduction(\''+p.id+'\')">';
     h+='<span>📐 '+fwName+'</span>';
     h+='<span>🎬 '+clipCount+'个片段</span>';
+    if(p.submitter)h+='<span>👤 '+p.submitter+'</span>';
     h+='<span>📅 '+fmtTime(p.created_at)+'</span>';
     h+='</div></div>';
   });
   h+='</div>';
   document.getElementById("prodList").innerHTML=h;
+}
+
+async function deleteProduction(id){
+  if(!confirm("确定要删除这个成片方案吗？相关的素材和成品也会被删除。"))return;
+  try{
+    // 删除关联的clips和outputs
+    await fetch(qa("production_clips","production_id=eq."+id),{method:"DELETE",headers:{"apikey":K}});
+    await fetch(qa("production_outputs","production_id=eq."+id),{method:"DELETE",headers:{"apikey":K}});
+    await fetch(qa("productions","id=eq."+id),{method:"DELETE",headers:{"apikey":K}});
+    toast("方案已删除","tgs");
+    loadProductions();
+  }catch(e){toast("删除失败: "+e.message,"tge")}
 }
 
 async function openProduction(id){
