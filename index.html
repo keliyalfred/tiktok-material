@@ -859,7 +859,8 @@ function renderPreview(panel){
   var hasFramework=!!asmData.framework;
   h+='<div class="asm-nav-btns"><button class="btn bg" onclick="goAsmStep('+(asmStep-1)+')">← 上一步</button>';
   h+='<div style="display:flex;gap:8px">';
-  h+='<button class="btn bp" onclick="generateShootingGuide()" id="genGuideBtn"'+(hasFramework?'':' disabled style="opacity:0.5"')+'>📸 生成拍摄指导</button>';
+  h+='<button class="btn bp" onclick="generateShootingGuide(\'photo\')" id="genGuideBtn"'+(hasFramework?'':' disabled style="opacity:0.5"')+'>📷 照片拍摄指导</button>';
+  h+='<button class="btn bp" onclick="generateShootingGuide(\'video\')" id="genGuideBtn2"'+(hasFramework?'':' disabled style="opacity:0.5"')+'>🎬 视频拍摄指导</button>';
   h+='<button class="btn bv" onclick="saveProduction()"'+(hasFramework?'':' disabled style="opacity:0.5"')+'>💾 保存成片方案</button>';
   h+='</div></div>';
   panel.innerHTML=h;
@@ -926,14 +927,14 @@ function showGuideModal(){
   if(!guideModalEl){
     guideModalEl=document.createElement("div");guideModalEl.className="mo";guideModalEl.id="guideMO";
     guideModalEl.onclick=function(e){if(e.target===guideModalEl)hideGuideModal()};
-    guideModalEl.innerHTML='<div class="modal guide-modal"><div class="mh"><h3>📸 拍摄指导 SOP</h3><button class="mx" onclick="hideGuideModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="guide-content" id="guideContent"></div></div>';
+    guideModalEl.innerHTML='<div class="modal guide-modal"><div class="mh"><h3 id="guideModalTitle">📸 拍摄指导 SOP</h3><button class="mx" onclick="hideGuideModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="guide-content" id="guideContent"></div></div>';
     document.body.appendChild(guideModalEl);
   }
   guideModalEl.style.display="flex";
 }
 function hideGuideModal(){if(guideModalEl)guideModalEl.style.display="none"}
 
-function buildGuidePrompt(shootingParamsData){
+function buildGuidePrompt(shootingParamsData,guideType){
   var parts=[];
 
   // 框架
@@ -1008,26 +1009,38 @@ function buildGuidePrompt(shootingParamsData){
     materialText+="\n\n【拍摄参数库（参考）】\n以下是已积累的拍摄参数，请在生成镜头指导时参考这些经验：\n"+spText;
   }
 
-  var systemPrompt='你是一位TikTok短视频拍摄指导专家，专注于跨境电商女装类目。你的任务是根据运营团队已选定的素材方案，生成一份"小白级"拍摄SOP（标准作业流程），让完全没有拍摄经验的人也能看懂并执行。\n\n重要前提：\n- 所有拍摄都使用【假模/人台/模特道具】展示服装，没有真人模特\n- 不要写任何关于"模特表情""演员走位""真人动作"的内容\n- 重点放在：服装在假模上的展示角度、手动展示面料/细节的手部动作、运镜技巧、光影打造、道具搭配\n- 可以用手入镜展示面料质感、拉链、口袋等细节\n\n要求：\n1. 使用中文输出\n2. 按视频时间线从头到尾，逐个镜头写清楚\n3. 每个镜头要写明：镜头编号、时间段（如0:00-0:03）、画面内容、镜头景别（特写/中景/全景等）、运镜方式（固定/推拉/跟拍等）、展示手法（如何用手展示细节）、配音/画外音文案、字幕文案、注意事项\n4. 在开头写一段"拍前准备"清单：需要的设备、假模/人台类型、场地布置、光线设置、道具、熨烫整理等\n5. 在结尾写"后期要点"：剪辑节奏、配乐卡点、字幕样式、转场特效建议\n6. 语言要口语化、具体化，避免抽象描述\n7. 用markdown格式输出，用## 分大标题，### 分小标题，用编号列表\n8. 如果选了节奏模板，要按照节奏模板的时间分配来规划每个镜头的时长';
+  var systemPrompt;
+  if(guideType==="photo"){
+    systemPrompt='你是一位跨境电商女装产品摄影指导专家。你的任务是根据运营团队已选定的素材方案，生成一份"小白级"照片拍摄SOP，让没有摄影经验的人也能拍出合格的假模产品照片。\n\n重要前提：\n- 拍摄的是【假模/人台上的服装照片】，不是视频\n- 这些照片后续会通过AI换成真人穿着效果，所以要确保：衣服整洁无褶皱、假模姿态自然、背景干净\n- 每套服装需要拍多个角度：正面全身、背面全身、侧面、领口/袖口细节、面料质感特写、吊牌/标签\n\n要求：\n1. 使用中文输出\n2. 按照拍摄顺序，逐张照片写清楚\n3. 每张照片要写明：照片编号、拍摄角度（正面/侧面/背面/俯拍等）、景别（全身/半身/特写）、灯光设置、假模姿态调整要点、背景要求、相机设置建议（焦距/光圈/ISO）、注意事项\n4. 在开头写"拍前准备"清单：需要的设备（相机/手机型号建议、灯光、背景布/纸）、假模类型选择、服装熨烫整理、场地布置\n5. 在结尾写"后期处理要点"：修图建议（亮度/对比度/白平衡）、裁剪比例、命名规范\n6. 特别强调：AI换模效果取决于照片质量，要写清楚哪些细节会影响AI生成效果（如背景太杂、衣服有褶皱、光线不均等）\n7. 用markdown格式输出\n8. 建议每套服装拍6-8张不同角度的照片';
+  }else{
+    systemPrompt='你是一位TikTok短视频拍摄指导专家，专注于跨境电商女装类目。你的任务是根据运营团队已选定的素材方案，生成一份"小白级"拍摄SOP（标准作业流程），让完全没有拍摄经验的人也能看懂并执行。\n\n重要前提：\n- 所有拍摄都使用【假模/人台/模特道具】展示服装，没有真人模特\n- 不要写任何关于"模特表情""演员走位""真人动作"的内容\n- 重点放在：服装在假模上的展示角度、手动展示面料/细节的手部动作、运镜技巧、光影打造、道具搭配\n- 可以用手入镜展示面料质感、拉链、口袋等细节\n\n要求：\n1. 使用中文输出\n2. 按视频时间线从头到尾，逐个镜头写清楚\n3. 每个镜头要写明：镜头编号、时间段（如0:00-0:03）、画面内容、镜头景别（特写/中景/全景等）、运镜方式（固定/推拉/跟拍等）、展示手法（如何用手展示细节）、配音/画外音文案、字幕文案、注意事项\n4. 在开头写一段"拍前准备"清单：需要的设备、假模/人台类型、场地布置、光线设置、道具、熨烫整理等\n5. 在结尾写"后期要点"：剪辑节奏、配乐卡点、字幕样式、转场特效建议\n6. 语言要口语化、具体化，避免抽象描述\n7. 用markdown格式输出，用## 分大标题，### 分小标题，用编号列表\n8. 如果选了节奏模板，要按照节奏模板的时间分配来规划每个镜头的时长';
+  }
 
-  var userPrompt='请根据以下已选定的成片方案素材，生成完整的拍摄指导SOP：\n\n'+materialText+'\n\n请按照"拍前准备 → 逐镜头拍摄指导 → 后期要点"的结构输出。每个镜头要具体到"在哪拍、怎么拍、拍什么、说什么、写什么字幕"，让拍摄小白一看就懂。';
+  var userPrompt;
+  if(guideType==="photo"){
+    userPrompt='请根据以下已选定的成片方案素材，生成完整的假模照片拍摄SOP：\n\n'+materialText+'\n\n请按照"拍前准备 → 逐张照片拍摄指导 → 后期处理要点"的结构输出。每张照片要具体到"什么角度、什么景别、灯光怎么打、假模怎么摆、背景用什么"，让拍摄小白一看就懂。这些照片后续会通过FASHN AI转为真人穿着效果。';
+  }else{
+    userPrompt='请根据以下已选定的成片方案素材，生成完整的视频拍摄指导SOP：\n\n'+materialText+'\n\n请按照"拍前准备 → 逐镜头拍摄指导 → 后期要点"的结构输出。每个镜头要具体到"在哪拍、怎么拍、拍什么、说什么、写什么字幕"，让拍摄小白一看就懂。';
+  }
 
   return {system:systemPrompt,user:userPrompt};
 }
 
-async function generateShootingGuide(){
+async function generateShootingGuide(guideType){
   if(!asmData.framework){toast("请先选择框架","tge");return}
 
-  var btn=document.getElementById("genGuideBtn");
-  btn.disabled=true;btn.innerHTML='⏳ 提交中...';
+  var btnId=guideType==="photo"?"genGuideBtn":"genGuideBtn2";
+  var btn=document.getElementById(btnId);
+  if(btn){btn.disabled=true;btn.innerHTML='⏳ 提交中...';}
 
   showGuideModal();
   var content=document.getElementById("guideContent");
-  content.innerHTML='<div class="guide-loading"><div class="spinner"></div><p>正在提交AI生成任务...</p></div>';
+  var typeLabel=guideType==="photo"?"📷 照片拍摄指导":"🎬 视频拍摄指导";
+  content.innerHTML='<div class="guide-loading"><div class="spinner"></div><p>正在生成'+typeLabel+'...</p></div>';
 
   // 加载拍摄参数库数据作为参考
   var shootingParams=await loadAsmData("shooting_params");
-  var prompt=buildGuidePrompt(shootingParams);
+  var prompt=buildGuidePrompt(shootingParams,guideType);
 
   try{
     // 第1步：提交异步任务（pg_net发送，不等待结果）
@@ -1064,7 +1077,7 @@ async function generateShootingGuide(){
       if(attempt>=maxAttempts){
         clearInterval(pollInterval);
         content.innerHTML='<div class="guide-loading"><p style="color:var(--amber)">⏱️ 生成超时，请重试</p><div class="guide-actions"><button class="btn bg" onclick="generateShootingGuide()">🔄 重试</button><button class="btn bp" onclick="copyGuidePrompt()">📋 复制Prompt手动生成</button></div></div>';
-        btn.disabled=false;btn.innerHTML='📸 生成拍摄指导';
+        if(btn){btn.disabled=false;btn.innerHTML=guideType==='photo'?'📷 照片拍摄指导':'🎬 视频拍摄指导'};
         return;
       }
 
@@ -1078,11 +1091,11 @@ async function generateShootingGuide(){
         if(task.status==="done"&&task.result_text){
           clearInterval(pollInterval);
           renderGuideResult(content,task.result_text);
-          btn.disabled=false;btn.innerHTML='📸 生成拍摄指导';
+          if(btn){btn.disabled=false;btn.innerHTML=guideType==='photo'?'📷 照片拍摄指导':'🎬 视频拍摄指导'};
         }else if(task.status==="error"){
           clearInterval(pollInterval);
           content.innerHTML='<div class="guide-loading"><p style="color:var(--rose)">⚠️ 生成失败: '+(task.error_message||"未知错误")+'</p><div class="guide-actions"><button class="btn bg" onclick="generateShootingGuide()">🔄 重试</button><button class="btn bp" onclick="copyGuidePrompt()">📋 复制Prompt手动生成</button></div></div>';
-          btn.disabled=false;btn.innerHTML='📸 生成拍摄指导';
+          if(btn){btn.disabled=false;btn.innerHTML=guideType==='photo'?'📷 照片拍摄指导':'🎬 视频拍摄指导'};
         }
       }catch(pe){}
     },3000);
@@ -1091,7 +1104,7 @@ async function generateShootingGuide(){
     console.error("拍摄指导提交失败:",e.message);
     var isNotInstalled=e.message==="NOT_INSTALLED";
     content.innerHTML='<div class="guide-loading"><p style="color:var(--rose)">⚠️ '+(isNotInstalled?'请先安装数据库函数':'提交失败: '+e.message)+'</p><p style="font-size:11px;color:var(--text3);margin-top:8px">'+(isNotInstalled?'请在 Supabase SQL Editor 中执行 <strong>setup_shooting_guide.sql</strong>':'请检查数据库函数配置')+'</p><div class="guide-actions"><button class="btn bg" onclick="generateShootingGuide()">🔄 重试</button><button class="btn bp" onclick="copyGuidePrompt()">📋 复制Prompt手动生成</button></div></div>';
-    btn.disabled=false;btn.innerHTML='📸 生成拍摄指导';
+    if(btn){btn.disabled=false;btn.innerHTML=guideType==='photo'?'📷 照片拍摄指导':'🎬 视频拍摄指导'};
   }
 }
 
@@ -1292,15 +1305,22 @@ function renderProdDetail(detail){
   h+='</div></div>';
 
   // 上传拍摄素材区域
-  h+='<div class="preview-card" style="margin-bottom:10px"><h5>🎬 拍摄素材 ('+clips.length+'个片段)</h5>';
+  var photoCount=clips.filter(function(c){return (c.mime_type||"").startsWith("image")}).length;
+  var videoCount=clips.filter(function(c){return (c.mime_type||"").startsWith("video")}).length;
+  h+='<div class="preview-card" style="margin-bottom:10px"><h5>📁 拍摄素材 ('+clips.length+'个: '+photoCount+'张照片 '+videoCount+'个视频)</h5>';
   if(clips.length){
     h+='<div style="display:grid;gap:6px;margin-bottom:8px">';
     clips.forEach(function(c,i){
       var fileUrl=U+"/storage/v1/object/public/production-clips/"+c.file_path;
+      var isPhoto=(c.mime_type||"").startsWith("image");
+      var typeIcon=isPhoto?'📷':'🎬';
+      var typeColor=isPhoto?'var(--emerald)':'var(--indigo)';
       h+='<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface2);border-radius:var(--radius-sm)">';
-      h+='<span style="font-size:11px;font-weight:600;color:var(--indigo);min-width:24px">#'+(i+1)+'</span>';
-      h+='<span style="font-size:12px;flex:1">'+( c.clip_name||"片段"+(i+1))+'</span>';
+      h+='<span style="font-size:11px;font-weight:600;color:'+typeColor+';min-width:24px">#'+(i+1)+'</span>';
+      h+='<span style="font-size:10px">'+typeIcon+'</span>';
+      h+='<span style="font-size:12px;flex:1">'+(c.clip_name||"素材"+(i+1))+'</span>';
       if(c.duration_seconds)h+='<span style="font-size:10px;color:var(--text3)">'+c.duration_seconds+'s</span>';
+      if(isPhoto)h+='<img src="'+fileUrl+'" style="width:36px;height:36px;object-fit:cover;border-radius:3px">';
       h+='<a class="cl" href="'+fileUrl+'" target="_blank" style="font-size:10px">预览</a>';
       h+='<button class="retire-btn" onclick="deleteClip(\''+c.id+'\',\''+c.file_path+'\')">删除</button>';
       h+='</div>';
@@ -1308,9 +1328,9 @@ function renderProdDetail(detail){
     h+='</div>';
   }
   h+='<div style="border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .15s" onclick="document.getElementById(\'clipUploadInput\').click()" onmouseover="this.style.borderColor=\'var(--indigo)\'" onmouseout="this.style.borderColor=\'var(--border)\'">';
-  h+='<div style="font-size:12px;color:var(--text2);margin-bottom:4px">点击上传拍摄片段</div>';
-  h+='<div style="font-size:10px;color:var(--text3)">支持 MP4 / MOV / WebM，按镜头顺序逐个上传</div>';
-  h+='<input type="file" id="clipUploadInput" accept="video/*" multiple style="display:none" onchange="uploadClips(this.files)">';
+  h+='<div style="font-size:12px;color:var(--text2);margin-bottom:4px">点击批量上传素材</div>';
+  h+='<div style="font-size:10px;color:var(--text3)">支持照片（JPG/PNG）和视频（MP4/MOV），可一次选择多个文件</div>';
+  h+='<input type="file" id="clipUploadInput" accept="image/*,video/*" multiple style="display:none" onchange="uploadClips(this.files)">';
   h+='</div>';
   h+='<div id="uploadProgress" style="display:none;margin-top:8px"></div>';
   h+='</div>';
@@ -1318,11 +1338,11 @@ function renderProdDetail(detail){
   // 操作按钮 - 按流程排布
   var hasClips=clips.length>0;
   h+='<div class="preview-card" style="margin-bottom:10px"><h5>🔧 第一步：AI合成视频</h5>';
-  h+='<div style="font-size:11px;color:var(--text2);margin-bottom:8px">上传素材后，选择AI工具自动合成视频（拼接片段+字幕+配乐）</div>';
+  h+='<div style="font-size:11px;color:var(--text2);margin-bottom:8px">假模素材 → FASHN换真人 → Seedance生成视频 → 自动拼接字幕配乐</div>';
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
-  h+='<button class="btn bp" onclick="aiComposeVideo(\'runway\')" '+(hasClips?'':'disabled style="opacity:0.5"')+'>🎥 Runway 合成</button>';
-  h+='<button class="btn bp" onclick="aiComposeVideo(\'veo\')" '+(hasClips?'':'disabled style="opacity:0.5"')+'>🌐 Google Veo 合成</button>';
-  h+='<button class="btn bg" onclick="aiComposeVideo(\'ffmpeg\')" '+(hasClips?'':'disabled style="opacity:0.5"')+'>⚡ 快速拼接（FFmpeg）</button>';
+  h+='<button class="btn bp" onclick="aiComposeVideo(\'full\')" '+(hasClips?'':'disabled style="opacity:0.5"')+'>🤖 一键AI合成（推荐）</button>';
+  h+='<button class="btn bg" onclick="aiComposeVideo(\'fashn_only\')" '+(hasClips?'':'disabled style="opacity:0.5"')+'>👗 仅换真人模特</button>';
+  h+='<button class="btn bg" onclick="aiComposeVideo(\'video_only\')" '+(hasClips?'':'disabled style="opacity:0.5"')+'>🎬 仅生成视频</button>';
   h+='</div>';
   if(!hasClips)h+='<div style="font-size:10px;color:var(--text3);margin-top:6px">请先上传拍摄素材</div>';
   h+='</div>';
@@ -1333,7 +1353,8 @@ function renderProdDetail(detail){
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
   h+='<button class="btn bg" onclick="exportToCapcut()" '+(hasClips?'':'disabled style="opacity:0.5"')+'>📱 导出剪映工程</button>';
   h+='<button class="btn bg" onclick="exportToPremiere()" '+(hasClips?'':'disabled style="opacity:0.5"')+'>🎬 导出PR工程 (XML)</button>';
-  h+='<button class="btn bg" onclick="generateShootingGuide()" id="genGuideBtn">📸 拍摄指导</button>';
+  h+='<button class="btn bg" onclick="generateShootingGuide(\'photo\')">📷 照片拍摄指导</button>';
+  h+='<button class="btn bg" onclick="generateShootingGuide(\'video\')">🎬 视频拍摄指导</button>';
   h+='</div>';
   h+='</div>';
 
@@ -1427,233 +1448,335 @@ async function deleteClip(clipId,filePath){
   }catch(e){toast("删除失败","tge")}
 }
 
-// AI合成视频
-async function aiComposeVideo(engine){
+// AI合成视频 - FASHN + fal.ai Seedance 方案
+async function aiComposeVideo(mode){
   if(!currentProdId){toast("请先打开方案","tge");return}
-
-  // 获取方案和素材数据
   var pr=await fetch(qa("productions","id=eq."+currentProdId));
   var prod=(await pr.json())[0];
   var cr=await fetch(qa("production_clips","production_id=eq."+currentProdId+"&order=clip_order.asc"));
   var clips=await cr.json();
   var mat=prod.selected_materials||{};
-
   if(!clips.length){toast("请先上传拍摄素材","tge");return}
-
-  if(engine==="runway"){
-    showComposeModal("Runway AI 合成",clips,mat,engine);
-  }else if(engine==="veo"){
-    showComposeModal("Google Veo 合成",clips,mat,engine);
-  }else{
-    showComposeModal("FFmpeg 快速拼接",clips,mat,engine);
-  }
+  showComposeModal(mode,clips,mat);
 }
 
-// 合成弹窗
 var composeMO=null;
-function showComposeModal(title,clips,mat,engine){
+function showComposeModal(mode,clips,mat){
   if(!composeMO){
     composeMO=document.createElement("div");composeMO.className="mo";composeMO.id="composeMO";
     composeMO.onclick=function(e){if(e.target===composeMO)composeMO.style.display="none"};
     composeMO.innerHTML='<div class="modal wide"><div class="mh"><h3 id="composeTitle"></h3><button class="mx" onclick="document.getElementById(\'composeMO\').style.display=\'none\'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="mbo" id="composeBody"></div></div>';
     document.body.appendChild(composeMO);
   }
-  document.getElementById("composeTitle").textContent="🤖 "+title;
+  var titles={"full":"🤖 一键AI合成","fashn_only":"👗 假模换真人","video_only":"🎬 生成展示视频"};
+  document.getElementById("composeTitle").textContent=titles[mode]||"AI合成";
   composeMO.style.display="flex";
 
-  // 构建合成配置界面
+  var fashnKey=localStorage.getItem("fashn_api_key")||"";
+  var falKey=localStorage.getItem("fal_api_key")||"";
   var allTexts=[];
   if(mat.stop)mat.stop.forEach(function(s){allTexts.push(s.text)});
   if(mat.pain)mat.pain.forEach(function(p2){allTexts.push(p2.pain||p2.scene)});
   if(mat.buy)mat.buy.forEach(function(b){allTexts.push(b.text)});
-  var bgmName=mat.bgm&&mat.bgm.length?mat.bgm[0].name:"无";
 
-  var h='<div class="fg"><label class="fl">视频片段 ('+clips.length+'个)</label>';
-  h+='<div style="font-size:12px;color:var(--text);max-height:100px;overflow-y:auto;padding:6px;background:var(--surface2);border-radius:var(--radius-sm)">';
-  clips.forEach(function(c,i){h+='<div>'+(i+1)+'. '+(c.clip_name||"片段"+(i+1))+' ('+(c.duration_seconds||"?")+'s)</div>'});
+  var h='<div class="fg"><label class="fl">素材片段 ('+clips.length+'个)</label>';
+  h+='<div style="font-size:12px;max-height:80px;overflow-y:auto;padding:6px;background:var(--surface2);border-radius:var(--radius-sm)">';
+  clips.forEach(function(c,i){h+='<div>'+(i+1)+'. '+(c.clip_name||"片段"+(i+1))+'</div>'});
   h+='</div></div>';
 
-  h+='<div class="fg"><label class="fl">自动字幕 ('+allTexts.length+'条)</label>';
-  h+='<textarea class="finp" id="composeSubtitles" rows="3" style="min-height:60px">'+allTexts.join("\n")+'</textarea>';
-  h+='</div>';
-
-  h+='<div class="fg"><label class="fl">BGM</label>';
-  h+='<input class="finp" id="composeBgm" value="'+bgmName+'" placeholder="BGM名称"></div>';
-
-  if(engine==="runway"){
-    h+='<div class="fg"><label class="fl">Runway API Key</label>';
-    h+='<input class="finp" id="composeApiKey" type="password" placeholder="输入你的 Runway API Key"></div>';
-    h+='<div class="fg"><label class="fl">视频风格增强提示词</label>';
-    h+='<textarea class="finp" id="composePrompt" rows="2" placeholder="如：cinematic lighting, warm tones, fashion product showcase, smooth transitions">cinematic fashion product showcase on mannequin, smooth camera movements, warm lighting, TikTok vertical format 9:16</textarea></div>';
-  }else if(engine==="veo"){
-    h+='<div class="fg"><label class="fl">Google Gemini API Key</label>';
-    h+='<input class="finp" id="composeApiKey" type="password" placeholder="输入你的 Gemini API Key"></div>';
-    h+='<div class="fg"><label class="fl">视频生成提示词</label>';
-    h+='<textarea class="finp" id="composePrompt" rows="2" placeholder="描述你想要的视频效果">Close-up product showcase of women\'s clothing on mannequin, cinematic lighting, smooth slow motion, TikTok vertical 9:16</textarea></div>';
-  }else{
-    h+='<div style="font-size:11px;color:var(--text2);padding:8px;background:var(--surface2);border-radius:var(--radius-sm)">快速拼接模式：按顺序拼接所有片段，叠加字幕，需要服务端 FFmpeg 支持。<br>如服务端未部署，将生成带有完整配置的剪映/PR工程文件。</div>';
+  if(mode==="full"||mode==="fashn_only"){
+    h+='<div class="fg"><label class="fl">FASHN API Key <span style="font-weight:400;color:var(--text3)">(假模→真人，自动记住)</span></label>';
+    h+='<input class="finp" id="composeFashnKey" type="password" value="'+fashnKey+'" placeholder="从 fashn.ai 获取" onchange="localStorage.setItem(\'fashn_api_key\',this.value)"></div>';
+  }
+  if(mode==="full"||mode==="video_only"){
+    h+='<div class="fg"><label class="fl">fal.ai API Key <span style="font-weight:400;color:var(--text3)">(视频生成，自动记住)</span></label>';
+    h+='<input class="finp" id="composeFalKey" type="password" value="'+falKey+'" placeholder="从 fal.ai 获取" onchange="localStorage.setItem(\'fal_api_key\',this.value)"></div>';
+    h+='<div class="fg"><label class="fl">视频风格描述</label>';
+    h+='<textarea class="finp" id="composePrompt" rows="2" style="min-height:50px">Fashion model showcasing clothing with natural poses. Smooth camera movement, warm studio lighting, TikTok vertical format, professional fashion video.</textarea></div>';
   }
 
-  h+='<div id="composeProgress" style="display:none;margin-top:8px"></div>';
-  h+='<button class="bs" id="composeBtn" onclick="doCompose(\''+engine+'\')">开始合成</button>';
+  h+='<div class="fg"><label class="fl">自动字幕 ('+allTexts.length+'条)</label>';
+  h+='<textarea class="finp" id="composeSubtitles" rows="2" style="min-height:40px">'+allTexts.join("\n")+'</textarea></div>';
 
+  h+='<div style="font-size:11px;color:var(--text2);padding:8px;background:var(--surface2);border-radius:var(--radius-sm);margin-bottom:10px">';
+  if(mode==="full")h+='全自动: 假模图→FASHN换真人($0.075/张)→Seedance生成视频($0.18/条)→拼接';
+  else if(mode==="fashn_only")h+='仅假模→真人穿着图($0.075/张)';
+  else h+='直接从素材截图生成视频($0.18/条)';
+  h+='</div>';
+
+  h+='<div id="composeProgress" style="display:none;margin-top:8px"></div>';
+  h+='<button class="bs" id="composeBtn" onclick="doCompose(\''+mode+'\')">开始合成</button>';
   document.getElementById("composeBody").innerHTML=h;
 }
 
-async function doCompose(engine){
+// ===== FFmpeg.wasm 浏览器端视频拼接 =====
+var ffmpegInstance=null;
+var ffmpegLoaded=false;
+
+async function loadFFmpegWasm(){
+  if(ffmpegLoaded&&ffmpegInstance)return ffmpegInstance;
+  // 动态加载ffmpeg.wasm（单线程版，兼容GitHub Pages）
+  if(!window.FFmpegWASM){
+    await new Promise(function(resolve,reject){
+      var s=document.createElement("script");
+      s.src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js";
+      s.onload=resolve;s.onerror=reject;
+      document.head.appendChild(s);
+    });
+    await new Promise(function(resolve,reject){
+      var s=document.createElement("script");
+      s.src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js";
+      s.onload=resolve;s.onerror=reject;
+      document.head.appendChild(s);
+    });
+  }
+  var FFmpeg=window.FFmpegWASM||window.FFmpeg;
+  if(!FFmpeg||!FFmpeg.FFmpeg)throw new Error("FFmpeg.wasm加载失败");
+  ffmpegInstance=new FFmpeg.FFmpeg();
+  ffmpegInstance.on("log",function(e){console.log("[ffmpeg]",e.message)});
+  await ffmpegInstance.load({
+    coreURL:"https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js",
+    wasmURL:"https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm"
+  });
+  ffmpegLoaded=true;
+  return ffmpegInstance;
+}
+
+async function ffmpegMerge(videoUrls,subtitles,progEl){
+  progEl.innerHTML=progBox("🔧 加载FFmpeg引擎(~22MB，首次较慢)...",0,3);
+
+  var ffmpeg=await loadFFmpegWasm();
+  var fetchFile=window.FFmpegUtil?window.FFmpegUtil.fetchFile:async function(url){var r=await fetch(url);return new Uint8Array(await r.arrayBuffer())};
+
+  // 下载所有视频片段到FFmpeg虚拟文件系统
+  progEl.innerHTML=progBox("🔧 下载视频片段...",1,3);
+  var fileList="";
+  for(var i=0;i<videoUrls.length;i++){
+    var fname="clip_"+i+".mp4";
+    try{
+      var data=await fetchFile(videoUrls[i]);
+      await ffmpeg.writeFile(fname,data);
+      fileList+="file '"+fname+"'\n";
+    }catch(dlErr){
+      console.error("下载片段"+i+"失败:",dlErr);
+    }
+  }
+  if(!fileList)throw new Error("没有可拼接的片段");
+
+  // 写入拼接列表
+  var encoder=new TextEncoder();
+  await ffmpeg.writeFile("list.txt",encoder.encode(fileList));
+
+  // 生成SRT字幕文件
+  if(subtitles&&subtitles.length){
+    var totalDuration=videoUrls.length*5; // 每段约5秒
+    var subDur=totalDuration/subtitles.length;
+    var srt="";
+    subtitles.forEach(function(txt,idx){
+      var startSec=idx*subDur;
+      var endSec=(idx+1)*subDur;
+      srt+=(idx+1)+"\n"+formatSrtTime(startSec)+" --> "+formatSrtTime(endSec)+"\n"+txt+"\n\n";
+    });
+    await ffmpeg.writeFile("subs.srt",encoder.encode(srt));
+  }
+
+  // 执行FFmpeg拼接命令
+  progEl.innerHTML=progBox("🔧 拼接视频"+(subtitles.length?"+烧字幕":"")+"...",2,3);
+
+  if(subtitles&&subtitles.length){
+    // 拼接+烧字幕
+    await ffmpeg.exec([
+      "-f","concat","-safe","0","-i","list.txt",
+      "-vf","subtitles=subs.srt:force_style='FontSize=18,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,Alignment=2,MarginV=40'",
+      "-c:v","libx264","-preset","ultrafast","-c:a","aac",
+      "-y","output.mp4"
+    ]);
+  }else{
+    // 仅拼接
+    await ffmpeg.exec([
+      "-f","concat","-safe","0","-i","list.txt",
+      "-c","copy","-y","output.mp4"
+    ]);
+  }
+
+  // 读取输出文件
+  var outputData=await ffmpeg.readFile("output.mp4");
+  var blob=new Blob([outputData.buffer],{type:"video/mp4"});
+  var outputUrl=URL.createObjectURL(blob);
+
+  // 同时提供下载
+  var a=document.createElement("a");a.href=outputUrl;
+  a.download="tiktok_final_"+Date.now()+".mp4";
+  document.body.appendChild(a);a.click();a.remove();
+
+  // 清理虚拟文件系统
+  for(var ci=0;ci<videoUrls.length;ci++){
+    try{await ffmpeg.deleteFile("clip_"+ci+".mp4")}catch(e){}
+  }
+  try{await ffmpeg.deleteFile("list.txt")}catch(e){}
+  try{await ffmpeg.deleteFile("subs.srt")}catch(e){}
+  try{await ffmpeg.deleteFile("output.mp4")}catch(e){}
+
+  return outputUrl;
+}
+
+function formatSrtTime(sec){
+  var h=Math.floor(sec/3600);
+  var m=Math.floor((sec%3600)/60);
+  var s=Math.floor(sec%60);
+  var ms=Math.round((sec%1)*1000);
+  return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0")+":"+String(s).padStart(2,"0")+","+String(ms).padStart(3,"0");
+}
+
+function sleep(ms){return new Promise(function(r){setTimeout(r,ms)})}
+function progBox(msg,current,total){
+  var pct=total==="done"?100:(total?Math.round(current/total*100):0);
+  return '<div style="padding:8px;background:var(--sky-light);border-radius:6px;font-size:11px;color:var(--sky-text)"><div style="margin-bottom:4px">'+msg+'</div><div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:var(--indigo);border-radius:2px;transition:width .3s"></div></div></div>';
+}
+
+async function doCompose(mode){
   var btn=document.getElementById("composeBtn");
-  btn.disabled=true;btn.textContent="合成中...";
+  btn.disabled=true;btn.textContent="处理中...";
   var prog=document.getElementById("composeProgress");
   prog.style.display="block";
 
-  var subtitles=(document.getElementById("composeSubtitles").value||"").split("\n").filter(function(s){return s.trim()});
-  var bgm=document.getElementById("composeBgm").value||"";
-  var apiKey=document.getElementById("composeApiKey")?document.getElementById("composeApiKey").value:"";
+  var fashnKey=document.getElementById("composeFashnKey")?document.getElementById("composeFashnKey").value:"";
+  var falKey=document.getElementById("composeFalKey")?document.getElementById("composeFalKey").value:"";
   var prompt=document.getElementById("composePrompt")?document.getElementById("composePrompt").value:"";
+  var subtitles=(document.getElementById("composeSubtitles").value||"").split("\n").filter(function(s){return s.trim()});
+
+  var cr=await fetch(qa("production_clips","production_id=eq."+currentProdId+"&order=clip_order.asc"));
+  var clips=await cr.json();
 
   try{
-    if(engine==="runway"){
-      if(!apiKey){toast("请输入 Runway API Key","tge");throw new Error("缺少API Key")}
-      prog.innerHTML='<div style="padding:8px;background:var(--sky-light);border-radius:6px;font-size:11px;color:var(--sky-text)">⏳ 正在调用 Runway API 生成视频...</div>';
+    var imageUrls=[];
 
-      // 获取第一个片段的URL作为参考图
-      var cr=await fetch(qa("production_clips","production_id=eq."+currentProdId+"&order=clip_order.asc&limit=1"));
-      var firstClip=(await cr.json())[0];
-      var clipUrl=U+"/storage/v1/object/public/production-clips/"+firstClip.file_path;
+    // ===== 步骤1: FASHN 假模→真人 =====
+    if(mode==="full"||mode==="fashn_only"){
+      if(!fashnKey){throw new Error("请输入 FASHN API Key")}
+      prog.innerHTML=progBox("👗 FASHN: 准备处理"+clips.length+"个片段...",0,clips.length);
 
-      // 调用 Runway video-to-video API
-      var rwResp=await fetch("https://api.dev.runwayml.com/v1/video_to_video",{
-        method:"POST",
-        headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json","X-Runway-Version":"2024-11-06"},
-        body:JSON.stringify({
-          model:"gen4_turbo",
-          promptVideo:clipUrl,
-          promptText:prompt||"cinematic fashion product showcase",
-          ratio:"9:16",
-          duration:10
-        })
-      });
+      for(var i=0;i<clips.length;i++){
+        var clipUrl=U+"/storage/v1/object/public/production-clips/"+clips[i].file_path;
+        prog.innerHTML=progBox("👗 FASHN换真人: "+(i+1)+"/"+clips.length,i,clips.length);
 
-      if(!rwResp.ok){
-        var errBody=await rwResp.text();
-        throw new Error("Runway API错误("+rwResp.status+"): "+errBody.substring(0,200));
-      }
+        try{
+          var fResp=await fetch("https://api.fashn.ai/v1/run",{
+            method:"POST",
+            headers:{"Content-Type":"application/json","Authorization":"Bearer "+fashnKey},
+            body:JSON.stringify({model_name:"product-to-model",inputs:{product_image:clipUrl,prompt:"Full body, professional fashion model wearing this clothing, studio lighting, clean white background"}})
+          });
+          if(!fResp.ok)throw new Error("FASHN "+(await fResp.text()).substring(0,100));
+          var fData=await fResp.json();
+          var predId=fData.id;
 
-      var rwResult=await rwResp.json();
-      var taskId=rwResult.id;
-      prog.innerHTML='<div style="padding:8px;background:var(--sky-light);border-radius:6px;font-size:11px;color:var(--sky-text)">⏳ Runway任务已提交('+taskId+')，正在生成...<br>预计1-3分钟</div>';
-
-      // 轮询 Runway 任务状态
-      var maxPoll=60;
-      for(var pi=0;pi<maxPoll;pi++){
-        await new Promise(function(r){setTimeout(r,5000)});
-        var statusResp=await fetch("https://api.dev.runwayml.com/v1/tasks/"+taskId,{headers:{"Authorization":"Bearer "+apiKey,"X-Runway-Version":"2024-11-06"}});
-        var statusData=await statusResp.json();
-        prog.innerHTML='<div style="padding:8px;background:var(--sky-light);border-radius:6px;font-size:11px;color:var(--sky-text)">⏳ Runway 状态: '+(statusData.status||"processing")+' ('+(pi+1)+'/'+maxPoll+')</div>';
-
-        if(statusData.status==="SUCCEEDED"&&statusData.output&&statusData.output.length){
-          var videoUrl=statusData.output[0];
-          await saveComposeOutput(videoUrl,subtitles,"runway",prompt);
-          prog.innerHTML='<div style="padding:8px;background:var(--emerald-light);border-radius:6px;font-size:11px;color:var(--emerald-text)">✅ Runway合成完成！</div>';
-          toast("AI合成完成！","tgs");
-          setTimeout(function(){composeMO.style.display="none";openProduction(currentProdId)},1500);
-          return;
-        }
-        if(statusData.status==="FAILED"){throw new Error("Runway生成失败: "+(statusData.failure||""))}
-      }
-      throw new Error("Runway生成超时");
-
-    }else if(engine==="veo"){
-      if(!apiKey){toast("请输入 Gemini API Key","tge");throw new Error("缺少API Key")}
-      prog.innerHTML='<div style="padding:8px;background:var(--sky-light);border-radius:6px;font-size:11px;color:var(--sky-text)">⏳ 正在调用 Google Veo API 生成视频...</div>';
-
-      // 调用 Gemini Veo API
-      var veoResp=await fetch("https://generativelanguage.googleapis.com/v1beta/models/veo-3.1-generate-preview:predictLongRunning?key="+apiKey,{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          instances:[{prompt:prompt||"TikTok fashion product video, mannequin showcase, cinematic"}],
-          parameters:{aspectRatio:"9:16",personGeneration:"allow_all",numberOfVideos:1,durationSeconds:8}
-        })
-      });
-
-      if(!veoResp.ok){
-        var veoErr=await veoResp.text();
-        throw new Error("Veo API错误("+veoResp.status+"): "+veoErr.substring(0,200));
-      }
-
-      var veoResult=await veoResp.json();
-      var opName=veoResult.name;
-      prog.innerHTML='<div style="padding:8px;background:var(--sky-light);border-radius:6px;font-size:11px;color:var(--sky-text)">⏳ Veo任务已提交，正在生成...<br>预计1-3分钟</div>';
-
-      // 轮询 Veo 操作状态
-      for(var vi=0;vi<60;vi++){
-        await new Promise(function(r){setTimeout(r,5000)});
-        var opResp=await fetch("https://generativelanguage.googleapis.com/v1beta/"+opName+"?key="+apiKey);
-        var opData=await opResp.json();
-        prog.innerHTML='<div style="padding:8px;background:var(--sky-light);border-radius:6px;font-size:11px;color:var(--sky-text)">⏳ Veo 状态: '+(opData.done?"完成":"生成中")+' ('+(vi+1)+'/60)</div>';
-
-        if(opData.done){
-          if(opData.response&&opData.response.generateVideoResponse&&opData.response.generateVideoResponse.generatedSamples){
-            var sample=opData.response.generateVideoResponse.generatedSamples[0];
-            var videoData=sample.video;
-            // Veo返回的是base64视频数据，需要上传到Storage
-            if(videoData&&videoData.uri){
-              await saveComposeOutput(videoData.uri,subtitles,"veo",prompt);
-            }else{
-              await saveComposeOutput("veo://generated",subtitles,"veo",prompt);
-            }
-            prog.innerHTML='<div style="padding:8px;background:var(--emerald-light);border-radius:6px;font-size:11px;color:var(--emerald-text)">✅ Veo合成完成！</div>';
-            toast("AI合成完成！","tgs");
-            setTimeout(function(){composeMO.style.display="none";openProduction(currentProdId)},1500);
-            return;
+          var modelImg="";
+          for(var fi=0;fi<60;fi++){
+            await sleep(3000);
+            var sResp=await fetch("https://api.fashn.ai/v1/status/"+predId,{headers:{"Authorization":"Bearer "+fashnKey}});
+            var sData=await sResp.json();
+            if(sData.status==="completed"&&sData.output&&sData.output.length){modelImg=sData.output[0];break}
+            if(sData.status==="failed")throw new Error(sData.error||"FASHN处理失败");
           }
-          if(opData.error)throw new Error("Veo错误: "+JSON.stringify(opData.error).substring(0,200));
+          if(!modelImg)throw new Error("FASHN超时");
+          imageUrls.push(modelImg);
+        }catch(fe){
+          console.error("FASHN片段"+(i+1)+"失败:",fe.message);
+          imageUrls.push(clipUrl);
         }
       }
-      throw new Error("Veo生成超时");
+      prog.innerHTML=progBox("✅ FASHN完成! "+imageUrls.length+"张真人图",clips.length,clips.length);
 
+      if(mode==="fashn_only"){
+        await saveComposeOutput(imageUrls.join("\n"),subtitles,"fashn","假模→真人");
+        prog.innerHTML=progBox("✅ 完成！真人穿着图已生成","done","done");
+        toast("真人模特图已生成！","tgs");
+        setTimeout(function(){composeMO.style.display="none";openProduction(currentProdId)},1500);
+        return;
+      }
     }else{
-      // FFmpeg快速拼接 - 目前前端无法直接调FFmpeg，生成剪映+PR工程作为替代
-      prog.innerHTML='<div style="padding:8px;background:var(--amber-light);border-radius:6px;font-size:11px;color:var(--amber-text)">服务端FFmpeg暂未部署，将自动生成剪映和PR工程文件供手动合成</div>';
-      await new Promise(function(r){setTimeout(r,1000)});
-
-      // 自动导出两种格式
-      await exportToCapcut();
-      await exportToPremiere();
-
-      // 创建一个output记录
-      await saveComposeOutput("",subtitles,"ffmpeg_manual","手动合成");
-      prog.innerHTML='<div style="padding:8px;background:var(--emerald-light);border-radius:6px;font-size:11px;color:var(--emerald-text)">✅ 剪映和PR工程文件已下载！请在剪辑软件中打开合成</div>';
-      toast("工程文件已下载","tgs");
-      setTimeout(function(){composeMO.style.display="none";openProduction(currentProdId)},2000);
+      clips.forEach(function(c){imageUrls.push(U+"/storage/v1/object/public/production-clips/"+c.file_path)});
     }
 
+    // ===== 步骤2: fal.ai Seedance 图→视频 =====
+    if(mode==="full"||mode==="video_only"){
+      if(!falKey){throw new Error("请输入 fal.ai API Key")}
+      prog.innerHTML=progBox("🎬 Seedance: 准备生成"+imageUrls.length+"条视频...",0,imageUrls.length);
+      var videoUrls=[];
+
+      for(var vi=0;vi<imageUrls.length;vi++){
+        prog.innerHTML=progBox("🎬 Seedance生成: "+(vi+1)+"/"+imageUrls.length,vi,imageUrls.length);
+
+        try{
+          var vResp=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video",{
+            method:"POST",
+            headers:{"Authorization":"Key "+falKey,"Content-Type":"application/json"},
+            body:JSON.stringify({prompt:prompt||"Fashion model showcasing clothing",image_url:imageUrls[vi],aspect_ratio:"9:16",duration:5})
+          });
+          if(!vResp.ok)throw new Error("fal.ai "+(await vResp.text()).substring(0,100));
+          var vData=await vResp.json();
+          var reqId=vData.request_id;
+
+          var videoUrl="";
+          for(var pi=0;pi<90;pi++){
+            await sleep(4000);
+            var psResp=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video/requests/"+reqId+"/status",{headers:{"Authorization":"Key "+falKey}});
+            var psData=await psResp.json();
+            prog.innerHTML=progBox("🎬 Seedance: "+(vi+1)+"/"+imageUrls.length+" 等待中("+(pi*4)+"s)",vi,imageUrls.length);
+            if(psData.status==="COMPLETED"){
+              var vrResp=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video/requests/"+reqId,{headers:{"Authorization":"Key "+falKey}});
+              var vrData=await vrResp.json();
+              if(vrData.video&&vrData.video.url){videoUrl=vrData.video.url;break}
+            }
+            if(psData.status==="FAILED")throw new Error("Seedance生成失败");
+          }
+          if(!videoUrl)throw new Error("Seedance超时");
+          videoUrls.push(videoUrl);
+        }catch(ve){
+          console.error("Seedance "+(vi+1)+"失败:",ve.message);
+          toast("视频"+(vi+1)+"失败: "+ve.message,"tge");
+        }
+      }
+
+      if(videoUrls.length){
+        // ===== 步骤3: FFmpeg.wasm 拼接+字幕 =====
+        if(videoUrls.length>1||subtitles.length){
+          prog.innerHTML=progBox("🔧 FFmpeg: 拼接视频+烧字幕...",0,1);
+          try{
+            var mergedUrl=await ffmpegMerge(videoUrls,subtitles,prog);
+            if(mergedUrl){
+              await saveComposeOutput(mergedUrl,subtitles,"fashn+seedance+ffmpeg",prompt);
+              prog.innerHTML=progBox("✅ 完成! 视频已拼接+字幕","done","done");
+              toast("AI合成完成! 视频已拼接","tgs");
+            }else{throw new Error("拼接失败")}
+          }catch(mergeErr){
+            console.error("FFmpeg拼接失败，保存独立片段:",mergeErr);
+            await saveComposeOutput(videoUrls.join("\n"),subtitles,"fashn+seedance",prompt);
+            prog.innerHTML=progBox("⚠️ 拼接失败，已保存"+videoUrls.length+"条独立视频","done","done");
+            toast("视频已生成（拼接失败，已保存独立片段）","tgs");
+          }
+        }else{
+          await saveComposeOutput(videoUrls[0],subtitles,"fashn+seedance",prompt);
+          prog.innerHTML=progBox("✅ 完成! 1条视频已生成","done","done");
+          toast("AI合成完成!","tgs");
+        }
+      }else{throw new Error("所有视频均失败")}
+    }
+    setTimeout(function(){composeMO.style.display="none";openProduction(currentProdId)},2000);
   }catch(e){
     prog.innerHTML='<div style="padding:8px;background:var(--rose-light);border-radius:6px;font-size:11px;color:var(--rose-text)">❌ '+e.message+'</div>';
-    console.error("合成失败:",e);
-  }finally{
-    btn.disabled=false;btn.textContent="开始合成";
-  }
+  }finally{btn.disabled=false;btn.textContent="开始合成"}
 }
 
-async function saveComposeOutput(videoUrl,subtitles,engine,prompt){
-  // 获取当前版本号
+async function saveComposeOutput(outputUrls,subtitles,engine,prompt){
   var or2=await fetch(qa("production_outputs","production_id=eq."+currentProdId+"&select=version&order=version.desc&limit=1"));
   var existing=await or2.json();
   var nextVersion=(existing.length?existing[0].version:0)+1;
-
-  var outputData={
-    production_id:currentProdId,
-    version:nextVersion,
-    status:"done",
-    output_file_path:videoUrl||"",
-    ai_compose_prompt:prompt||"",
-    subtitle_data:subtitles,
-    bgm_info:{engine:engine},
-    notes:engine+" 合成 V"+nextVersion
-  };
-  await fetch(qa("production_outputs"),{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify(outputData)});
+  await fetch(qa("production_outputs"),{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({
+    production_id:currentProdId,version:nextVersion,status:"done",
+    output_file_path:outputUrls||"",ai_compose_prompt:prompt||"",
+    subtitle_data:subtitles,bgm_info:{engine:engine},notes:engine+" V"+nextVersion
+  })});
   await fetch(qa("productions","id=eq."+currentProdId),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({status:"composed",has_output:true})});
 }
 
