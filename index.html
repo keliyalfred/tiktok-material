@@ -75,6 +75,8 @@ tbody td{padding:8px 10px;color:var(--text);vertical-align:top;min-width:40px;ma
 .stars{display:inline-flex;gap:1px;cursor:pointer}.star{font-size:14px;color:var(--border);transition:color 0.1s}.star.on{color:var(--amber)}
 .note-input{width:100%;min-width:80px;padding:3px 6px;border:1px solid transparent;border-radius:3px;font-size:11px;background:transparent;color:var(--text);outline:none}
 .note-input:focus{border-color:var(--indigo);background:var(--surface)}
+.trans-row{font-size:10px;color:var(--sky-text);margin-top:2px;line-height:1.4;padding:1px 4px;background:var(--sky-light);border-radius:3px;display:inline-block;max-width:100%;word-break:break-all}
+.trans-loading{font-size:10px;color:var(--text3);margin-top:2px;font-style:italic}
 .empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:12px}
 .loading{text-align:center;padding:30px;color:var(--text3);font-size:12px}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fi 0.15s}
@@ -306,7 +308,8 @@ function cV(r,c){
   if(c==="source_video_url"||c==="reference_video_url")return '<a class="cl" href="'+v+'" target="_blank">查看</a>';
   // 音乐标题：加试听按钮
   if((c==="music_title"||c==="bgm_title")&&r.music_play_url){
-    return '<div style="display:flex;align-items:center;gap:4px"><div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="flex:1">'+String(v)+'</div><button class="retire-btn" style="color:var(--violet);border-color:var(--violet-light);background:var(--violet-light);font-size:9px" onclick="event.stopPropagation();playMusic(\''+r.music_play_url.replace(/'/g,"\\'")+'\')">\u266B听</button></div>';
+    var msv=String(v).replace(/"/g,"&quot;");
+    return '<div><div style="display:flex;align-items:center;gap:4px"><div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="flex:1" data-translate="'+msv+'">'+String(v)+'</div><button class="retire-btn" style="color:var(--violet);border-color:var(--violet-light);background:var(--violet-light);font-size:9px" onclick="event.stopPropagation();playMusic(\''+r.music_play_url.replace(/'/g,"\\'")+'\')">\u266B听</button></div></div>';
   }
   if(c==="view_count"||c==="like_count"||c==="comment_count"||c==="share_count"||c==="collect_count"||c==="usage_count"||c==="total_views"||c==="video_count"||c==="total_likes")return '<span class="cn">'+fmtNum(v)+'</span>';
   if(c==="creator_followers")return v&&Number(v)>0?'<span class="cn">'+fmtNum(v)+'</span>':'<span class="ce">—</span>';
@@ -320,7 +323,11 @@ function cV(r,c){
   if(c==="website")return v?'<a class="cl" href="'+v+'" target="_blank">访问</a>':'<span class="ce">—</span>';
   if(c==="difficulty"){var dc={"入门":"te","进阶":"ta","高阶":"tr"};return '<span class="tag '+(dc[v]||"")+'">'+v+'</span>'}
   if(TG[c])return '<span class="tag '+TG[c]+'">'+v+'</span>';
-  return '<div class="ct2" onclick="this.classList.toggle(\'expanded\')">'+String(v)+'</div>';
+  // 需要翻译的英文字段：自动加 data-translate 属性
+  var needsTranslate=TRANSLATE_FIELDS&&TRANSLATE_FIELDS.indexOf(c)!==-1;
+  var sv=String(v).replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  if(needsTranslate){return '<div><div class="ct2" onclick="this.classList.toggle(\'expanded\')" data-translate="'+sv.replace(/"/g,"&quot;")+'">'+sv+'</div></div>'}
+  return '<div class="ct2" onclick="this.classList.toggle(\'expanded\')">'+sv+'</div>';
 }
 var NAV_GROUPS=[
   {id:"material",label:"📦 素材拆分",tabs:["material_intake","viral_comments","pain_points","cta_scripts","competitor_analysis","visual_shots","social_proofs","benefits","bgm_tracks","frameworks","shooting_params","rhythm_templates","trending_tags","posting_strategies"]},
@@ -396,8 +403,8 @@ function updateActiveFiltersBar(){
   var h="";keys.forEach(function(col){h+='<span class="active-filter-tag">'+cfg.n[col]+': '+colFilter[col]+' <span class="remove-filter" onclick="removeFilter(\''+col+'\')">×</span></span>'});
   h+='<button class="clear-all-filters" onclick="clearAllFilters()">清除全部</button>';bar.innerHTML=h;bar.style.display="flex";
 }
-function removeFilter(col){delete colFilter[col];var inp=document.querySelector('.col-filter-input[data-col="'+col+'"]');if(inp){inp.value="";inp.classList.remove("has-value")}updateActiveFiltersBar();document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows))}
-function clearAllFilters(){colFilter={};document.querySelectorAll(".col-filter-input").forEach(function(inp){inp.value="";inp.classList.remove("has-value")});updateActiveFiltersBar();document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows))}
+function removeFilter(col){delete colFilter[col];var inp=document.querySelector('.col-filter-input[data-col="'+col+'"]');if(inp){inp.value="";inp.classList.remove("has-value")}updateActiveFiltersBar();document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));setTimeout(triggerPageTranslation,50)}
+function clearAllFilters(){colFilter={};document.querySelectorAll(".col-filter-input").forEach(function(inp){inp.value="";inp.classList.remove("has-value")});updateActiveFiltersBar();document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));setTimeout(triggerPageTranslation,50)}
 function renderRows(rows){
   var cfg=FD[at];var canOp=at!=="frameworks";
   var total=rows.length;
@@ -433,13 +440,13 @@ function renderRows(rows){
   h+='</div>';
   return h;
 }
-function goPage(p){curPage=p;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters()}
-function changePageSize(v){pageSize=parseInt(v);curPage=1;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters()}
+function goPage(p){curPage=p;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters();setTimeout(triggerPageTranslation,50)}
+function changePageSize(v){pageSize=parseInt(v);curPage=1;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters();setTimeout(triggerPageTranslation,50)}
 function restoreFilters(){Object.keys(colFilter).forEach(function(c2){var inp2=document.querySelector('.col-filter-input[data-col="'+c2+'"]');if(inp2){inp2.value=colFilter[c2];inp2.classList.add("has-value")}})}
 function onColFilter(el,col){
   var val=el.value.trim();if(val){colFilter[col]=val;el.classList.add("has-value")}else{delete colFilter[col];el.classList.remove("has-value")}
   updateActiveFiltersBar();curPage=1;
-  document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters();
+  document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters();setTimeout(triggerPageTranslation,50);
 }
 async function rT(){
   var clr=CL[at];
@@ -451,8 +458,10 @@ async function rT(){
   document.getElementById("sL").textContent=sortDir==="desc"?"最新":"最早";document.getElementById("sB").className="sort-btn"+(sortDir==="asc"?" active":"");
   var b=document.getElementById("tBody");b.innerHTML='<div class="loading">加载中...</div>';
   allRows=await fR(at);updateActiveFiltersBar();b.innerHTML=renderRows(filterRows(allRows));
+  // 触发英文内容翻译
+  setTimeout(triggerPageTranslation,50);
 }
-function doSearch(){searchTerm=document.getElementById("sI").value.trim();curPage=1;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters()}
+function doSearch(){searchTerm=document.getElementById("sI").value.trim();curPage=1;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters();setTimeout(triggerPageTranslation,50)}
 function toggleSort(){sortDir=sortDir==="desc"?"asc":"desc";curPage=1;rT()}
 async function doRetire(id){if(!confirm("确定要作废这条素材吗？"))return;try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({is_retired:true})});toast("已作废","tgs");setTimeout(refreshAll,300)}catch(e){toast("失败","tge")}}
 
@@ -1893,24 +1902,31 @@ async function doCompose(mode){
           var vResp=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video",{
             method:"POST",
             headers:{"Authorization":"Key "+falKey,"Content-Type":"application/json"},
-            body:JSON.stringify({prompt:prompt||"Fashion model showcasing clothing",image_url:imageUrls[vi],aspect_ratio:"9:16",duration:5})
+            body:JSON.stringify({prompt:prompt||"Fashion model showcasing clothing",image_url:imageUrls[vi],aspect_ratio:"9:16",duration:"5"})
           });
-          if(!vResp.ok)throw new Error("fal.ai "+(await vResp.text()).substring(0,100));
-          var vData=await vResp.json();
+          var vRespText=await vResp.text();
+          if(!vResp.ok)throw new Error("fal.ai "+vRespText.substring(0,200));
+          if(!vRespText||!vRespText.trim())throw new Error("fal.ai 返回空响应，请检查API Key是否正确");
+          var vData;try{vData=JSON.parse(vRespText)}catch(je){throw new Error("fal.ai 返回非JSON: "+vRespText.substring(0,100))}
           var reqId=vData.request_id;
+          if(!reqId)throw new Error("fal.ai 未返回request_id: "+vRespText.substring(0,100));
 
           var videoUrl="";
           for(var pi=0;pi<90;pi++){
             await sleep(4000);
             var psResp=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video/requests/"+reqId+"/status",{headers:{"Authorization":"Key "+falKey}});
-            var psData=await psResp.json();
-            prog.innerHTML=progBox("🎬 Seedance: "+(vi+1)+"/"+imageUrls.length+" 等待中("+(pi*4)+"s)",vi,imageUrls.length);
+            var psText=await psResp.text();
+            if(!psText||!psText.trim()){console.warn("Seedance状态查询返回空，重试...");continue}
+            var psData;try{psData=JSON.parse(psText)}catch(je2){console.warn("Seedance状态非JSON:",psText.substring(0,50));continue}
+            prog.innerHTML=progBox("🎬 Seedance: "+(vi+1)+"/"+imageUrls.length+" "+psData.status+"("+(pi*4)+"s)",vi,imageUrls.length);
             if(psData.status==="COMPLETED"){
               var vrResp=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video/requests/"+reqId,{headers:{"Authorization":"Key "+falKey}});
-              var vrData=await vrResp.json();
+              var vrText=await vrResp.text();
+              if(!vrText||!vrText.trim()){console.warn("Seedance结果返回空");continue}
+              var vrData;try{vrData=JSON.parse(vrText)}catch(je3){console.warn("Seedance结果非JSON:",vrText.substring(0,50));continue}
               if(vrData.video&&vrData.video.url){videoUrl=vrData.video.url;break}
             }
-            if(psData.status==="FAILED")throw new Error("Seedance生成失败");
+            if(psData.status==="FAILED"){var failMsg=psData.error||psData.detail||"Seedance生成失败";throw new Error(failMsg);}
           }
           if(!videoUrl)throw new Error("Seedance超时");
           videoUrls.push(videoUrl);
@@ -2174,6 +2190,170 @@ function buildFCPXML(prod,clips,mat){
 // 发布视频（占位）
 async function publishVideo(outputId){
   toast("TikTok发布功能将在Phase 5中实现","tge");
+}
+
+// ==================== 英文内容实时翻译 ====================
+// 需要翻译的字段：英文内容在显示时自动加中文翻译
+var TRANSLATE_FIELDS=["title","comment_en","script_en","hook_script","music_title","bgm_title"];
+// 翻译缓存（避免重复翻译）
+var transCache={};
+
+function isEnglish(text){
+  if(!text||typeof text!=="string")return false;
+  // 如果超过40%是ASCII字母，判定为英文
+  var ascii=0;for(var i=0;i<text.length;i++){var c=text.charCodeAt(i);if((c>=65&&c<=90)||(c>=97&&c<=122))ascii++}
+  return ascii/text.length>0.4;
+}
+
+// 批量翻译：收集页面上所有需要翻译的元素一次性翻译
+var translateQueue=[];
+var translateTimer=null;
+
+function queueTranslation(el,text){
+  if(!text||!isEnglish(text))return;
+  var key=text.substring(0,200).trim();
+  if(transCache[key]){
+    el.insertAdjacentHTML("afterend",'<div class="trans-row">🇨🇳 '+transCache[key]+'</div>');
+    return;
+  }
+  el.insertAdjacentHTML("afterend",'<div class="trans-loading" data-trans-key="'+btoa(encodeURIComponent(key)).substring(0,40)+'">翻译中...</div>');
+  translateQueue.push({el:el,text:key,loadingKey:btoa(encodeURIComponent(key)).substring(0,40)});
+  // 延迟100ms收集同批次翻译
+  if(translateTimer)clearTimeout(translateTimer);
+  translateTimer=setTimeout(flushTranslations,150);
+}
+
+async function flushTranslations(){
+  var batch=translateQueue.splice(0,20); // 每批最多20条
+  if(!batch.length)return;
+  // 去重
+  var unique={};batch.forEach(function(item){
+    if(!unique[item.text])unique[item.text]=[];
+    unique[item.text].push(item);
+  });
+  var texts=Object.keys(unique);
+  if(!texts.length)return;
+
+  try{
+    // 调用Supabase Edge Function或直接用简单的翻译RPC
+    // 优先使用已有的Claude API通过Supabase pg_net
+    var prompt="Translate each English text to Chinese. Return ONLY a JSON array of translations in the same order. No explanation.\n\n"+texts.map(function(t,i){return (i+1)+". "+t}).join("\n");
+
+    var resp=await fetch(U+"/rest/v1/rpc/translate_texts",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":K},
+      body:JSON.stringify({texts_json:JSON.stringify(texts)})
+    });
+
+    var translations=[];
+    if(resp.ok){
+      var result=await resp.json();
+      if(Array.isArray(result)){translations=result}
+      else if(result&&result.translations){translations=result.translations}
+    }
+
+    // 如果RPC不存在，回退到前端简单翻译（基于常见词汇的本地翻译）
+    if(!translations.length){
+      translations=texts.map(function(t){return localTranslate(t)});
+    }
+
+    // 应用翻译
+    texts.forEach(function(text,i){
+      var trans=translations[i]||"";
+      if(trans){
+        transCache[text]=trans;
+        var items=unique[text]||[];
+        items.forEach(function(item){
+          var loadEl=document.querySelector('[data-trans-key="'+item.loadingKey+'"]');
+          if(loadEl){loadEl.className="trans-row";loadEl.innerHTML="🇨🇳 "+trans}
+        });
+      }
+    });
+  }catch(e){
+    console.warn("翻译失败，使用本地翻译:",e.message);
+    // 回退到本地翻译
+    texts.forEach(function(text){
+      var trans=localTranslate(text);
+      if(trans){
+        transCache[text]=trans;
+        var items=unique[text]||[];
+        items.forEach(function(item){
+          var loadEl=document.querySelector('[data-trans-key="'+item.loadingKey+'"]');
+          if(loadEl){loadEl.className="trans-row";loadEl.innerHTML="🇨🇳 "+trans}
+        });
+      }
+    });
+  }
+  // 如果队列中还有，继续处理
+  if(translateQueue.length)setTimeout(flushTranslations,200);
+}
+
+// 本地简易翻译（基于常见TikTok/电商词汇映射 + 关键词提取）
+function localTranslate(text){
+  if(!text)return "";
+  var dict={
+    "haul":"开箱","unboxing":"开箱","try on":"试穿","try-on":"试穿","outfit":"穿搭","ootd":"今日穿搭",
+    "review":"测评","honest review":"真实测评","get ready with me":"一起化妆","grwm":"一起准备",
+    "must have":"必备","must-have":"必备","favorite":"最爱","favourites":"最爱","best":"最好的",
+    "worth it":"值得","affordable":"平价","budget":"预算","cheap":"便宜","expensive":"贵",
+    "summer":"夏季","winter":"冬季","spring":"春季","fall":"秋季","autumn":"秋季",
+    "dress":"连衣裙","top":"上衣","pants":"裤子","jeans":"牛仔裤","skirt":"裙子","shoes":"鞋子",
+    "bag":"包","handbag":"手提包","jewelry":"首饰","accessories":"配饰","makeup":"化妆品",
+    "skincare":"护肤","hair":"头发","beauty":"美妆","fashion":"时尚","style":"风格",
+    "trending":"流行","viral":"爆款","new":"新的","latest":"最新","collection":"系列",
+    "sale":"促销","discount":"折扣","free shipping":"包邮","limited":"限量","exclusive":"独家",
+    "shop":"购物","link in bio":"链接在简介","link below":"链接在下方","comment":"评论",
+    "follow":"关注","like":"点赞","share":"分享","save":"收藏","subscribe":"订阅",
+    "amazing":"惊人的","love":"喜欢","obsessed":"超爱","perfect":"完美","gorgeous":"超美",
+    "stunning":"惊艳","cute":"可爱","aesthetic":"美学","inspo":"灵感","inspiration":"灵感",
+    "transformation":"变身","before and after":"前后对比","hack":"技巧","tips":"小贴士","tutorial":"教程",
+    "how to":"怎么","what i":"我的","my":"我的","you need":"你需要","this":"这个","that":"那个",
+    "with":"和","for":"为了","the":"","and":"和","is":"是","are":"是","was":"曾是","not":"不",
+    "so":"太","very":"非常","really":"真的","just":"只是","only":"仅","more":"更多","most":"最",
+    "never":"从不","always":"总是","every":"每个","all":"所有","no":"没有","yes":"是",
+    "size":"尺码","color":"颜色","quality":"质量","material":"材质","comfortable":"舒适",
+    "workout":"健身","fitness":"健身","yoga":"瑜伽","running":"跑步","gym":"健身房",
+    "home":"家","kitchen":"厨房","bedroom":"卧室","bathroom":"浴室","living room":"客厅",
+    "recipe":"食谱","cooking":"烹饪","food":"食物","eat":"吃","drink":"饮品",
+    "travel":"旅行","vacation":"度假","hotel":"酒店","beach":"沙滩","city":"城市",
+    "amazon":"亚马逊","tiktok":"抖音","walmart":"沃尔玛","target":"Target",
+    "under":"低于","over":"超过","from":"来自","brand":"品牌","find":"发现","found":"发现了",
+    "check":"查看","look":"看","watch":"看","see":"看","try":"试","buy":"买","get":"得到",
+    "wear":"穿","wearing":"穿着","wore":"穿了","buying":"购买","shopping":"购物",
+    "pack":"打包","packing":"打包","clean":"清洁","cleaning":"清洁",
+    "day":"日","night":"夜","week":"周","month":"月","year":"年",
+    "girl":"女孩","women":"女性","men":"男性","kids":"儿童","baby":"宝宝",
+    "thing":"东西","things":"东西","product":"产品","products":"产品","item":"物品","items":"物品",
+    "update":"更新","recommend":"推荐","recommendation":"推荐","rating":"评分"
+  };
+  var lower=text.toLowerCase();
+  var result=lower;
+  // 按长度降序替换（先替换长词组）
+  var keys=Object.keys(dict).sort(function(a,b){return b.length-a.length});
+  keys.forEach(function(en){
+    var re=new RegExp("\\b"+en.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","gi");
+    result=result.replace(re,dict[en]);
+  });
+  // 清理多余空格和标点
+  result=result.replace(/\s+/g," ").trim();
+  // 如果翻译后跟原文差不多（大部分单词没变），说明本地词典不够用
+  if(result===lower)return "";
+  // 移除残余的英文定冠词等
+  result=result.replace(/\b(a|an|i|in|on|at|to|of|it|do|if|up|by|or)\b/gi,"").replace(/\s+/g," ").trim();
+  return result||"";
+}
+
+// 页面渲染后触发翻译：在表格渲染完成后扫描需要翻译的元素
+function triggerPageTranslation(){
+  translateQueue=[];
+  document.querySelectorAll("[data-translate]").forEach(function(el){
+    var text=el.getAttribute("data-translate");
+    if(text&&isEnglish(text)){
+      // 检查是否已经翻译过（避免重复）
+      if(el.nextElementSibling&&(el.nextElementSibling.classList.contains("trans-row")||el.nextElementSibling.classList.contains("trans-loading")))return;
+      queueTranslation(el,text);
+    }
+  });
 }
 
 // ==================== 初始化 ====================
