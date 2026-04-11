@@ -1997,36 +1997,84 @@ async function doCompose(mode){
         prog.innerHTML=progBox("🎬 Seedance生成: "+(vi+1)+"/"+imageUrls.length,vi,imageUrls.length);
 
         try{
-          var vResp=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video",{
-            method:"POST",
-            headers:{"Authorization":"Key "+falKey,"Content-Type":"application/json"},
-            body:JSON.stringify({prompt:prompt||"Fashion model showcasing clothing",image_url:imageUrls[vi],aspect_ratio:"9:16",duration:"5"})
-          });
-          var vRespText=await vResp.text();
-          if(!vResp.ok)throw new Error("fal.ai "+vRespText.substring(0,200));
-          if(!vRespText||!vRespText.trim())throw new Error("fal.ai 返回空响应，请检查API Key是否正确");
-          var vData;try{vData=JSON.parse(vRespText)}catch(je){throw new Error("fal.ai 返回非JSON: "+vRespText.substring(0,100))}
-          var reqId=vData.request_id;
-          if(!reqId)throw new Error("fal.ai 未返回request_id: "+vRespText.substring(0,100));
-
-          var videoUrl="";
-          for(var pi=0;pi<90;pi++){
-            await sleep(4000);
-            var psResp=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video/requests/"+reqId+"/status",{headers:{"Authorization":"Key "+falKey}});
-            var psText=await psResp.text();
-            if(!psText||!psText.trim()){console.warn("Seedance状态查询返回空，重试...");continue}
-            var psData;try{psData=JSON.parse(psText)}catch(je2){console.warn("Seedance状态非JSON:",psText.substring(0,50));continue}
-            prog.innerHTML=progBox("🎬 Seedance: "+(vi+1)+"/"+imageUrls.length+" "+psData.status+"("+(pi*4)+"s)",vi,imageUrls.length);
-            if(psData.status==="COMPLETED"){
-              var vrResp=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video/requests/"+reqId,{headers:{"Authorization":"Key "+falKey}});
-              var vrText=await vrResp.text();
-              if(!vrText||!vrText.trim()){console.warn("Seedance结果返回空");continue}
-              var vrData;try{vrData=JSON.parse(vrText)}catch(je3){console.warn("Seedance结果非JSON:",vrText.substring(0,50));continue}
-              if(vrData.video&&vrData.video.url){videoUrl=vrData.video.url;break}
+          // ===== 提交任务：优先走 Supabase RPC 代理（解决CORS），失败则直连 =====
+          var reqId="";
+          var useProxy=true;
+          try{
+            var submitResp=await fetch(U+"/rest/v1/rpc/fal_seedance_submit",{
+              method:"POST",headers:{"Content-Type":"application/json","apikey":K},
+              body:JSON.stringify({p_fal_key:falKey,p_image_url:imageUrls[vi],p_prompt:prompt||"Fashion model showcasing clothing",p_aspect_ratio:"9:16",p_duration:"5"})
+            });
+            if(!submitResp.ok){
+              var errT=await submitResp.text();
+              if(errT.includes("does not exist")||errT.includes("could not find")){useProxy=false}
+              else{throw new Error("代理提交失败: "+errT.substring(0,100))}
+            }else{
+              var submitResult=await submitResp.json();
+              if(submitResult.success&&submitResult.data){reqId=submitResult.data.request_id||""}
+              else if(submitResult.request_id){reqId=submitResult.request_id}
+              else{throw new Error("代理返回异常: "+JSON.stringify(submitResult).substring(0,150))}
             }
-            if(psData.status==="FAILED"){var failMsg=psData.error||psData.detail||"Seedance生成失败";throw new Error(failMsg);}
+          }catch(proxyErr){
+            console.warn("RPC代理不可用，尝试直连fal.ai:",proxyErr.message);
+            useProxy=false;
           }
-          if(!videoUrl)throw new Error("Seedance超时");
+
+          // 直连模式（RPC代理不存在时回退）
+          if(!useProxy||!reqId){
+            prog.innerHTML=progBox("🎬 Seedance(直连): "+(vi+1)+"/"+imageUrls.length,vi,imageUrls.length);
+            var vResp=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video",{
+              method:"POST",
+              headers:{"Authorization":"Key "+falKey,"Content-Type":"application/json"},
+              body:JSON.stringify({prompt:prompt||"Fashion model showcasing clothing",image_url:imageUrls[vi],aspect_ratio:"9:16",duration:"5"})
+            });
+            var vRespText=await vResp.text();
+            if(!vResp.ok)throw new Error("fal.ai "+vRespText.substring(0,200));
+            if(!vRespText||!vRespText.trim())throw new Error("fal.ai 返回空响应，请检查API Key");
+            var vData;try{vData=JSON.parse(vRespText)}catch(je){throw new Error("fal.ai 返回非JSON: "+vRespText.substring(0,100))}
+            reqId=vData.request_id;
+          }
+          if(!reqId)throw new Error("未获取到request_id");
+
+          // ===== 轮询状态 =====
+          var videoUrl="";
+          for(var pi=0;pi<120;pi++){
+            await sleep(3000);
+            var psData=null;
+            try{
+              if(useProxy){
+                var psResp=await fetch(U+"/rest/v1/rpc/fal_seedance_status",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_fal_key:falKey,p_request_id:reqId})});
+                psData=await psResp.json();
+              }else{
+                var psResp2=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video/requests/"+reqId+"/status",{headers:{"Authorization":"Key "+falKey}});
+                var psText=await psResp2.text();
+                if(!psText||!psText.trim()){continue}
+                try{psData=JSON.parse(psText)}catch(je2){continue}
+              }
+            }catch(pollErr){console.warn("轮询出错，重试:",pollErr.message);continue}
+            if(!psData||!psData.status)continue;
+
+            var elapsed=pi*3;var mins=Math.floor(elapsed/60);var secs=elapsed%60;
+            var timeStr=mins>0?mins+"分"+secs+"秒":secs+"秒";
+            prog.innerHTML=progBox("🎬 Seedance: "+(vi+1)+"/"+imageUrls.length+" "+psData.status+" ("+timeStr+")",vi,imageUrls.length);
+
+            if(psData.status==="COMPLETED"){
+              try{
+                var vrData=null;
+                if(useProxy){
+                  var vrResp=await fetch(U+"/rest/v1/rpc/fal_seedance_result",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_fal_key:falKey,p_request_id:reqId})});
+                  vrData=await vrResp.json();
+                }else{
+                  var vrResp2=await fetch("https://queue.fal.run/fal-ai/bytedance/seedance/v1/lite/image-to-video/requests/"+reqId,{headers:{"Authorization":"Key "+falKey}});
+                  var vrText=await vrResp2.text();
+                  if(vrText&&vrText.trim())try{vrData=JSON.parse(vrText)}catch(je3){}
+                }
+                if(vrData&&vrData.video&&vrData.video.url){videoUrl=vrData.video.url;break}
+              }catch(resErr){console.warn("获取结果出错:",resErr.message);continue}
+            }
+            if(psData.status==="FAILED"){var failMsg=psData.error||psData.detail||psData.message||"Seedance生成失败";throw new Error(failMsg)}
+          }
+          if(!videoUrl)throw new Error("Seedance超时（等待"+Math.round(pi*3/60)+"分钟）");
           videoUrls.push(videoUrl);
         }catch(ve){
           console.error("Seedance "+(vi+1)+"失败:",ve.message);
