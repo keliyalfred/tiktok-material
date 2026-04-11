@@ -1316,6 +1316,7 @@ function renderProdDetail(detail){
   h+='</div>';
 
   // 操作按钮 - 按流程排布
+  var hasClips=clips.length>0;
   h+='<div class="preview-card" style="margin-bottom:10px"><h5>🔧 第一步：AI合成视频</h5>';
   h+='<div style="font-size:11px;color:var(--text2);margin-bottom:8px">上传素材后，选择AI工具自动合成视频（拼接片段+字幕+配乐）</div>';
   h+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
