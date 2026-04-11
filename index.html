@@ -156,6 +156,10 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 @keyframes spin{to{transform:rotate(360deg)}}
 .guide-actions{display:flex;gap:8px;margin-top:16px;justify-content:center;flex-wrap:wrap}
 .guide-actions .btn{padding:8px 16px;font-size:12px}
+
+/* === 成品管理样式 === */
+#productionsView .preview-card{border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;background:var(--surface)}
+#productionsView .preview-card h5{font-size:12px;font-weight:600;margin-bottom:8px;color:var(--text2)}
 </style>
 </head>
 <body>
@@ -189,6 +193,16 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
     <div class="asm-wrap">
       <div class="asm-steps" id="asmSteps"></div>
       <div class="asm-panel" id="asmPanel"></div>
+    </div>
+  </div>
+
+  <!-- 成品管理视图 -->
+  <div id="productionsView" style="display:none">
+    <div class="tw">
+      <div class="toolbar">
+        <div class="tt"><span class="nc" style="background:var(--emerald-light);color:var(--emerald);width:20px;height:20px;border-radius:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:9px;height:9px"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></span>成品管理 <span class="ct" id="prodCount"></span></div>
+      </div>
+      <div id="prodList"><div class="loading">加载中...</div></div>
     </div>
   </div>
 </div>
@@ -239,10 +253,10 @@ var U="https://vjblxvebexpqlxfhwzlm.supabase.co",K="sb_publishable_TAtVWHXtEycUH
 // TikAPI直连模式（不依赖n8n）
 function qa(t,e){var u=U+"/rest/v1/"+t+"?apikey="+K;if(e)u+="&"+e;return u}
 
-var LN={material_intake:"素材总表",viral_comments:"爆款评论",pain_points:"痛点场景",cta_scripts:"CTA话术",competitor_analysis:"竞品拆解",visual_shots:"卖点画面",social_proofs:"社会证明",benefits:"权益库",bgm_tracks:"BGM情绪",frameworks:"框架结构",shooting_params:"拍摄参数",rhythm_templates:"节奏模板",trending_tags:"热门标签",posting_strategies:"发布策略",trending_videos:"🔥爆款视频",trending_music:"🎵爆款音乐",trending_hashtag_stats:"#热门标签",creator_rankings:"👤达人排行",brand_directory:"🏪品牌店铺","__assemble__":"组装成片"};
+var LN={material_intake:"素材总表",viral_comments:"爆款评论",pain_points:"痛点场景",cta_scripts:"CTA话术",competitor_analysis:"竞品拆解",visual_shots:"卖点画面",social_proofs:"社会证明",benefits:"权益库",bgm_tracks:"BGM情绪",frameworks:"框架结构",shooting_params:"拍摄参数",rhythm_templates:"节奏模板",trending_tags:"热门标签",posting_strategies:"发布策略",trending_videos:"🔥爆款视频",trending_music:"🎵爆款音乐",trending_hashtag_stats:"#热门标签",creator_rankings:"👤达人排行",brand_directory:"🏪品牌店铺","__assemble__":"组装成片","__productions__":"成品管理"};
 
-var IC={material_intake:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',viral_comments:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.4 8.4 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.4 8.4 0 013.8-.9h.5a8.5 8.5 0 018 8v.5z"/></svg>',pain_points:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',cta_scripts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>',competitor_analysis:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',visual_shots:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',social_proofs:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',benefits:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg>',bgm_tracks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',frameworks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',shooting_params:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',rhythm_templates:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',trending_tags:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',posting_strategies:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',"__assemble__":'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.64 5.64l12.73 12.73M18.36 5.64L5.64 18.36"/></svg>',trending_videos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',trending_music:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',trending_hashtag_stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>',creator_rankings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',brand_directory:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>'};
-var CL={material_intake:{b:"var(--indigo-light)",f:"var(--indigo)"},viral_comments:{b:"var(--orange-light)",f:"var(--orange)"},pain_points:{b:"var(--rose-light)",f:"var(--rose)"},cta_scripts:{b:"var(--emerald-light)",f:"var(--emerald)"},competitor_analysis:{b:"var(--sky-light)",f:"var(--sky)"},visual_shots:{b:"var(--pink-light)",f:"var(--pink)"},social_proofs:{b:"var(--amber-light)",f:"var(--amber)"},benefits:{b:"var(--teal-light)",f:"var(--teal)"},bgm_tracks:{b:"var(--violet-light)",f:"var(--violet)"},frameworks:{b:"var(--amber-light)",f:"var(--amber)"},shooting_params:{b:"var(--pink-light)",f:"var(--pink)"},rhythm_templates:{b:"var(--indigo-light)",f:"var(--indigo)"},trending_tags:{b:"var(--orange-light)",f:"var(--orange)"},posting_strategies:{b:"var(--teal-light)",f:"var(--teal)"},"__assemble__":{b:"var(--violet-light)",f:"var(--violet)"},trending_videos:{b:"var(--rose-light)",f:"var(--rose)"},trending_music:{b:"var(--violet-light)",f:"var(--violet)"},trending_hashtag_stats:{b:"var(--orange-light)",f:"var(--orange)"},creator_rankings:{b:"var(--sky-light)",f:"var(--sky)"},brand_directory:{b:"var(--teal-light)",f:"var(--teal)"}};
+var IC={material_intake:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>',viral_comments:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 11.5a8.4 8.4 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.4 8.4 0 01-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.4 8.4 0 013.8-.9h.5a8.5 8.5 0 018 8v.5z"/></svg>',pain_points:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',cta_scripts:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/></svg>',competitor_analysis:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>',visual_shots:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>',social_proofs:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>',benefits:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 12v10H4V12"/><path d="M2 7h20v5H2z"/><path d="M12 22V7"/></svg>',bgm_tracks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',frameworks:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',shooting_params:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>',rhythm_templates:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>',trending_tags:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>',posting_strategies:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>',"__assemble__":'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v18M3 12h18M5.64 5.64l12.73 12.73M18.36 5.64L5.64 18.36"/></svg>',trending_videos:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',trending_music:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>',trending_hashtag_stats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/><line x1="10" y1="3" x2="8" y2="21"/><line x1="16" y1="3" x2="14" y2="21"/></svg>',creator_rankings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>',brand_directory:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>',"__productions__":'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>'};
+var CL={material_intake:{b:"var(--indigo-light)",f:"var(--indigo)"},viral_comments:{b:"var(--orange-light)",f:"var(--orange)"},pain_points:{b:"var(--rose-light)",f:"var(--rose)"},cta_scripts:{b:"var(--emerald-light)",f:"var(--emerald)"},competitor_analysis:{b:"var(--sky-light)",f:"var(--sky)"},visual_shots:{b:"var(--pink-light)",f:"var(--pink)"},social_proofs:{b:"var(--amber-light)",f:"var(--amber)"},benefits:{b:"var(--teal-light)",f:"var(--teal)"},bgm_tracks:{b:"var(--violet-light)",f:"var(--violet)"},frameworks:{b:"var(--amber-light)",f:"var(--amber)"},shooting_params:{b:"var(--pink-light)",f:"var(--pink)"},rhythm_templates:{b:"var(--indigo-light)",f:"var(--indigo)"},trending_tags:{b:"var(--orange-light)",f:"var(--orange)"},posting_strategies:{b:"var(--teal-light)",f:"var(--teal)"},"__assemble__":{b:"var(--violet-light)",f:"var(--violet)"},trending_videos:{b:"var(--rose-light)",f:"var(--rose)"},trending_music:{b:"var(--violet-light)",f:"var(--violet)"},trending_hashtag_stats:{b:"var(--orange-light)",f:"var(--orange)"},creator_rankings:{b:"var(--sky-light)",f:"var(--sky)"},brand_directory:{b:"var(--teal-light)",f:"var(--teal)"},"__productions__":{b:"var(--emerald-light)",f:"var(--emerald)"}};
 var LL=["material_intake","viral_comments","pain_points","cta_scripts","competitor_analysis","visual_shots","social_proofs","benefits","bgm_tracks","frameworks","shooting_params","rhythm_templates","trending_tags","posting_strategies","trending_videos","trending_music","trending_hashtag_stats","creator_rankings","brand_directory","__assemble__"];
 
 var FD={
@@ -311,7 +325,8 @@ function cV(r,c){
 var NAV_GROUPS=[
   {id:"material",label:"📦 素材拆分",tabs:["material_intake","viral_comments","pain_points","cta_scripts","competitor_analysis","visual_shots","social_proofs","benefits","bgm_tracks","frameworks","shooting_params","rhythm_templates","trending_tags","posting_strategies"]},
   {id:"trending",label:"🔥 爆款抓取",tabs:["trending_videos","trending_music","trending_hashtag_stats","creator_rankings","brand_directory"]},
-  {id:"assemble",label:"🎬 成片组装",tabs:["__assemble__"]}
+  {id:"assemble",label:"🎬 成片组装",tabs:["__assemble__"]},
+  {id:"produce",label:"📹 成品管理",tabs:["__productions__"]}
 ];
 var activeGroup=NAV_GROUPS[0].id;
 
@@ -492,8 +507,12 @@ async function doTriggerScrape(){
   finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>抓爆款'}
 }
 function sT(k){at=k;searchTerm="";colFilter={};curPage=1;if(document.getElementById("sI"))document.getElementById("sI").value="";rN();
-  if(k==="__assemble__"){document.getElementById("tableView").style.display="none";document.getElementById("assembleView").style.display="block";initAssemble()}
-  else{document.getElementById("tableView").style.display="block";document.getElementById("assembleView").style.display="none";rT()}
+  document.getElementById("tableView").style.display="none";
+  document.getElementById("assembleView").style.display="none";
+  document.getElementById("productionsView").style.display="none";
+  if(k==="__assemble__"){document.getElementById("assembleView").style.display="block";initAssemble()}
+  else if(k==="__productions__"){document.getElementById("productionsView").style.display="block";loadProductions()}
+  else{document.getElementById("tableView").style.display="block";rT()}
 }
 function showModal(){document.getElementById("mO").style.display="flex";setTimeout(function(){document.getElementById("fC").focus()},100)}
 function hideModal(){document.getElementById("mO").style.display="none";document.getElementById("fC").value="";document.getElementById("fU").value=""}
@@ -1175,6 +1194,447 @@ function downloadGuide(){
   var a=document.createElement("a");a.href=url;a.download=filename;
   document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
   toast("下载成功","tgs");
+}
+
+// ==================== Phase 3-5: 成品管理模块 ====================
+
+var prodData=[];
+var currentProdId=null;
+
+async function loadProductions(){
+  var list=document.getElementById("prodList");
+  list.innerHTML='<div class="loading">加载中...</div>';
+  try{
+    var r=await fetch(qa("productions","order=created_at.desc&limit=50"));
+    if(!r.ok)throw new Error(await r.text());
+    prodData=await r.json();
+    document.getElementById("prodCount").textContent=prodData.length+"个方案";
+    renderProdList(prodData);
+  }catch(e){list.innerHTML='<div class="empty">加载失败: '+e.message+'</div>'}
+}
+
+function renderProdList(prods){
+  if(!prods.length){document.getElementById("prodList").innerHTML='<div class="empty">暂无成片方案，请先在"成片组装"中创建方案并保存</div>';return}
+  var h='<div style="display:grid;gap:10px">';
+  prods.forEach(function(p){
+    var st=p.status||"draft";
+    var stLabel={"draft":"草稿","clips_uploaded":"素材已上传","composing":"合成中","composed":"已合成","published":"已发布"}[st]||st;
+    var stClass={"draft":"sp","clips_uploaded":"si","composing":"si","composed":"sd","published":"te"}[st]||"sp";
+    var mat=p.selected_materials;
+    var fwName=mat&&mat.framework?mat.framework.name:"未知框架";
+    var clipCount=p.clip_count||0;
+
+    h+='<div class="preview-card" style="cursor:pointer;transition:all .15s" onmouseover="this.style.borderColor=\'var(--indigo)\'" onmouseout="this.style.borderColor=\'var(--border)\'" onclick="openProduction(\''+p.id+'\')">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+    h+='<div style="font-size:13px;font-weight:600">'+( p.title||"未命名方案")+'</div>';
+    h+='<span class="st '+stClass+'"><span class="dot" style="background:currentColor"></span>'+stLabel+'</span>';
+    h+='</div>';
+    h+='<div style="font-size:11px;color:var(--text2);display:flex;gap:12px;flex-wrap:wrap">';
+    h+='<span>📐 '+fwName+'</span>';
+    h+='<span>🎬 '+clipCount+'个片段</span>';
+    h+='<span>📅 '+fmtTime(p.created_at)+'</span>';
+    h+='</div></div>';
+  });
+  h+='</div>';
+  document.getElementById("prodList").innerHTML=h;
+}
+
+async function openProduction(id){
+  currentProdId=id;
+  var list=document.getElementById("prodList");
+  list.innerHTML='<div class="loading">加载方案详情...</div>';
+
+  try{
+    // 获取方案详情
+    var r=await fetch(U+"/rest/v1/rpc/get_production_detail",{
+      method:"POST",headers:{"Content-Type":"application/json","apikey":K},
+      body:JSON.stringify({p_id:id})
+    });
+    var detail;
+    if(!r.ok){
+      // 如果RPC不存在，手动查3个表
+      var pr=await fetch(qa("productions","id=eq."+id));
+      var prod=(await pr.json())[0];
+      var cr=await fetch(qa("production_clips","production_id=eq."+id+"&order=clip_order.asc"));
+      var clips=cr.ok?await cr.json():[];
+      var or2=await fetch(qa("production_outputs","production_id=eq."+id+"&order=version.desc"));
+      var outputs=or2.ok?await or2.json():[];
+      detail={production:prod,clips:clips,outputs:outputs};
+    }else{
+      detail=await r.json();
+    }
+
+    renderProdDetail(detail);
+  }catch(e){
+    list.innerHTML='<div class="empty">加载失败: '+e.message+'<br><button class="btn bg" style="margin-top:8px" onclick="loadProductions()">← 返回列表</button></div>';
+  }
+}
+
+function renderProdDetail(detail){
+  var p=detail.production;
+  var clips=detail.clips||[];
+  var outputs=detail.outputs||[];
+  var mat=p.selected_materials||{};
+
+  var h='<div style="margin-bottom:12px"><button class="btn bg" onclick="loadProductions()">← 返回列表</button></div>';
+
+  // 方案标题
+  h+='<div style="font-size:16px;font-weight:700;margin-bottom:12px">'+(p.title||"未命名方案")+'</div>';
+
+  // 素材概要
+  h+='<div class="preview-card" style="margin-bottom:10px"><h5>📐 方案素材</h5><div style="font-size:12px;color:var(--text2)">';
+  if(mat.framework)h+='<div>框架: '+mat.framework.name+' — '+mat.framework.formula+'</div>';
+  if(mat.stop&&mat.stop.length)h+='<div>钩子: '+mat.stop.length+'条</div>';
+  if(mat.pain&&mat.pain.length)h+='<div>痛点: '+mat.pain.length+'条</div>';
+  if(mat.visual&&mat.visual.length)h+='<div>卖点: '+mat.visual.length+'条</div>';
+  if(mat.bgm&&mat.bgm.length)h+='<div>BGM: '+mat.bgm.map(function(b){return b.name}).join(", ")+'</div>';
+  if(mat.rhythm&&mat.rhythm.length)h+='<div>节奏: '+mat.rhythm.map(function(r2){return r2.name+" "+r2.duration}).join(", ")+'</div>';
+  h+='</div></div>';
+
+  // 上传拍摄素材区域
+  h+='<div class="preview-card" style="margin-bottom:10px"><h5>🎬 拍摄素材 ('+clips.length+'个片段)</h5>';
+  if(clips.length){
+    h+='<div style="display:grid;gap:6px;margin-bottom:8px">';
+    clips.forEach(function(c,i){
+      var fileUrl=U+"/storage/v1/object/public/production-clips/"+c.file_path;
+      h+='<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface2);border-radius:var(--radius-sm)">';
+      h+='<span style="font-size:11px;font-weight:600;color:var(--indigo);min-width:24px">#'+(i+1)+'</span>';
+      h+='<span style="font-size:12px;flex:1">'+( c.clip_name||"片段"+(i+1))+'</span>';
+      if(c.duration_seconds)h+='<span style="font-size:10px;color:var(--text3)">'+c.duration_seconds+'s</span>';
+      h+='<a class="cl" href="'+fileUrl+'" target="_blank" style="font-size:10px">预览</a>';
+      h+='<button class="retire-btn" onclick="deleteClip(\''+c.id+'\',\''+c.file_path+'\')">删除</button>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+  h+='<div style="border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;cursor:pointer;transition:all .15s" onclick="document.getElementById(\'clipUploadInput\').click()" onmouseover="this.style.borderColor=\'var(--indigo)\'" onmouseout="this.style.borderColor=\'var(--border)\'">';
+  h+='<div style="font-size:12px;color:var(--text2);margin-bottom:4px">点击上传拍摄片段</div>';
+  h+='<div style="font-size:10px;color:var(--text3)">支持 MP4 / MOV / WebM，按镜头顺序逐个上传</div>';
+  h+='<input type="file" id="clipUploadInput" accept="video/*" multiple style="display:none" onchange="uploadClips(this.files)">';
+  h+='</div>';
+  h+='<div id="uploadProgress" style="display:none;margin-top:8px"></div>';
+  h+='</div>';
+
+  // 操作按钮
+  h+='<div class="preview-card" style="margin-bottom:10px"><h5>🔧 操作</h5>';
+  h+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+  var hasClips=clips.length>0;
+  h+='<button class="btn bp" onclick="aiComposeVideo()" '+(hasClips?'':'disabled style="opacity:0.5"')+'>🤖 AI合成视频</button>';
+  h+='<button class="btn bg" onclick="exportToCapcut()" '+(hasClips?'':'disabled style="opacity:0.5"')+'>📱 导出剪映工程</button>';
+  h+='<button class="btn bg" onclick="exportToPremiere()" '+(hasClips?'':'disabled style="opacity:0.5"')+'>🎬 导出PR工程 (XML)</button>';
+  h+='<button class="btn bp" onclick="generateShootingGuide()" id="genGuideBtn">📸 拍摄指导</button>';
+  h+='</div>';
+  if(!hasClips)h+='<div style="font-size:10px;color:var(--text3);margin-top:6px">请先上传拍摄素材后再操作</div>';
+  h+='</div>';
+
+  // 成品视频列表
+  if(outputs.length){
+    h+='<div class="preview-card"><h5>📦 成品视频 ('+outputs.length+'个版本)</h5>';
+    h+='<div style="display:grid;gap:6px">';
+    outputs.forEach(function(o){
+      var fileUrl=o.output_file_path?U+"/storage/v1/object/public/production-outputs/"+o.output_file_path:"";
+      var pst=o.publish_status||"draft";
+      var pstLabel={"draft":"未发布","reviewing":"审核中","published":"已发布"}[pst]||pst;
+      h+='<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:var(--radius-sm)">';
+      h+='<span style="font-size:12px;font-weight:600">V'+o.version+'</span>';
+      h+='<span class="st '+(pst==="published"?"sd":"sp")+'"><span class="dot" style="background:currentColor"></span>'+pstLabel+'</span>';
+      h+='<span style="flex:1;font-size:11px;color:var(--text2)">'+(o.notes||"")+'</span>';
+      if(fileUrl){
+        h+='<a class="cl" href="'+fileUrl+'" target="_blank">预览</a>';
+        h+='<a class="cl" href="'+fileUrl+'" download style="margin-left:4px">下载</a>';
+      }
+      h+='<button class="btn bp" style="padding:3px 8px;font-size:10px" onclick="publishVideo(\''+o.id+'\')">发布</button>';
+      h+='</div>';
+    });
+    h+='</div></div>';
+  }
+
+  document.getElementById("prodList").innerHTML=h;
+}
+
+// 上传视频片段
+async function uploadClips(files){
+  if(!files||!files.length)return;
+  if(!currentProdId){toast("请先打开一个方案","tge");return}
+
+  var prog=document.getElementById("uploadProgress");
+  prog.style.display="block";
+  var total=files.length,done=0,errors=0;
+
+  for(var i=0;i<files.length;i++){
+    var f=files[i];
+    var ext=f.name.split(".").pop().toLowerCase();
+    var filePath=currentProdId+"/clip_"+Date.now()+"_"+i+"."+ext;
+
+    prog.innerHTML='<div style="padding:6px 10px;border-radius:6px;background:var(--sky-light);font-size:11px;color:var(--sky-text)">上传中: '+(i+1)+'/'+total+' — '+f.name+'</div>';
+
+    try{
+      // 上传到 Supabase Storage
+      var ur=await fetch(U+"/storage/v1/object/production-clips/"+filePath,{
+        method:"POST",
+        headers:{"apikey":K,"Content-Type":f.type||"video/mp4","x-upsert":"true"},
+        body:f
+      });
+      if(!ur.ok)throw new Error(await ur.text());
+
+      // 创建数据库记录
+      var clipData={
+        production_id:currentProdId,
+        clip_name:f.name,
+        clip_order:done,
+        file_path:filePath,
+        file_size:f.size,
+        mime_type:f.type||"video/mp4"
+      };
+      await fetch(qa("production_clips"),{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify(clipData)});
+
+      done++;
+    }catch(e){
+      errors++;
+      console.error("上传失败:",f.name,e);
+    }
+  }
+
+  // 更新方案的clip_count
+  await fetch(qa("productions","id=eq."+currentProdId),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({clip_count:done,status:"clips_uploaded"})});
+
+  prog.innerHTML='<div style="padding:6px 10px;border-radius:6px;background:var(--emerald-light);font-size:11px;color:var(--emerald-text)">上传完成: '+done+'个成功'+(errors?' , '+errors+'个失败':'')+'</div>';
+  toast("上传完成！"+done+"个片段","tgs");
+
+  // 刷新详情
+  setTimeout(function(){openProduction(currentProdId)},500);
+}
+
+async function deleteClip(clipId,filePath){
+  if(!confirm("确定删除这个片段？"))return;
+  try{
+    // 删除Storage文件
+    await fetch(U+"/storage/v1/object/production-clips/"+filePath,{method:"DELETE",headers:{"apikey":K}});
+    // 删除数据库记录
+    await fetch(qa("production_clips","id=eq."+clipId),{method:"DELETE",headers:{"apikey":K}});
+    toast("已删除","tgs");
+    openProduction(currentProdId);
+  }catch(e){toast("删除失败","tge")}
+}
+
+// AI合成视频（提交任务）
+async function aiComposeVideo(){
+  if(!currentProdId){toast("请先打开方案","tge");return}
+  toast("AI合成功能开发中，请使用导出剪映/PR工程进行编辑","tge");
+}
+
+// 导出剪映草稿
+async function exportToCapcut(){
+  if(!currentProdId)return;
+  try{
+    // 获取方案详情
+    var pr=await fetch(qa("productions","id=eq."+currentProdId));
+    var prod=(await pr.json())[0];
+    var cr=await fetch(qa("production_clips","production_id=eq."+currentProdId+"&order=clip_order.asc"));
+    var clips=await cr.json();
+    var mat=prod.selected_materials||{};
+
+    if(!clips.length){toast("请先上传拍摄素材","tge");return}
+
+    // 生成剪映草稿JSON
+    var draft=buildCapcutDraft(prod,clips,mat);
+    var blob=new Blob([JSON.stringify(draft,null,2)],{type:"application/json"});
+    var url2=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url2;a.download="draft_content.json";
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url2);
+    toast("剪映草稿已下载！请放入剪映草稿目录","tgs");
+  }catch(e){toast("导出失败: "+e.message,"tge")}
+}
+
+function buildCapcutDraft(prod,clips,mat){
+  var fps=30;
+  var tracks=[];var currentTime=0;
+
+  // 视频轨道
+  var videoSegments=[];
+  clips.forEach(function(c,i){
+    var dur=(c.duration_seconds||5)*1000000; // 微秒
+    videoSegments.push({
+      material_id:"video_"+i,
+      target_timerange:{start:currentTime,duration:dur},
+      source_timerange:{start:0,duration:dur},
+      speed:1.0
+    });
+    currentTime+=dur;
+  });
+  tracks.push({type:"video",segments:videoSegments});
+
+  // 字幕轨道（从钩子+痛点+促单生成）
+  var subtitles=[];var subTime=0;
+  var allTexts=[];
+  if(mat.stop)mat.stop.forEach(function(s){allTexts.push(s.text)});
+  if(mat.pain)mat.pain.forEach(function(p2){allTexts.push(p2.pain||p2.scene)});
+  if(mat.buy)mat.buy.forEach(function(b){allTexts.push(b.text)});
+
+  var subDur=allTexts.length?Math.floor(currentTime/allTexts.length):currentTime;
+  allTexts.forEach(function(txt,i){
+    subtitles.push({
+      material_id:"text_"+i,
+      content:txt||"",
+      target_timerange:{start:subDur*i,duration:subDur}
+    });
+  });
+  if(subtitles.length)tracks.push({type:"text",segments:subtitles});
+
+  // BGM轨道
+  if(mat.bgm&&mat.bgm.length){
+    tracks.push({type:"audio",segments:[{
+      material_id:"bgm_0",
+      bgm_name:mat.bgm[0].name||"BGM",
+      target_timerange:{start:0,duration:currentTime}
+    }]});
+  }
+
+  return {
+    id:prod.id,
+    name:prod.title||"TikTok视频",
+    width:1080,height:1920,fps:fps,
+    duration:currentTime,
+    tracks:tracks,
+    materials:{
+      videos:clips.map(function(c,i){return {id:"video_"+i,path:c.clip_name||"clip_"+i+".mp4",type:"video"}}),
+      texts:allTexts.map(function(t,i){return {id:"text_"+i,content:t}}),
+      audios:mat.bgm?mat.bgm.map(function(b,i){return {id:"bgm_"+i,name:b.name||"BGM"}}):[],
+    },
+    _note:"将此文件放入剪映草稿目录（如 ~/Movies/JianyingPro/User Data/Projects/com.lveditor.draft/）中对应文件夹的 draft_content.json"
+  };
+}
+
+// 导出PR工程（FCP XML格式）
+async function exportToPremiere(){
+  if(!currentProdId)return;
+  try{
+    var pr=await fetch(qa("productions","id=eq."+currentProdId));
+    var prod=(await pr.json())[0];
+    var cr=await fetch(qa("production_clips","production_id=eq."+currentProdId+"&order=clip_order.asc"));
+    var clips=await cr.json();
+    var mat=prod.selected_materials||{};
+
+    if(!clips.length){toast("请先上传拍摄素材","tge");return}
+
+    var xml=buildFCPXML(prod,clips,mat);
+    var blob=new Blob([xml],{type:"application/xml"});
+    var url2=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=url2;a.download=(prod.title||"tiktok_project").replace(/\s/g,"_")+".xml";
+    document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url2);
+    toast("PR工程XML已下载！在Premiere中 文件→导入 打开","tgs");
+  }catch(e){toast("导出失败: "+e.message,"tge")}
+}
+
+function buildFCPXML(prod,clips,mat){
+  var fps=30;var totalFrames=0;
+  clips.forEach(function(c){totalFrames+=(c.duration_seconds||5)*fps});
+
+  var xml='<?xml version="1.0" encoding="UTF-8"?>\n';
+  xml+='<!DOCTYPE xmeml>\n<xmeml version="5">\n<project>\n';
+  xml+='<name>'+(prod.title||"TikTok Video")+'</name>\n';
+  xml+='<children>\n';
+
+  // Bin with clips
+  xml+='<bin><name>素材</name><children>\n';
+  clips.forEach(function(c,i){
+    var dur=Math.round((c.duration_seconds||5)*fps);
+    var fileUrl=U+"/storage/v1/object/public/production-clips/"+c.file_path;
+    xml+='<clip id="clip-'+i+'">\n';
+    xml+='<name>'+(c.clip_name||"clip_"+(i+1))+'</name>\n';
+    xml+='<duration>'+dur+'</duration>\n';
+    xml+='<rate><timebase>'+fps+'</timebase><ntsc>FALSE</ntsc></rate>\n';
+    xml+='<file id="file-'+i+'"><name>'+(c.clip_name||"clip_"+(i+1))+'</name>';
+    xml+='<pathurl>'+fileUrl+'</pathurl>';
+    xml+='<duration>'+dur+'</duration>';
+    xml+='<rate><timebase>'+fps+'</timebase><ntsc>FALSE</ntsc></rate>';
+    xml+='<media><video><duration>'+dur+'</duration>';
+    xml+='<samplecharacteristics><width>1080</width><height>1920</height></samplecharacteristics>';
+    xml+='</video></media></file>\n';
+    xml+='</clip>\n';
+  });
+  xml+='</children></bin>\n';
+
+  // Sequence
+  xml+='<sequence>\n<name>'+(prod.title||"主序列")+'</name>\n';
+  xml+='<duration>'+totalFrames+'</duration>\n';
+  xml+='<rate><timebase>'+fps+'</timebase><ntsc>FALSE</ntsc></rate>\n';
+  xml+='<media>\n<video>\n<format>\n<samplecharacteristics>\n';
+  xml+='<width>1080</width><height>1920</height>\n';
+  xml+='<rate><timebase>'+fps+'</timebase><ntsc>FALSE</ntsc></rate>\n';
+  xml+='</samplecharacteristics>\n</format>\n';
+
+  // Video track
+  xml+='<track>\n';
+  var currentFrame=0;
+  clips.forEach(function(c,i){
+    var dur=Math.round((c.duration_seconds||5)*fps);
+    xml+='<clipitem id="seq-clip-'+i+'">\n';
+    xml+='<name>'+(c.clip_name||"clip_"+(i+1))+'</name>\n';
+    xml+='<duration>'+dur+'</duration>\n';
+    xml+='<rate><timebase>'+fps+'</timebase><ntsc>FALSE</ntsc></rate>\n';
+    xml+='<start>'+currentFrame+'</start>\n';
+    xml+='<end>'+(currentFrame+dur)+'</end>\n';
+    xml+='<in>0</in><out>'+dur+'</out>\n';
+    xml+='<file id="file-'+i+'"/>\n';
+    xml+='</clipitem>\n';
+    currentFrame+=dur;
+  });
+  xml+='</track>\n';
+
+  // Subtitle track (generatoritem)
+  var allTexts=[];
+  if(mat.stop)mat.stop.forEach(function(s){allTexts.push(s.text)});
+  if(mat.pain)mat.pain.forEach(function(p2){allTexts.push(p2.pain||p2.scene)});
+  if(mat.buy)mat.buy.forEach(function(b){allTexts.push(b.text)});
+
+  if(allTexts.length){
+    xml+='<track>\n';
+    var subDurF=Math.floor(totalFrames/allTexts.length);
+    allTexts.forEach(function(txt,i){
+      xml+='<generatoritem id="sub-'+i+'">\n';
+      xml+='<name>'+( txt||"字幕")+'</name>\n';
+      xml+='<duration>'+subDurF+'</duration>\n';
+      xml+='<rate><timebase>'+fps+'</timebase><ntsc>FALSE</ntsc></rate>\n';
+      xml+='<start>'+(subDurF*i)+'</start>\n';
+      xml+='<end>'+(subDurF*(i+1))+'</end>\n';
+      xml+='<in>0</in><out>'+subDurF+'</out>\n';
+      xml+='<effect><name>Text</name><effectid>Text</effectid><effecttype>generator</effecttype>';
+      xml+='<parameter><parameterid>str</parameterid><name>Text</name><value>'+(txt||"").replace(/&/g,"&amp;").replace(/</g,"&lt;")+'</value></parameter>';
+      xml+='</effect>\n</generatoritem>\n';
+    });
+    xml+='</track>\n';
+  }
+
+  xml+='</video>\n';
+
+  // Audio track
+  xml+='<audio>\n<track>\n';
+  currentFrame=0;
+  clips.forEach(function(c,i){
+    var dur=Math.round((c.duration_seconds||5)*fps);
+    xml+='<clipitem id="seq-audio-'+i+'">\n';
+    xml+='<name>'+(c.clip_name||"clip_"+(i+1))+'</name>\n';
+    xml+='<duration>'+dur+'</duration>\n';
+    xml+='<rate><timebase>'+fps+'</timebase><ntsc>FALSE</ntsc></rate>\n';
+    xml+='<start>'+currentFrame+'</start><end>'+(currentFrame+dur)+'</end>\n';
+    xml+='<in>0</in><out>'+dur+'</out>\n';
+    xml+='<file id="file-'+i+'"/>\n';
+    xml+='</clipitem>\n';
+    currentFrame+=dur;
+  });
+  xml+='</track>\n</audio>\n';
+
+  xml+='</media>\n</sequence>\n';
+  xml+='</children>\n</project>\n</xmeml>';
+  return xml;
+}
+
+// 发布视频（占位）
+async function publishVideo(outputId){
+  toast("TikTok发布功能将在Phase 5中实现","tge");
 }
 
 // ==================== 初始化 ====================
