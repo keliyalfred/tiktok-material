@@ -289,15 +289,39 @@ function cV(r,c){
   if(TG[c])return '<span class="tag '+TG[c]+'">'+v+'</span>';
   return '<div class="ct2" onclick="this.classList.toggle(\'expanded\')">'+String(v)+'</div>';
 }
-function rN(){var h="";LL.forEach(function(k){var a=at===k?" active":"",c=ct[k]!=null?ct[k]:"·",cl=CL[k];
-  if(k==="__assemble__"){
-    h+='<button class="ni'+a+'" onclick="sT(\''+k+'\')" style="margin-left:auto;border:1px solid var(--violet-light)"><span class="nc" style="background:'+cl.b+';color:'+cl.f+'">'+IC[k]+'</span>'+LN[k]+'</button>';
-  } else if(k==="trending_videos"||k==="trending_music"||k==="trending_hashtag_stats"||k==="creator_rankings"||k==="brand_directory"){
-    h+='<button class="ni'+a+'" onclick="sT(\''+k+'\')" style="border:1px solid var(--rose-light);background:'+(a?'':'var(--rose-light)')+'"><span class="nc" style="background:'+cl.b+';color:'+cl.f+'">'+IC[k]+'</span>'+LN[k]+'<span class="nn">'+c+'</span></button>';
-  } else {
-    h+='<button class="ni'+a+'" onclick="sT(\''+k+'\')"><span class="nc" style="background:'+cl.b+';color:'+cl.f+'">'+IC[k]+'</span>'+LN[k]+'<span class="nn">'+c+'</span></button>';
+var NAV_GROUPS=[
+  {id:"material",label:"📦 素材拆分",tabs:["material_intake","viral_comments","pain_points","cta_scripts","competitor_analysis","visual_shots","social_proofs","benefits","bgm_tracks","frameworks","shooting_params","rhythm_templates","trending_tags","posting_strategies"]},
+  {id:"trending",label:"🔥 爆款抓取",tabs:["trending_videos","trending_music","trending_hashtag_stats","creator_rankings","brand_directory"]},
+  {id:"assemble",label:"🎬 成片组装",tabs:["__assemble__"]}
+];
+var activeGroup=NAV_GROUPS[0].id;
+
+function rN(){
+  // 自动判断当前tab属于哪个分组
+  NAV_GROUPS.forEach(function(g){if(g.tabs.includes(at))activeGroup=g.id});
+  var h='<div style="display:flex;gap:6px;margin-bottom:6px">';
+  NAV_GROUPS.forEach(function(g){
+    var isActive=g.id===activeGroup;
+    var totalCount=0;g.tabs.forEach(function(k){if(ct[k])totalCount+=ct[k]});
+    h+='<button style="padding:6px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;border:1px solid '+(isActive?'var(--indigo)':'var(--border)')+';background:'+(isActive?'var(--indigo)':'var(--surface)')+';color:'+(isActive?'#fff':'var(--text2)')+';cursor:pointer" onclick="activeGroup=\''+g.id+'\';rN()">'+g.label+(totalCount?' <span style="font-size:10px;font-weight:400;opacity:0.8">'+totalCount+'</span>':'')+'</button>';
+  });
+  h+='</div>';
+  // 当前分组的子Tab
+  var group=NAV_GROUPS.find(function(g){return g.id===activeGroup});
+  if(group){
+    h+='<div style="display:flex;gap:2px;flex-wrap:wrap">';
+    group.tabs.forEach(function(k){
+      var a=at===k?" active":"",c=ct[k]!=null?ct[k]:"·",cl=CL[k];
+      if(k==="__assemble__"){
+        h+='<button class="ni'+a+'" onclick="sT(\''+k+'\')"><span class="nc" style="background:'+cl.b+';color:'+cl.f+'">'+IC[k]+'</span>'+LN[k]+'</button>';
+      }else{
+        h+='<button class="ni'+a+'" onclick="sT(\''+k+'\')"><span class="nc" style="background:'+cl.b+';color:'+cl.f+'">'+IC[k]+'</span>'+LN[k]+'<span class="nn">'+c+'</span></button>';
+      }
+    });
+    h+='</div>';
   }
-});document.getElementById("navTabs").innerHTML=h}
+  document.getElementById("navTabs").innerHTML=h;
+}
 
 async function fC(t){
   try{
