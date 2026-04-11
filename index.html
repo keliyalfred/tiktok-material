@@ -203,6 +203,18 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 </div>
 
 <div id="toastW"></div>
+
+<!-- 添加达人监控弹窗 -->
+<div class="mo" id="creatorMO" style="display:none" onclick="if(event.target===this)hideCreatorModal()">
+  <div class="modal"><div class="mh"><h3>👤 添加达人监控</h3><button class="mx" onclick="hideCreatorModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="mbo">
+    <div class="fg"><label class="fl">TikTok用户名 <span class="rq">*</span></label><input class="finp" id="creatorUsername" type="text" placeholder="输入用户名，如 shein_official（不带@）"></div>
+    <div class="fg"><label class="fl">类目</label><select class="finp" id="creatorCategory"><option>美国女装</option><option>美妆</option><option>家居</option><option>其他</option></select></div>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">自动抓取该达人的粉丝数、视频数、简介等信息，并根据简介自动判断是达人/品牌/店铺</p>
+    <div id="creatorProgress" style="display:none;margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--sky-light);font-size:11px;color:var(--sky-text)"></div>
+    <button class="bs" id="creatorBtn" onclick="doAddCreator()">抓取并添加监控</button>
+  </div></div>
+</div>
 <script>
 var U="https://vjblxvebexpqlxfhwzlm.supabase.co",K="sb_publishable_TAtVWHXtEycUHu1xwslZSw_JdFOOg5l";
 // TikAPI直连模式（不依赖n8n）
@@ -367,7 +379,12 @@ function onColFilter(el,col){
   document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters();
 }
 async function rT(){
-  var clr=CL[at];document.getElementById("tTitle").innerHTML='<span class="nc" style="background:'+clr.b+';color:'+clr.f+';width:20px;height:20px;border-radius:4px">'+IC[at]+'</span>'+LN[at]+' <span class="ct">'+(ct[at]!=null?ct[at]+"条":"")+'</span>';
+  var clr=CL[at];
+  var extraBtns="";
+  if(at==="creator_rankings"){
+    extraBtns=' <button class="btn bg" style="font-size:11px;padding:4px 8px" onclick="showCreatorModal()">+ 添加达人</button><button class="btn bg" style="font-size:11px;padding:4px 8px" id="syncCreatorsBtn" onclick="doSyncCreators()">同步详情</button>';
+  }
+  document.getElementById("tTitle").innerHTML='<span class="nc" style="background:'+clr.b+';color:'+clr.f+';width:20px;height:20px;border-radius:4px">'+IC[at]+'</span>'+LN[at]+' <span class="ct">'+(ct[at]!=null?ct[at]+"条":"")+'</span>'+extraBtns;
   document.getElementById("sL").textContent=sortDir==="desc"?"最新":"最早";document.getElementById("sB").className="sort-btn"+(sortDir==="asc"?" active":"");
   var b=document.getElementById("tBody");b.innerHTML='<div class="loading">加载中...</div>';
   allRows=await fR(at);updateActiveFiltersBar();b.innerHTML=renderRows(filterRows(allRows));
@@ -461,6 +478,40 @@ function playMusic(url){
   setTimeout(function(){if(currentAudio){currentAudio.pause();currentAudio=null}},30000);
 }
 function stopMusic(){if(currentAudio){currentAudio.pause();currentAudio=null;toast("已停止","tgs")}}
+
+// 达人监控
+function showCreatorModal(){document.getElementById("creatorMO").style.display="flex";setTimeout(function(){document.getElementById("creatorUsername").focus()},100)}
+function hideCreatorModal(){document.getElementById("creatorMO").style.display="none";document.getElementById("creatorUsername").value="";var p=document.getElementById("creatorProgress");if(p)p.style.display="none"}
+async function doAddCreator(){
+  var username=document.getElementById("creatorUsername").value.trim().replace(/^@/,"");
+  if(!username){toast("请输入用户名","tge");return}
+  var cat=document.getElementById("creatorCategory").value;
+  var btn=document.getElementById("creatorBtn");btn.disabled=true;btn.textContent="抓取中...";
+  var prog=document.getElementById("creatorProgress");prog.style.display="block";prog.textContent="⏳ 正在从TikAPI抓取 @"+username+" 的资料...";
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/add_creator_monitor",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_username:username,p_category:cat})});
+    if(!r.ok)throw new Error(await r.text());
+    var result=await r.json();
+    if(result.success){
+      hideCreatorModal();toast(result.message,"tgs");
+      if(at==="creator_rankings")rT();else{at="creator_rankings";rN();rT()}
+    }else{toast(result.message||"未找到该用户","tge")}
+  }catch(e){toast("添加失败: "+e.message,"tge")}
+  finally{btn.disabled=false;btn.textContent="抓取并添加监控";prog.style.display="none"}
+}
+// 批量同步达人详情
+async function doSyncCreators(){
+  var btn=document.getElementById("syncCreatorsBtn");if(!btn)return;
+  btn.disabled=true;btn.textContent="同步中...";
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/batch_sync_creator_details",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({max_count:20})});
+    if(!r.ok)throw new Error(await r.text());
+    var result=await r.json();
+    toast("同步完成！更新"+result.synced+"个达人","tgs");
+    if(at==="creator_rankings")rT();
+  }catch(e){toast("同步失败: "+e.message,"tge")}
+  finally{btn.disabled=false;btn.textContent="同步详情"}
+}
 function toast(m,t){var c=document.getElementById("toastW"),e=document.createElement("div");e.className="toast "+t;e.textContent=m;c.appendChild(e);setTimeout(function(){e.style.opacity="0";e.style.transition="opacity 0.3s";setTimeout(function(){e.remove()},300)},2000)}
 async function doSubmit(){
   var content=document.getElementById("fC").value.trim();if(!content){toast("请填写","tge");return}
