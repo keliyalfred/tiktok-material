@@ -77,6 +77,31 @@ tbody td{padding:8px 10px;color:var(--text);vertical-align:top;min-width:40px;ma
 .note-input:focus{border-color:var(--indigo);background:var(--surface)}
 .trans-row{font-size:10px;color:var(--sky-text);margin-top:2px;line-height:1.4;padding:1px 4px;background:var(--sky-light);border-radius:3px;display:inline-block;max-width:100%;word-break:break-all}
 .trans-loading{font-size:10px;color:var(--text3);margin-top:2px;font-style:italic}
+
+/* === 登录 & 账号管理样式 === */
+.login-wrap{position:fixed;inset:0;background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 50%,#DB2777 100%);display:flex;align-items:center;justify-content:center;z-index:999;padding:20px}
+.login-box{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.login-box .logo{text-align:center;margin-bottom:24px}
+.login-box .logo h2{font-size:20px;font-weight:700;margin-top:8px}
+.login-box .logo p{font-size:12px;color:var(--text3)}
+.login-err{font-size:12px;color:var(--rose);text-align:center;margin-bottom:8px;min-height:18px}
+.user-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:var(--radius-sm);background:var(--surface2);font-size:11px;color:var(--text2);cursor:pointer}
+.user-badge:hover{background:var(--surface3)}
+.user-badge .avatar{width:22px;height:22px;border-radius:50%;background:var(--indigo);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.perm-grid{display:grid;gap:6px}
+.perm-group{margin-bottom:12px}
+.perm-group-title{font-size:12px;font-weight:600;margin-bottom:6px;color:var(--text2);padding-bottom:4px;border-bottom:1px solid var(--border)}
+.perm-item{display:flex;align-items:center;gap:8px;padding:4px 8px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer}
+.perm-item:hover{background:var(--surface2)}
+.perm-item input[type=checkbox]{accent-color:var(--indigo);width:16px;height:16px}
+.perm-item .perm-desc{font-size:10px;color:var(--text3)}
+.user-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px;transition:all .15s}
+.user-card:hover{border-color:var(--indigo);box-shadow:0 2px 8px rgba(79,70,229,0.08)}
+.user-card .uc-header{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.user-card .uc-name{font-size:13px;font-weight:600}
+.user-card .uc-user{font-size:11px;color:var(--text3)}
+.user-card .uc-perms{display:flex;flex-wrap:wrap;gap:3px;margin-top:4px}
+
 .empty{text-align:center;padding:40px 20px;color:var(--text3);font-size:12px}
 .loading{text-align:center;padding:30px;color:var(--text3);font-size:12px}
 .mo{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;animation:fi 0.15s}
@@ -165,14 +190,32 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 </style>
 </head>
 <body>
-<div class="app">
+
+<!-- 登录界面 -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-box">
+    <div class="logo">
+      <div style="width:48px;height:48px;background:linear-gradient(135deg,#4F46E5,#7C3AED);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" width="24" height="24"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+      <h2>TikTok 素材库</h2>
+      <p>智能分发系统 · 请登录</p>
+    </div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="fg"><label class="fl">账号</label><input class="finp" id="loginUser" type="text" placeholder="输入账号" autocomplete="username"></div>
+    <div class="fg"><label class="fl">密码</label><input class="finp" id="loginPass" type="password" placeholder="输入密码" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <button class="bs" id="loginBtn" onclick="doLogin()">登 录</button>
+    <div style="text-align:center;margin-top:12px;font-size:10px;color:var(--text3)">首次使用请联系管理员获取账号</div>
+  </div>
+</div>
+
+<div class="app" id="appMain" style="display:none">
   <div class="header"><div class="ht">
     <div class="hb"><div class="hl"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div><div><h1>TikTok 素材库 <span class="hs">智能分发系统</span></h1></div></div>
     <div class="ha">
-      <button class="btn bg" onclick="showLinkModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>贴链接</button>
+      <button class="btn bg" onclick="showLinkModal()" id="btnLink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>贴链接</button>
       <button class="btn bg" onclick="doTriggerScrape()" id="scrapeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>抓爆款</button>
       <button class="btn bg" onclick="refreshAll()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115.4-6.4L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15.4 6.4L3 16"/></svg>刷新</button>
-      <button class="btn bp" onclick="showModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>投入素材</button>
+      <button class="btn bp" onclick="showModal()" id="btnAddMaterial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>投入素材</button>
+      <div class="user-badge" id="userBadge" onclick="showUserMenu()"><span class="avatar" id="userAvatar">A</span><span id="userDisplayName">管理员</span></div>
     </div>
   </div></div>
   <div class="nav" id="navTabs"></div>
@@ -338,10 +381,16 @@ var NAV_GROUPS=[
 var activeGroup=NAV_GROUPS[0].id;
 
 function rN(){
+  // 隐藏管理面板
+  var adv=document.getElementById("adminView");if(adv)adv.style.display="none";
+  // 根据权限过滤可见的导航分组
+  var visibleGroups=typeof getVisibleNavGroups==="function"?getVisibleNavGroups():NAV_GROUPS;
   // 自动判断当前tab属于哪个分组
-  NAV_GROUPS.forEach(function(g){if(g.tabs.includes(at))activeGroup=g.id});
+  var found=false;
+  visibleGroups.forEach(function(g){if(g.tabs.includes(at)){activeGroup=g.id;found=true}});
+  if(!found&&visibleGroups.length){activeGroup=visibleGroups[0].id}
   var h='<div style="display:flex;gap:6px;margin-bottom:6px">';
-  NAV_GROUPS.forEach(function(g){
+  visibleGroups.forEach(function(g){
     var isActive=g.id===activeGroup;
     var totalCount=0;g.tabs.forEach(function(k){if(ct[k])totalCount+=ct[k]});
     h+='<button style="padding:6px 14px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;border:1px solid '+(isActive?'var(--indigo)':'var(--border)')+';background:'+(isActive?'var(--indigo)':'var(--surface)')+';color:'+(isActive?'#fff':'var(--text2)')+';cursor:pointer" onclick="switchGroup(\''+g.id+'\')">'+g.label+(totalCount?' <span style="font-size:10px;font-weight:400;opacity:0.8">'+totalCount+'</span>':'')+'</button>';
@@ -463,7 +512,7 @@ async function rT(){
 }
 function doSearch(){searchTerm=document.getElementById("sI").value.trim();curPage=1;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters();setTimeout(triggerPageTranslation,50)}
 function toggleSort(){sortDir=sortDir==="desc"?"asc":"desc";curPage=1;rT()}
-async function doRetire(id){if(!confirm("确定要作废这条素材吗？"))return;try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({is_retired:true})});toast("已作废","tgs");setTimeout(refreshAll,300)}catch(e){toast("失败","tge")}}
+async function doRetire(id){if(!hasPerm("material_retire")){toast("无权限操作","tge");return}if(!confirm("确定要作废这条素材吗？"))return;try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({is_retired:true})});toast("已作废","tgs");setTimeout(refreshAll,300)}catch(e){toast("失败","tge")}}
 
 // 把爆款视频投入素材总表进行AI拆解
 async function dispatchTrending(id){
@@ -519,13 +568,14 @@ function sT(k){at=k;searchTerm="";colFilter={};curPage=1;if(document.getElementB
   document.getElementById("tableView").style.display="none";
   document.getElementById("assembleView").style.display="none";
   document.getElementById("productionsView").style.display="none";
+  var adv=document.getElementById("adminView");if(adv)adv.style.display="none";
   if(k==="__assemble__"){document.getElementById("assembleView").style.display="block";initAssemble()}
   else if(k==="__productions__"){document.getElementById("productionsView").style.display="block";loadProductions()}
   else{document.getElementById("tableView").style.display="block";rT()}
 }
-function showModal(){document.getElementById("mO").style.display="flex";setTimeout(function(){document.getElementById("fC").focus()},100)}
+function showModal(){if(!hasPerm("material_write")){toast("无权限操作","tge");return}document.getElementById("mO").style.display="flex";setTimeout(function(){document.getElementById("fC").focus()},100)}
 function hideModal(){document.getElementById("mO").style.display="none";document.getElementById("fC").value="";document.getElementById("fU").value=""}
-function showLinkModal(){document.getElementById("linkMO").style.display="flex";var ls=localStorage.getItem("submitter");if(ls)document.getElementById("linkSubmitter").value=ls;setTimeout(function(){document.getElementById("linkUrl").focus()},100)}
+function showLinkModal(){if(!hasPerm("material_write")){toast("无权限操作","tge");return}document.getElementById("linkMO").style.display="flex";var ls=localStorage.getItem("submitter");if(ls)document.getElementById("linkSubmitter").value=ls;setTimeout(function(){document.getElementById("linkUrl").focus()},100)}
 function hideLinkModal(){document.getElementById("linkMO").style.display="none";document.getElementById("linkUrl").value=""}
 
 // 视频预览弹窗
@@ -1280,6 +1330,7 @@ function renderProdList(prods){
 }
 
 async function deleteProduction(id){
+  if(!hasPerm("production_delete")){toast("无权限操作","tge");return}
   if(!confirm("确定要删除这个成片方案吗？相关的素材和成品也会被删除。"))return;
   try{
     // 删除关联的clips和outputs
@@ -2452,10 +2503,424 @@ function triggerPageTranslation(){
   });
 }
 
+// ==================== 账号权限管理系统 ====================
+var curUser=null;   // {id, username, display_name, role}
+var curPerms=[];    // ['material_read','material_write',...]
+
+// SHA-256 哈希（浏览器原生）
+async function sha256(text){
+  var enc=new TextEncoder().encode(text);
+  var hash=await crypto.subtle.digest("SHA-256",enc);
+  return Array.from(new Uint8Array(hash)).map(function(b){return b.toString(16).padStart(2,"0")}).join("");
+}
+
+// 权限检查
+function hasPerm(perm){
+  if(!curUser)return false;
+  if(curUser.role==="admin")return true;
+  return curPerms.indexOf(perm)!==-1;
+}
+
+// 登录
+async function doLogin(){
+  var username=document.getElementById("loginUser").value.trim();
+  var password=document.getElementById("loginPass").value;
+  var errEl=document.getElementById("loginErr");
+  var btn=document.getElementById("loginBtn");
+  if(!username||!password){errEl.textContent="请输入账号和密码";return}
+  btn.disabled=true;btn.textContent="登录中...";errEl.textContent="";
+
+  try{
+    var hash=await sha256(password);
+    var r=await fetch(U+"/rest/v1/rpc/user_login",{
+      method:"POST",headers:{"Content-Type":"application/json","apikey":K},
+      body:JSON.stringify({p_username:username,p_password_hash:hash})
+    });
+    if(!r.ok){
+      // RPC不存在时，允许免登录进入（兼容未部署auth SQL的情况）
+      var errText=await r.text();
+      if(errText.includes("does not exist")||errText.includes("could not find")){
+        curUser={id:"local",username:"admin",display_name:"管理员(本地)",role:"admin"};
+        curPerms=["all"];
+        onLoginSuccess();return;
+      }
+      throw new Error(errText);
+    }
+    var result=await r.json();
+    if(!result.success){errEl.textContent=result.message||"登录失败";return}
+
+    curUser=result.user;
+    curPerms=result.permissions||[];
+    // 保存会话
+    localStorage.setItem("auth_session",JSON.stringify({user:curUser,perms:curPerms,ts:Date.now()}));
+    onLoginSuccess();
+  }catch(e){errEl.textContent="登录失败: "+e.message}
+  finally{btn.disabled=false;btn.textContent="登 录"}
+}
+
+function onLoginSuccess(){
+  document.getElementById("loginWrap").style.display="none";
+  document.getElementById("appMain").style.display="block";
+  // 更新头部用户信息
+  document.getElementById("userAvatar").textContent=(curUser.display_name||"U")[0];
+  document.getElementById("userDisplayName").textContent=curUser.display_name||curUser.username;
+  // 根据权限控制按钮显示
+  applyPermissions();
+  // 初始化数据
+  initApp();
+}
+
+function applyPermissions(){
+  // 隐藏无权限的按钮
+  var el;
+  el=document.getElementById("btnLink");if(el)el.style.display=hasPerm("material_write")?"":"none";
+  el=document.getElementById("scrapeBtn");if(el)el.style.display=hasPerm("trending_scrape")?"":"none";
+  el=document.getElementById("btnAddMaterial");if(el)el.style.display=hasPerm("material_write")?"":"none";
+}
+
+// 检查本地缓存的登录会话
+function checkSession(){
+  try{
+    var s=localStorage.getItem("auth_session");
+    if(!s)return false;
+    var session=JSON.parse(s);
+    // 24小时过期
+    if(Date.now()-session.ts>24*3600*1000){localStorage.removeItem("auth_session");return false}
+    curUser=session.user;
+    curPerms=session.perms;
+    return true;
+  }catch(e){return false}
+}
+
+// 退出登录
+function doLogout(){
+  curUser=null;curPerms=[];
+  localStorage.removeItem("auth_session");
+  document.getElementById("loginWrap").style.display="flex";
+  document.getElementById("appMain").style.display="none";
+  document.getElementById("loginUser").value="";
+  document.getElementById("loginPass").value="";
+  document.getElementById("loginErr").textContent="";
+}
+
+// 用户菜单
+function showUserMenu(){
+  var existing=document.getElementById("userMenuDrop");
+  if(existing){existing.remove();return}
+
+  var menu=document.createElement("div");
+  menu.id="userMenuDrop";
+  menu.style.cssText="position:fixed;top:52px;right:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 8px 24px rgba(0,0,0,0.12);z-index:200;min-width:180px;padding:6px 0;animation:fi 0.1s";
+
+  var items=[];
+  items.push({label:"👤 "+curUser.display_name,sub:curUser.role==="admin"?"管理员":"运营",disabled:true});
+  items.push({type:"divider"});
+  items.push({label:"🔑 修改密码",action:"showChangePwdModal()"});
+  if(hasPerm("admin_users")){
+    items.push({label:"👥 账号管理",action:"showAdminPanel()"});
+  }
+  items.push({type:"divider"});
+  items.push({label:"🚪 退出登录",action:"doLogout()",color:"var(--rose)"});
+
+  var h="";
+  items.forEach(function(it){
+    if(it.type==="divider"){h+='<div style="height:1px;background:var(--border);margin:4px 0"></div>';return}
+    if(it.disabled){
+      h+='<div style="padding:8px 14px"><div style="font-size:12px;font-weight:600">'+it.label+'</div>';
+      if(it.sub)h+='<div style="font-size:10px;color:var(--text3)">'+it.sub+'</div>';
+      h+='</div>';return;
+    }
+    h+='<div style="padding:7px 14px;font-size:12px;cursor:pointer;color:'+(it.color||"var(--text)")+'" onmouseover="this.style.background=\'var(--surface2)\'" onmouseout="this.style.background=\'transparent\'" onclick="document.getElementById(\'userMenuDrop\').remove();'+it.action+'">'+it.label+'</div>';
+  });
+  menu.innerHTML=h;
+  document.body.appendChild(menu);
+  // 点击其他地方关闭
+  setTimeout(function(){document.addEventListener("click",function closeMenu(e){
+    if(!menu.contains(e.target)&&e.target.id!=="userBadge"){menu.remove();document.removeEventListener("click",closeMenu)}
+  })},10);
+}
+
+// 修改密码弹窗
+function showChangePwdModal(){
+  var el=document.getElementById("changePwdMO");
+  if(!el){
+    el=document.createElement("div");el.className="mo";el.id="changePwdMO";
+    el.onclick=function(e){if(e.target===el)el.style.display="none"};
+    el.innerHTML='<div class="modal" style="max-width:400px"><div class="mh"><h3>🔑 修改密码</h3><button class="mx" onclick="document.getElementById(\'changePwdMO\').style.display=\'none\'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="mbo"><div class="fg"><label class="fl">原密码</label><input class="finp" id="cpOldPwd" type="password" placeholder="输入原密码"></div><div class="fg"><label class="fl">新密码</label><input class="finp" id="cpNewPwd" type="password" placeholder="输入新密码（至少6位）"></div><div class="fg"><label class="fl">确认新密码</label><input class="finp" id="cpNewPwd2" type="password" placeholder="再次输入新密码"></div><button class="bs" onclick="doChangePwd()">确认修改</button></div></div>';
+    document.body.appendChild(el);
+  }
+  el.style.display="flex";
+}
+
+async function doChangePwd(){
+  var oldPwd=document.getElementById("cpOldPwd").value;
+  var newPwd=document.getElementById("cpNewPwd").value;
+  var newPwd2=document.getElementById("cpNewPwd2").value;
+  if(!oldPwd||!newPwd){toast("请填写完整","tge");return}
+  if(newPwd.length<6){toast("新密码至少6位","tge");return}
+  if(newPwd!==newPwd2){toast("两次密码不一致","tge");return}
+
+  try{
+    var oldHash=await sha256(oldPwd);
+    var newHash=await sha256(newPwd);
+    // 验证原密码
+    var vr=await fetch(U+"/rest/v1/rpc/user_login",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_username:curUser.username,p_password_hash:oldHash})});
+    var vResult=await vr.json();
+    if(!vResult.success){toast("原密码错误","tge");return}
+    // 更新密码
+    await fetch(U+"/rest/v1/sys_users?id=eq."+curUser.id,{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({password_hash:newHash})});
+    toast("密码修改成功","tgs");
+    document.getElementById("changePwdMO").style.display="none";
+    document.getElementById("cpOldPwd").value="";document.getElementById("cpNewPwd").value="";document.getElementById("cpNewPwd2").value="";
+  }catch(e){toast("修改失败: "+e.message,"tge")}
+}
+
+// ==================== 管理员 · 账号管理面板 ====================
+var allPermDefs=null; // 权限定义缓存
+
+async function loadPermDefs(){
+  if(allPermDefs)return allPermDefs;
+  try{
+    var r=await fetch(qa("sys_permissions","order=sort_order.asc"));
+    allPermDefs=await r.json();
+    return allPermDefs;
+  }catch(e){return []}
+}
+
+function showAdminPanel(){
+  // 切换到管理面板视图
+  document.getElementById("tableView").style.display="none";
+  document.getElementById("assembleView").style.display="none";
+  document.getElementById("productionsView").style.display="none";
+  var adminView=document.getElementById("adminView");
+  if(!adminView){
+    adminView=document.createElement("div");adminView.id="adminView";
+    adminView.innerHTML='<div class="tw"><div class="toolbar"><div class="tt"><span class="nc" style="background:var(--violet-light);color:var(--violet);width:20px;height:20px;border-radius:4px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:9px;height:9px"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>账号管理</div><button class="btn bp" style="margin-left:auto" onclick="showCreateUserModal()">+ 创建子账号</button></div><div id="adminUserList"><div class="loading">加载中...</div></div></div>';
+    document.querySelector(".app").appendChild(adminView);
+  }
+  adminView.style.display="block";
+  loadAdminUsers();
+}
+
+async function loadAdminUsers(){
+  var list=document.getElementById("adminUserList");
+  list.innerHTML='<div class="loading">加载中...</div>';
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/list_sub_users",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_admin_id:curUser.id})});
+    if(!r.ok)throw new Error(await r.text());
+    var result=await r.json();
+    if(!result.success){throw new Error(result.message)}
+    var perms=await loadPermDefs();
+    renderAdminUsers(result.users||[],perms);
+  }catch(e){list.innerHTML='<div class="empty">加载失败: '+e.message+'</div>'}
+}
+
+function renderAdminUsers(users,permDefs){
+  var list=document.getElementById("adminUserList");
+  if(!users.length){list.innerHTML='<div class="empty">暂无子账号<br><div style="font-size:11px;margin-top:6px;color:var(--text3)">点击右上角"+ 创建子账号"添加运营人员</div></div>';return}
+
+  var permMap={};permDefs.forEach(function(p){permMap[p.id]=p});
+
+  var h='<div style="display:grid;gap:8px;margin-top:8px">';
+  users.forEach(function(u){
+    var isActive=u.is_active!==false;
+    h+='<div class="user-card" style="'+(isActive?'':'opacity:0.5;border-color:var(--rose-light)')+'">';
+    h+='<div class="uc-header">';
+    h+='<div class="avatar" style="width:32px;height:32px;font-size:13px;border-radius:50%;background:'+(isActive?'var(--indigo)':'var(--text3)')+';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700">'+(u.display_name||"U")[0]+'</div>';
+    h+='<div style="flex:1"><div class="uc-name">'+u.display_name+' <span class="uc-user">@'+u.username+'</span>';
+    if(!isActive)h+=' <span class="tag tr">已禁用</span>';
+    h+='</div>';
+    h+='<div style="font-size:10px;color:var(--text3)">创建: '+fmtTime(u.created_at)+(u.last_login_at?' · 最近登录: '+fmtTime(u.last_login_at):'')+(u.notes?' · '+u.notes:'')+'</div>';
+    h+='</div>';
+    h+='<div style="display:flex;gap:4px">';
+    h+='<button class="btn bg" style="font-size:10px;padding:3px 8px" onclick="showEditUserModal(\''+u.id+'\')">编辑</button>';
+    if(isActive){
+      h+='<button class="retire-btn" onclick="toggleUserActive(\''+u.id+'\',false)">禁用</button>';
+    }else{
+      h+='<button class="btn bp" style="font-size:10px;padding:3px 8px" onclick="toggleUserActive(\''+u.id+'\',true)">启用</button>';
+    }
+    h+='</div></div>';
+    // 权限标签
+    var userPerms=u.permissions||[];
+    if(userPerms.length){
+      h+='<div class="uc-perms">';
+      userPerms.forEach(function(pid){
+        var pd=permMap[pid];
+        if(pd)h+='<span class="tag ti" style="font-size:9px">'+pd.display_name+'</span>';
+      });
+      h+='</div>';
+    }else{
+      h+='<div style="font-size:10px;color:var(--text3);margin-top:4px">未分配任何权限</div>';
+    }
+    h+='</div>';
+  });
+  h+='</div>';
+  list.innerHTML=h;
+}
+
+// 创建子账号弹窗
+async function showCreateUserModal(){
+  var perms=await loadPermDefs();
+  var el=document.getElementById("createUserMO");
+  if(!el){
+    el=document.createElement("div");el.className="mo";el.id="createUserMO";
+    el.onclick=function(e){if(e.target===el)el.style.display="none"};
+    el.innerHTML='<div class="modal wide"><div class="mh"><h3>👤 创建子账号</h3><button class="mx" onclick="document.getElementById(\'createUserMO\').style.display=\'none\'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="mbo" id="createUserBody"></div></div>';
+    document.body.appendChild(el);
+  }
+  var h='';
+  h+='<div style="display:flex;gap:8px"><div class="fg" style="flex:1"><label class="fl">账号名 <span class="rq">*</span></label><input class="finp" id="cuUsername" placeholder="英文/数字，如 xiaoming"></div>';
+  h+='<div class="fg" style="flex:1"><label class="fl">显示名称 <span class="rq">*</span></label><input class="finp" id="cuDisplayName" placeholder="如 小明"></div></div>';
+  h+='<div style="display:flex;gap:8px"><div class="fg" style="flex:1"><label class="fl">初始密码 <span class="rq">*</span></label><input class="finp" id="cuPassword" type="password" placeholder="至少6位"></div>';
+  h+='<div class="fg" style="flex:1"><label class="fl">备注</label><input class="finp" id="cuNotes" placeholder="如：负责美妆线"></div></div>';
+  h+='<div class="fg"><label class="fl">分配权限</label>';
+  h+=renderPermCheckboxes(perms,[]);
+  h+='</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px"><button class="btn bg" style="font-size:11px" onclick="toggleAllPerms(true)">全选</button><button class="btn bg" style="font-size:11px" onclick="toggleAllPerms(false)">全不选</button></div>';
+  h+='<button class="bs" onclick="doCreateUser()">创建账号</button>';
+  document.getElementById("createUserBody").innerHTML=h;
+  el.style.display="flex";
+}
+
+function renderPermCheckboxes(permDefs,selectedPerms){
+  var groups={};
+  permDefs.forEach(function(p){
+    if(!groups[p.group_name])groups[p.group_name]=[];
+    groups[p.group_name].push(p);
+  });
+  var h='<div class="perm-grid">';
+  Object.keys(groups).forEach(function(gName){
+    h+='<div class="perm-group"><div class="perm-group-title">'+gName+'</div>';
+    groups[gName].forEach(function(p){
+      var checked=selectedPerms.indexOf(p.id)!==-1?' checked':'';
+      h+='<label class="perm-item"><input type="checkbox" class="perm-cb" value="'+p.id+'"'+checked+'><div><div>'+p.display_name+'</div><div class="perm-desc">'+p.description+'</div></div></label>';
+    });
+    h+='</div>';
+  });
+  h+='</div>';
+  return h;
+}
+
+function toggleAllPerms(check){
+  document.querySelectorAll(".perm-cb").forEach(function(cb){cb.checked=check});
+}
+
+function getSelectedPerms(){
+  var perms=[];
+  document.querySelectorAll(".perm-cb:checked").forEach(function(cb){perms.push(cb.value)});
+  return perms;
+}
+
+async function doCreateUser(){
+  var username=document.getElementById("cuUsername").value.trim();
+  var displayName=document.getElementById("cuDisplayName").value.trim();
+  var password=document.getElementById("cuPassword").value;
+  var notes=document.getElementById("cuNotes").value.trim();
+  if(!username||!displayName){toast("请填写账号名和显示名称","tge");return}
+  if(!password||password.length<6){toast("密码至少6位","tge");return}
+
+  try{
+    var hash=await sha256(password);
+    var perms=getSelectedPerms();
+    var r=await fetch(U+"/rest/v1/rpc/create_sub_user",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({
+      p_admin_id:curUser.id,p_username:username,p_password_hash:hash,p_display_name:displayName,p_permissions:perms,p_notes:notes||null
+    })});
+    var result=await r.json();
+    if(!result.success){toast(result.message||"创建失败","tge");return}
+    toast("子账号创建成功！","tgs");
+    document.getElementById("createUserMO").style.display="none";
+    loadAdminUsers();
+  }catch(e){toast("创建失败: "+e.message,"tge")}
+}
+
+// 编辑子账号
+async function showEditUserModal(userId){
+  var perms=await loadPermDefs();
+  // 获取用户信息
+  var r=await fetch(qa("sys_users","id=eq."+userId));
+  var user=(await r.json())[0];if(!user){toast("用户不存在","tge");return}
+  var pr=await fetch(qa("sys_user_permissions","user_id=eq."+userId+"&select=permission_id"));
+  var userPerms=(await pr.json()).map(function(p){return p.permission_id});
+
+  var el=document.getElementById("editUserMO");
+  if(!el){
+    el=document.createElement("div");el.className="mo";el.id="editUserMO";
+    el.onclick=function(e){if(e.target===el)el.style.display="none"};
+    el.innerHTML='<div class="modal wide"><div class="mh"><h3 id="editUserTitle">编辑账号</h3><button class="mx" onclick="document.getElementById(\'editUserMO\').style.display=\'none\'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="mbo" id="editUserBody"></div></div>';
+    document.body.appendChild(el);
+  }
+  document.getElementById("editUserTitle").textContent="编辑 · "+user.display_name+" (@"+user.username+")";
+  var h='';
+  h+='<div style="display:flex;gap:8px"><div class="fg" style="flex:1"><label class="fl">显示名称</label><input class="finp" id="euDisplayName" value="'+(user.display_name||"").replace(/"/g,"&quot;")+'"></div>';
+  h+='<div class="fg" style="flex:1"><label class="fl">备注</label><input class="finp" id="euNotes" value="'+(user.notes||"").replace(/"/g,"&quot;")+'"></div></div>';
+  h+='<div class="fg"><label class="fl">重置密码 <span style="font-weight:400;color:var(--text3)">留空不修改</span></label><input class="finp" id="euPassword" type="password" placeholder="输入新密码（留空不修改）"></div>';
+  h+='<div class="fg"><label class="fl">分配权限</label>';
+  h+=renderPermCheckboxes(perms,userPerms);
+  h+='</div>';
+  h+='<div style="display:flex;gap:8px;margin-bottom:8px"><button class="btn bg" style="font-size:11px" onclick="toggleAllPerms(true)">全选</button><button class="btn bg" style="font-size:11px" onclick="toggleAllPerms(false)">全不选</button></div>';
+  h+='<button class="bs" onclick="doUpdateUser(\''+userId+'\')">保存修改</button>';
+  document.getElementById("editUserBody").innerHTML=h;
+  el.style.display="flex";
+}
+
+async function doUpdateUser(userId){
+  var displayName=document.getElementById("euDisplayName").value.trim();
+  var password=document.getElementById("euPassword").value;
+  var notes=document.getElementById("euNotes").value.trim();
+  var perms=getSelectedPerms();
+
+  try{
+    var params={p_admin_id:curUser.id,p_user_id:userId,p_display_name:displayName||null,p_permissions:perms,p_notes:notes||null};
+    if(password&&password.length>=6){params.p_password_hash=await sha256(password)}
+    var r=await fetch(U+"/rest/v1/rpc/update_sub_user",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify(params)});
+    var result=await r.json();
+    if(!result.success){toast(result.message||"更新失败","tge");return}
+    toast("账号更新成功","tgs");
+    document.getElementById("editUserMO").style.display="none";
+    loadAdminUsers();
+  }catch(e){toast("更新失败: "+e.message,"tge")}
+}
+
+async function toggleUserActive(userId,active){
+  var action=active?"启用":"禁用";
+  if(!confirm("确定要"+action+"这个账号吗？"))return;
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/update_sub_user",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_admin_id:curUser.id,p_user_id:userId,p_is_active:active})});
+    var result=await r.json();
+    if(!result.success){toast(result.message||action+"失败","tge");return}
+    toast("已"+action,"tgs");loadAdminUsers();
+  }catch(e){toast(action+"失败: "+e.message,"tge")}
+}
+
+// ==================== 导航权限控制 ====================
+// 重写导航分组：根据权限过滤
+function getVisibleNavGroups(){
+  var groups=[];
+  if(hasPerm("material_read"))groups.push(NAV_GROUPS[0]);
+  if(hasPerm("trending_read"))groups.push(NAV_GROUPS[1]);
+  if(hasPerm("assemble_read"))groups.push(NAV_GROUPS[2]);
+  if(hasPerm("production_read"))groups.push(NAV_GROUPS[3]);
+  return groups;
+}
+
 // ==================== 初始化 ====================
-var ss=localStorage.getItem("submitter");if(ss)document.getElementById("fS").value=ss;
-document.getElementById("fS").addEventListener("change",function(){localStorage.setItem("submitter",this.value)});
-(async function(){await lC();rN();rT()})();
+function initApp(){
+  var ss=localStorage.getItem("submitter");if(ss)document.getElementById("fS").value=ss;
+  document.getElementById("fS").addEventListener("change",function(){localStorage.setItem("submitter",this.value)});
+  (async function(){await lC();rN();rT()})();
+}
+
+// 启动：检查是否已登录
+(function(){
+  if(checkSession()){
+    onLoginSuccess();
+  }else{
+    // 显示登录界面
+    document.getElementById("loginWrap").style.display="flex";
+    document.getElementById("appMain").style.display="none";
+    setTimeout(function(){document.getElementById("loginUser").focus()},200);
+  }
+})();
 </script>
 </body>
 </html>
