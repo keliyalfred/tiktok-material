@@ -137,6 +137,25 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 .preview-card .pv-empty{font-size:11px;color:var(--text3);font-style:italic}
 
 @media(max-width:640px){.header{padding:10px 14px}.nav{padding:4px 14px 0}.tw{padding:10px 14px}thead th,tbody td{padding:6px 7px}.modal{max-height:90vh;border-radius:var(--radius) var(--radius) 0 0;align-self:flex-end}.mo{align-items:flex-end;padding:0}.asm-grid{grid-template-columns:1fr}.asm-wrap{padding:10px 14px}}
+
+/* === 拍摄指导样式 === */
+.guide-modal{max-width:700px;max-height:90vh}
+.guide-content{padding:0 20px 20px;overflow-y:auto;max-height:calc(90vh - 60px)}
+.guide-content h2{font-size:16px;font-weight:700;margin:18px 0 8px;color:var(--indigo);display:flex;align-items:center;gap:6px}
+.guide-content h3{font-size:14px;font-weight:600;margin:14px 0 6px;color:var(--text)}
+.guide-content p{font-size:13px;line-height:1.7;margin-bottom:8px;color:var(--text)}
+.guide-content ul,.guide-content ol{font-size:13px;line-height:1.7;margin:4px 0 10px 18px;color:var(--text)}
+.guide-content li{margin-bottom:4px}
+.guide-content strong{color:var(--indigo-text);font-weight:600}
+.guide-content em{color:var(--amber-text);font-style:normal;font-weight:500}
+.guide-content code{background:var(--surface2);padding:1px 4px;border-radius:3px;font-size:12px;color:var(--rose)}
+.guide-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:10px}
+.guide-section-title{font-size:13px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;color:var(--indigo)}
+.guide-loading{text-align:center;padding:40px;color:var(--text3)}
+.guide-loading .spinner{display:inline-block;width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--indigo);border-radius:50%;animation:spin 0.8s linear infinite;margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.guide-actions{display:flex;gap:8px;margin-top:16px;justify-content:center;flex-wrap:wrap}
+.guide-actions .btn{padding:8px 16px;font-size:12px}
 </style>
 </head>
 <body>
@@ -820,7 +839,10 @@ function renderPreview(panel){
   });
   var hasFramework=!!asmData.framework;
   h+='<div class="asm-nav-btns"><button class="btn bg" onclick="goAsmStep('+(asmStep-1)+')">← 上一步</button>';
-  h+='<button class="btn bv" onclick="saveProduction()"'+(hasFramework?'':' disabled style="opacity:0.5"')+'>💾 保存成片方案</button></div>';
+  h+='<div style="display:flex;gap:8px">';
+  h+='<button class="btn bp" onclick="generateShootingGuide()" id="genGuideBtn"'+(hasFramework?'':' disabled style="opacity:0.5"')+'>📸 生成拍摄指导</button>';
+  h+='<button class="btn bv" onclick="saveProduction()"'+(hasFramework?'':' disabled style="opacity:0.5"')+'>💾 保存成片方案</button>';
+  h+='</div></div>';
   panel.innerHTML=h;
 }
 
@@ -844,6 +866,248 @@ async function saveProduction(){
     asmData={framework:null,stop:[],pain:[],visual:[],proof:[],buy:[],bgm:[],rhythm:[]};
     asmStep=0;renderAsmSteps();renderAsmPanel();
   }catch(e){toast("保存失败: "+e.message,"tge")}
+}
+
+// ==================== Phase 2: AI拍摄指导生成 ====================
+var guideModalEl=null;
+
+function showGuideModal(){
+  if(!guideModalEl){
+    guideModalEl=document.createElement("div");guideModalEl.className="mo";guideModalEl.id="guideMO";
+    guideModalEl.onclick=function(e){if(e.target===guideModalEl)hideGuideModal()};
+    guideModalEl.innerHTML='<div class="modal guide-modal"><div class="mh"><h3>📸 拍摄指导 SOP</h3><button class="mx" onclick="hideGuideModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="guide-content" id="guideContent"></div></div>';
+    document.body.appendChild(guideModalEl);
+  }
+  guideModalEl.style.display="flex";
+}
+function hideGuideModal(){if(guideModalEl)guideModalEl.style.display="none"}
+
+function buildGuidePrompt(shootingParamsData){
+  var parts=[];
+
+  // 框架
+  var fw=asmData.framework;
+  if(fw){
+    parts.push("【框架结构】\n公式: "+fw.formula+"\n名称: "+(fw.name||"")+"\n核心逻辑: "+(fw.core_logic||"")+"\n适用场景: "+(fw.applicable_scene||"")+"\n难度: "+(fw.difficulty||""));
+  }
+
+  // 钩子
+  var stops=asmData.stop||[];
+  if(stops.length){
+    parts.push("【钩子话术（停）】\n"+stops.map(function(d,i){
+      return (i+1)+". "+(d.script_cn||d.comment_cn||d.script_en||d.comment_en||"—")+" | 阶段:"+(d.video_stage||"开头")+" | 类型:"+(d.action_type||d.convertible_to||"—");
+    }).join("\n"));
+  }
+
+  // 痛点
+  var pains=asmData.pain||[];
+  if(pains.length){
+    parts.push("【痛点场景（病）】\n"+pains.map(function(d,i){
+      return (i+1)+". 场景:"+(d.scene_name||"—")+" | 痛点:"+(d.user_pain||"—")+" | 切入角度:"+(d.product_angle||"—")+" | 情绪:"+(d.emotion_keywords||"—");
+    }).join("\n"));
+  }
+
+  // 卖点画面
+  var visuals=asmData.visual||[];
+  if(visuals.length){
+    parts.push("【卖点画面（药）】\n"+visuals.map(function(d,i){
+      return (i+1)+". "+(d.shot_description||"—")+" | 类型:"+(d.shot_type||"—")+" | 作用:"+(d.purpose||"—")+" | 阶段:"+(d.video_stage||"—");
+    }).join("\n"));
+  }
+
+  // 社会证明
+  var proofs=asmData.proof||[];
+  if(proofs.length){
+    parts.push("【社会证明（信）】\n"+proofs.map(function(d,i){
+      return (i+1)+". "+(d.name||"—")+" | 类型:"+(d.proof_type||"—")+" | 信任度:"+(d.trust_level||"—")+" | 使用场景:"+(d.usage_note||"—");
+    }).join("\n"));
+  }
+
+  // 促单CTA
+  var buys=asmData.buy||[];
+  if(buys.length){
+    parts.push("【促单CTA（买）】\n"+buys.map(function(d,i){
+      return (i+1)+". "+(d.script_cn||d.name||"—")+" | 类型:"+(d.action_type||d.benefit_type||"—")+" | 逻辑:"+(d.script_logic||d.description||"—");
+    }).join("\n"));
+  }
+
+  // BGM
+  var bgms=asmData.bgm||[];
+  if(bgms.length){
+    parts.push("【BGM选择】\n"+bgms.map(function(d,i){
+      return (i+1)+". "+(d.name||d.music_title||"—")+" | 情绪:"+(d.emotion_type||"—")+" | 适用:"+(d.applicable_content||"—")+" | 特征:"+(d.features||"—");
+    }).join("\n"));
+  }
+
+  // 节奏模板
+  var rhythms=asmData.rhythm||[];
+  if(rhythms.length){
+    parts.push("【节奏模板】\n"+rhythms.map(function(d,i){
+      return (i+1)+". "+(d.template_name||"—")+" | 时长:"+(d.total_duration||"—")+" | 节奏:"+(d.beat_structure||"—")+" | 钩子:"+(d.hook_content||"—")+" | 中间:"+(d.middle_content||"—")+" | CTA:"+(d.cta_content||"—")+" | 转场:"+(d.transition_style||"—")+" | BGM节奏:"+(d.bgm_tempo||"—");
+    }).join("\n"));
+  }
+
+  var materialText=parts.join("\n\n");
+
+  // 附加拍摄参数库参考数据
+  if(shootingParamsData&&shootingParamsData.length){
+    var spText=shootingParamsData.slice(0,15).map(function(d,i){
+      return (i+1)+". "+(d.shot_name||"—")+" | 分类:"+(d.shot_category||"—")+" | 景别:"+(d.framing||"—")+" | 角度:"+(d.camera_angle||"—")+" | 运镜:"+(d.camera_movement||"—")+" | 光线:"+(d.lighting||"—")+" | 要点:"+(d.shooting_tips||"—");
+    }).join("\n");
+    materialText+="\n\n【拍摄参数库（参考）】\n以下是已积累的拍摄参数，请在生成镜头指导时参考这些经验：\n"+spText;
+  }
+
+  var systemPrompt='你是一位TikTok短视频拍摄指导专家。你的任务是根据运营团队已选定的素材方案，生成一份"小白级"拍摄SOP（标准作业流程），让完全没有拍摄经验的人也能看懂并执行。\n\n要求：\n1. 使用中文输出\n2. 按视频时间线从头到尾，逐个镜头写清楚\n3. 每个镜头要写明：镜头编号、时间段（如0:00-0:03）、画面内容、镜头景别（特写/中景/全景等）、运镜方式（固定/推拉/跟拍等）、演员动作/表情、台词/配音、字幕文案、注意事项\n4. 在开头写一段"拍前准备"清单：需要的设备、场地、道具、服装、妆造等\n5. 在结尾写"后期要点"：剪辑节奏、配乐卡点、字幕样式、特效建议\n6. 语言要口语化、具体化，避免抽象描述\n7. 用markdown格式输出，用## 分大标题，### 分小标题，用编号列表\n8. 如果选了节奏模板，要按照节奏模板的时间分配来规划每个镜头的时长';
+
+  var userPrompt='请根据以下已选定的成片方案素材，生成完整的拍摄指导SOP：\n\n'+materialText+'\n\n请按照"拍前准备 → 逐镜头拍摄指导 → 后期要点"的结构输出。每个镜头要具体到"在哪拍、怎么拍、拍什么、说什么、写什么字幕"，让拍摄小白一看就懂。';
+
+  return {system:systemPrompt,user:userPrompt};
+}
+
+async function generateShootingGuide(){
+  if(!asmData.framework){toast("请先选择框架","tge");return}
+
+  var btn=document.getElementById("genGuideBtn");
+  btn.disabled=true;btn.innerHTML='⏳ 生成中...';
+
+  showGuideModal();
+  var content=document.getElementById("guideContent");
+  content.innerHTML='<div class="guide-loading"><div class="spinner"></div><p>AI正在根据你选的素材生成拍摄指导...</p><p style="font-size:11px;color:var(--text3);margin-top:6px">预计需要15-30秒，请耐心等待</p></div>';
+
+  // 加载拍摄参数库数据作为参考
+  var shootingParams=await loadAsmData("shooting_params");
+  var prompt=buildGuidePrompt(shootingParams);
+
+  try{
+    // 通过Supabase RPC调用Claude API
+    var r=await fetch(U+"/rest/v1/rpc/generate_shooting_guide",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":K},
+      body:JSON.stringify({p_system:prompt.system,p_user:prompt.user})
+    });
+
+    if(!r.ok){
+      var errText=await r.text();
+      if(errText.includes("does not find")||errText.includes("does not exist")||errText.includes("could not find")){
+        throw new Error("RPC函数未安装");
+      }
+      throw new Error("RPC调用失败: "+errText.substring(0,200));
+    }
+
+    var result=await r.json();
+    if(result.success){
+      renderGuideResult(content,result.guide_text);
+    }else{
+      throw new Error(result.message||"生成失败");
+    }
+  }catch(e){
+    console.error("拍摄指导生成失败:",e.message);
+    var isNotInstalled=e.message.includes("未安装");
+    content.innerHTML='<div class="guide-loading"><p style="color:var(--rose)">⚠️ '+(isNotInstalled?'请先安装数据库函数':'生成失败: '+e.message)+'</p><p style="font-size:11px;color:var(--text3);margin-top:8px">'+(isNotInstalled?'请在 Supabase SQL Editor 中执行 <strong>setup_shooting_guide.sql</strong>，安装 generate_shooting_guide 函数后重试。':'请检查数据库函数和API配置。')+'</p><div class="guide-actions">'+(isNotInstalled?'':'<button class="btn bg" onclick="generateShootingGuide()">🔄 重试</button>')+'<button class="btn bp" onclick="copyGuidePrompt()">📋 复制Prompt手动生成</button></div></div>';
+  }finally{
+    btn.disabled=false;btn.innerHTML='📸 生成拍摄指导';
+  }
+}
+
+function renderGuideResult(contentEl,mdText){
+  // 简单的Markdown→HTML转换
+  var html=mdToHtml(mdText);
+
+  contentEl.innerHTML='<div style="margin-bottom:12px">'+html+'</div>'+
+    '<div class="guide-actions">'+
+    '<button class="btn bp" onclick="copyGuideText()">📋 复制全文</button>'+
+    '<button class="btn bg" onclick="downloadGuide()">💾 下载文档</button>'+
+    '<button class="btn bg" onclick="generateShootingGuide()">🔄 重新生成</button>'+
+    '</div>';
+
+  // 保存原始文本供复制和下载
+  contentEl.dataset.rawText=mdText;
+}
+
+function mdToHtml(md){
+  // 基础Markdown转HTML
+  var lines=md.split("\n");
+  var html="";var inList=false;var listType="";
+
+  for(var i=0;i<lines.length;i++){
+    var line=lines[i];
+
+    // 标题
+    if(line.match(/^###\s/)){
+      if(inList){html+=listType==="ol"?"</ol>":"</ul>";inList=false}
+      html+="<h3>"+processInline(line.replace(/^###\s/,""))+"</h3>";continue;
+    }
+    if(line.match(/^##\s/)){
+      if(inList){html+=listType==="ol"?"</ol>":"</ul>";inList=false}
+      html+="<h2>"+processInline(line.replace(/^##\s/,""))+"</h2>";continue;
+    }
+    if(line.match(/^#\s/)){
+      if(inList){html+=listType==="ol"?"</ol>":"</ul>";inList=false}
+      html+="<h2>"+processInline(line.replace(/^#\s/,""))+"</h2>";continue;
+    }
+
+    // 有序列表
+    if(line.match(/^\d+\.\s/)){
+      if(!inList||listType!=="ol"){if(inList)html+=listType==="ol"?"</ol>":"</ul>";html+="<ol>";inList=true;listType="ol"}
+      html+="<li>"+processInline(line.replace(/^\d+\.\s/,""))+"</li>";continue;
+    }
+
+    // 无序列表
+    if(line.match(/^[-*]\s/)){
+      if(!inList||listType!=="ul"){if(inList)html+=listType==="ol"?"</ol>":"</ul>";html+="<ul>";inList=true;listType="ul"}
+      html+="<li>"+processInline(line.replace(/^[-*]\s/,""))+"</li>";continue;
+    }
+
+    // 空行
+    if(!line.trim()){
+      if(inList){html+=listType==="ol"?"</ol>":"</ul>";inList=false}
+      continue;
+    }
+
+    // 普通段落
+    if(inList){html+=listType==="ol"?"</ol>":"</ul>";inList=false}
+    html+="<p>"+processInline(line)+"</p>";
+  }
+  if(inList)html+=listType==="ol"?"</ol>":"</ul>";
+  return html;
+}
+
+function processInline(text){
+  // 粗体
+  text=text.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");
+  // 斜体
+  text=text.replace(/\*(.+?)\*/g,"<em>$1</em>");
+  // 行内代码
+  text=text.replace(/`(.+?)`/g,"<code>$1</code>");
+  return text;
+}
+
+function copyGuideText(){
+  var contentEl=document.getElementById("guideContent");
+  var text=contentEl.dataset.rawText||contentEl.innerText;
+  navigator.clipboard.writeText(text).then(function(){toast("已复制到剪贴板","tgs")}).catch(function(){
+    // fallback
+    var ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();toast("已复制","tgs");
+  });
+}
+
+function copyGuidePrompt(){
+  var prompt=buildGuidePrompt();
+  var text="【System Prompt】\n"+prompt.system+"\n\n【User Prompt】\n"+prompt.user;
+  navigator.clipboard.writeText(text).then(function(){toast("Prompt已复制，可粘贴到Claude/ChatGPT手动生成","tgs")}).catch(function(){toast("复制失败","tge")});
+}
+
+function downloadGuide(){
+  var contentEl=document.getElementById("guideContent");
+  var text=contentEl.dataset.rawText||"";
+  if(!text){toast("暂无内容","tge");return}
+  var fw=asmData.framework;
+  var filename="拍摄指导_"+(fw?fw.name:"方案")+"_"+new Date().toISOString().slice(0,10)+".md";
+  var blob=new Blob([text],{type:"text/markdown;charset=utf-8"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");a.href=url;a.download=filename;
+  document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+  toast("下载成功","tgs");
 }
 
 // ==================== 初始化 ====================
