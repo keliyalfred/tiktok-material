@@ -1330,8 +1330,11 @@ function renderProdDetail(detail){
 
   var h='<div style="margin-bottom:12px"><button class="btn bg" onclick="loadProductions()">← 返回列表</button></div>';
 
-  // 方案标题
-  h+='<div style="font-size:16px;font-weight:700;margin-bottom:12px">'+(p.title||"未命名方案")+'</div>';
+  // 方案标题 — 可编辑
+  h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">';
+  h+='<input type="text" class="finp" id="prodTitleInput" value="'+((p.title||"未命名方案").replace(/"/g,"&quot;"))+'" style="font-size:16px;font-weight:700;border:1px solid transparent;padding:4px 8px;flex:1" onfocus="this.style.borderColor=\'var(--indigo)\'" onblur="this.style.borderColor=\'transparent\';saveProdTitle(this.value)">';
+  h+='<button class="btn bg" style="font-size:10px;padding:3px 8px;white-space:nowrap" onclick="saveProdTitle(document.getElementById(\'prodTitleInput\').value)">✏️ 保存名称</button>';
+  h+='</div>';
 
   // 素材概要
   h+='<div class="preview-card" style="margin-bottom:10px"><h5>📐 方案素材</h5><div style="font-size:12px;color:var(--text2)">';
@@ -1399,21 +1402,65 @@ function renderProdDetail(detail){
 
   // 成品视频列表
   if(outputs.length){
-    h+='<div class="preview-card"><h5>📦 成品视频 ('+outputs.length+'个版本)</h5>';
-    h+='<div style="display:grid;gap:6px">';
+    h+='<div class="preview-card"><h5>📦 成品输出 ('+outputs.length+'个版本)</h5>';
+    h+='<div style="display:grid;gap:8px">';
     outputs.forEach(function(o){
-      var fileUrl=o.output_file_path?U+"/storage/v1/object/public/production-outputs/"+o.output_file_path:"";
+      var isStorage=o.output_file_path&&!o.output_file_path.startsWith("http");
+      var fileUrl=isStorage?(U+"/storage/v1/object/public/production-outputs/"+o.output_file_path):"";
       var pst=o.publish_status||"draft";
       var pstLabel={"draft":"未发布","reviewing":"审核中","published":"已发布"}[pst]||pst;
-      h+='<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--surface2);border-radius:var(--radius-sm)">';
-      h+='<span style="font-size:12px;font-weight:600">V'+o.version+'</span>';
+      var engineInfo=(o.bgm_info&&o.bgm_info.engine)||"";
+
+      h+='<div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px">';
+      // 版本头
+      h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+      h+='<span style="font-size:13px;font-weight:700;color:var(--indigo)">V'+o.version+'</span>';
       h+='<span class="st '+(pst==="published"?"sd":"sp")+'"><span class="dot" style="background:currentColor"></span>'+pstLabel+'</span>';
+      if(engineInfo)h+='<span class="tag tv" style="font-size:9px">'+engineInfo+'</span>';
       h+='<span style="flex:1;font-size:11px;color:var(--text2)">'+(o.notes||"")+'</span>';
-      if(fileUrl){
-        h+='<a class="cl" href="'+fileUrl+'" target="_blank">预览</a>';
-        h+='<a class="cl" href="'+fileUrl+'" download style="margin-left:4px">下载</a>';
-      }
       h+='<button class="btn bp" style="padding:3px 8px;font-size:10px" onclick="publishVideo(\''+o.id+'\')">发布</button>';
+      h+='</div>';
+
+      // 解析output_file_path：可能是单个URL、多个URL（换行分隔）、或Storage路径
+      var rawPath=o.output_file_path||"";
+      var urls=rawPath.split("\n").filter(function(u){return u.trim()});
+
+      if(urls.length){
+        h+='<div style="display:grid;gap:4px">';
+        urls.forEach(function(u,ui){
+          var isHttpUrl=u.trim().startsWith("http");
+          var dlUrl=isHttpUrl?u.trim():(U+"/storage/v1/object/public/production-outputs/"+u.trim());
+          var isImg=/\.(jpg|jpeg|png|webp)($|\?)/i.test(dlUrl);
+          var isVid=/\.(mp4|mov|webm)($|\?)/i.test(dlUrl);
+          // 如果URL无扩展名，通过引擎类型判断
+          if(!isImg&&!isVid){
+            if(engineInfo==="fashn")isImg=true;
+            else isVid=true;
+          }
+          var icon=isImg?'🖼️':'🎬';
+          var label=isImg?'AI真人图 #'+(ui+1):'AI视频 #'+(ui+1);
+          if(urls.length===1)label=isImg?'AI真人穿着图':'AI合成视频';
+
+          h+='<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;background:var(--surface);border-radius:4px;border:1px solid var(--border)">';
+          // 缩略图
+          if(isImg){
+            h+='<img src="'+dlUrl+'" style="width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid var(--border);cursor:pointer" onclick="window.open(\''+dlUrl+'\',\'_blank\')">';
+          }else if(isVid){
+            h+='<div style="width:48px;height:48px;background:var(--surface2);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:20px;cursor:pointer" onclick="window.open(\''+dlUrl+'\',\'_blank\')">▶</div>';
+          }
+          h+='<span style="font-size:11px;flex:1">'+icon+' '+label+'</span>';
+          h+='<a class="cl" href="'+dlUrl+'" target="_blank" style="font-size:10px">预览</a>';
+          h+='<button class="btn bg" style="font-size:10px;padding:3px 8px" onclick="downloadAIFile(\''+dlUrl.replace(/'/g,"\\'")+'\',\''+label.replace(/'/g,"\\'")+'\')">⬇️ 下载</button>';
+          h+='</div>';
+        });
+        h+='</div>';
+      }else if(fileUrl){
+        h+='<div style="display:flex;gap:8px;margin-top:4px">';
+        h+='<a class="cl" href="'+fileUrl+'" target="_blank">预览</a>';
+        h+='<button class="btn bg" style="font-size:10px;padding:3px 8px" onclick="downloadAIFile(\''+fileUrl.replace(/'/g,"\\'")+'\',\'V'+o.version+'\')">⬇️ 下载</button>';
+        h+='</div>';
+      }
+
       h+='</div>';
     });
     h+='</div></div>';
@@ -2185,6 +2232,55 @@ function buildFCPXML(prod,clips,mat){
   xml+='</media>\n</sequence>\n';
   xml+='</children>\n</project>\n</xmeml>';
   return xml;
+}
+
+// 保存方案名称
+async function saveProdTitle(newTitle){
+  if(!currentProdId||!newTitle)return;
+  try{
+    await fetch(qa("productions","id=eq."+currentProdId),{
+      method:"PATCH",
+      headers:{"Content-Type":"application/json","apikey":K},
+      body:JSON.stringify({title:newTitle.trim()})
+    });
+    toast("方案名称已保存","tgs");
+  }catch(e){toast("保存失败: "+e.message,"tge")}
+}
+
+// 下载AI生成的图片/视频文件
+async function downloadAIFile(url,label){
+  try{
+    toast("正在下载...","tgs");
+    var resp=await fetch(url);
+    if(!resp.ok)throw new Error("下载失败: HTTP "+resp.status);
+    var blob=await resp.blob();
+    // 根据内容类型确定扩展名
+    var ct2=resp.headers.get("content-type")||"";
+    var ext="bin";
+    if(ct2.includes("image/png"))ext="png";
+    else if(ct2.includes("image/jpeg")||ct2.includes("image/jpg"))ext="jpg";
+    else if(ct2.includes("image/webp"))ext="webp";
+    else if(ct2.includes("video/mp4"))ext="mp4";
+    else if(ct2.includes("video/webm"))ext="webm";
+    else{
+      // 从URL猜扩展名
+      var urlExt=url.split("?")[0].split(".").pop().toLowerCase();
+      if(["png","jpg","jpeg","webp","mp4","mov","webm"].indexOf(urlExt)!==-1)ext=urlExt;
+      else if(ct2.includes("video"))ext="mp4";
+      else if(ct2.includes("image"))ext="png";
+    }
+    var fileName=(label||"ai_output").replace(/[^a-zA-Z0-9\u4e00-\u9fff_-]/g,"_")+"_"+Date.now()+"."+ext;
+    var dlUrl=URL.createObjectURL(blob);
+    var a=document.createElement("a");
+    a.href=dlUrl;a.download=fileName;
+    document.body.appendChild(a);a.click();a.remove();
+    URL.revokeObjectURL(dlUrl);
+    toast("下载完成: "+fileName,"tgs");
+  }catch(e){
+    // 回退：直接在新标签页打开
+    toast("自动下载失败，已在新窗口打开","tge");
+    window.open(url,"_blank");
+  }
 }
 
 // 发布视频（占位）
