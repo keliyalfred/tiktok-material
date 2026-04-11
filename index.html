@@ -848,21 +848,53 @@ function renderPreview(panel){
 
 async function saveProduction(){
   var fw=asmData.framework;if(!fw){toast("请先选择框架","tge");return}
+
+  // 安全提取ID：只在素材确实来自对应表时才填外键字段
+  function safeId(arr,expectedTable){
+    if(!arr||!arr.length)return null;
+    // 如果素材来自extras表（非主表），不能填外键
+    // 通过检查字段特征来判断来源
+    return null; // 统一不填外键，改用JSON存全部素材
+  }
+
+  // 构建选中素材的完整JSON快照
+  var selectedMaterials={
+    framework:fw?{id:fw.id,name:fw.name,formula:fw.formula,core_logic:fw.core_logic}:null,
+    stop:(asmData.stop||[]).map(function(d){return {id:d.id,text:d.script_cn||d.comment_cn||d.script_en||d.comment_en||"",type:d.video_stage||d.convertible_to||""}}),
+    pain:(asmData.pain||[]).map(function(d){return {id:d.id,scene:d.scene_name||"",pain:d.user_pain||"",angle:d.product_angle||""}}),
+    visual:(asmData.visual||[]).map(function(d){return {id:d.id,desc:d.shot_description||"",type:d.shot_type||""}}),
+    proof:(asmData.proof||[]).map(function(d){return {id:d.id,name:d.name||"",type:d.proof_type||""}}),
+    buy:(asmData.buy||[]).map(function(d){return {id:d.id,text:d.script_cn||d.name||"",type:d.action_type||d.benefit_type||""}}),
+    bgm:(asmData.bgm||[]).map(function(d){return {id:d.id,name:d.name||d.music_title||"",emotion:d.emotion_type||""}}),
+    rhythm:(asmData.rhythm||[]).map(function(d){return {id:d.id,name:d.template_name||"",duration:d.total_duration||"",beat:d.beat_structure||""}})
+  };
+
   var data={
     title:(fw.name||"方案")+" — "+new Date().toLocaleDateString("zh-CN"),
     framework_id:fw.id,
     formula:fw.formula,
-    stop_cta_id:(asmData.stop&&asmData.stop[0])?asmData.stop[0].id:null,
-    pain_point_id:(asmData.pain&&asmData.pain[0])?asmData.pain[0].id:null,
-    visual_shot_id:(asmData.visual&&asmData.visual[0])?asmData.visual[0].id:null,
-    social_proof_id:(asmData.proof&&asmData.proof[0])?asmData.proof[0].id:null,
-    benefit_id:(asmData.buy&&asmData.buy[0])?asmData.buy[0].id:null,
-    bgm_id:(asmData.bgm&&asmData.bgm[0])?asmData.bgm[0].id:null
+    selected_materials:selectedMaterials
   };
   try{
     var r=await fetch(qa("productions"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(data)});
-    if(!r.ok)throw new Error(await r.text());
-    toast("成片方案已保存！","tgs");
+    if(!r.ok){
+      var errText=await r.text();
+      // 如果 selected_materials 列不存在，回退到只存基本字段
+      if(errText.includes("selected_materials")){
+        var fallbackData={
+          title:data.title,
+          framework_id:fw.id,
+          formula:fw.formula
+        };
+        var r2=await fetch(qa("productions"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(fallbackData)});
+        if(!r2.ok)throw new Error(await r2.text());
+        toast("成片方案已保存！（建议执行SQL添加 selected_materials 列以保存完整素材）","tgs");
+      }else{
+        throw new Error(errText);
+      }
+    }else{
+      toast("成片方案已保存！","tgs");
+    }
     asmData={framework:null,stop:[],pain:[],visual:[],proof:[],buy:[],bgm:[],rhythm:[]};
     asmStep=0;renderAsmSteps();renderAsmPanel();
   }catch(e){toast("保存失败: "+e.message,"tge")}
