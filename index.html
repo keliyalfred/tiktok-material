@@ -1000,61 +1000,78 @@ async function generateShootingGuide(){
   if(!asmData.framework){toast("请先选择框架","tge");return}
 
   var btn=document.getElementById("genGuideBtn");
-  btn.disabled=true;btn.innerHTML='⏳ 生成中...';
+  btn.disabled=true;btn.innerHTML='⏳ 提交中...';
 
   showGuideModal();
   var content=document.getElementById("guideContent");
-  content.innerHTML='<div class="guide-loading"><div class="spinner"></div><p>AI正在根据你选的素材生成拍摄指导...</p><p style="font-size:11px;color:var(--text3);margin-top:6px">预计需要15-30秒，请耐心等待</p></div>';
+  content.innerHTML='<div class="guide-loading"><div class="spinner"></div><p>正在提交AI生成任务...</p></div>';
 
   // 加载拍摄参数库数据作为参考
   var shootingParams=await loadAsmData("shooting_params");
   var prompt=buildGuidePrompt(shootingParams);
 
   try{
-    // 通过Supabase RPC调用Claude API（需要较长时间，设置AbortController超时）
-    var controller=new AbortController();
-    var timeoutId=setTimeout(function(){controller.abort()},120000); // 2分钟前端超时
-
-    var r=await fetch(U+"/rest/v1/rpc/generate_shooting_guide",{
+    // 第1步：提交异步任务（pg_net发送，不等待结果）
+    var r=await fetch(U+"/rest/v1/rpc/submit_shooting_guide",{
       method:"POST",
       headers:{"Content-Type":"application/json","apikey":K},
-      body:JSON.stringify({p_system:prompt.system,p_user:prompt.user}),
-      signal:controller.signal
+      body:JSON.stringify({p_system:prompt.system,p_user:prompt.user})
     });
-    clearTimeout(timeoutId);
 
     if(!r.ok){
       var errText=await r.text();
-      if(errText.includes("does not find")||errText.includes("does not exist")||errText.includes("could not find")){
-        throw new Error("RPC函数未安装");
+      if(errText.includes("does not exist")||errText.includes("could not find")){
+        throw new Error("NOT_INSTALLED");
       }
-      if(errText.includes("timeout")){
-        throw new Error("TIMEOUT");
-      }
-      throw new Error("RPC调用失败: "+errText.substring(0,200));
+      throw new Error("提交失败: "+errText.substring(0,200));
     }
 
     var result=await r.json();
-    if(result.success){
-      renderGuideResult(content,result.guide_text);
-    }else{
-      if(result.message&&result.message.includes("timeout")){
-        throw new Error("TIMEOUT");
+    if(!result.task_id){throw new Error("未返回task_id")}
+
+    // 第2步：轮询结果
+    content.innerHTML='<div class="guide-loading"><div class="spinner"></div><p>AI正在生成拍摄指导...</p><p style="font-size:11px;color:var(--text3);margin-top:6px">通常需要20-40秒，请耐心等待</p><p id="guidePollStatus" style="font-size:10px;color:var(--text3);margin-top:4px"></p></div>';
+    btn.innerHTML='⏳ 生成中...';
+
+    var taskId=result.task_id;
+    var maxAttempts=40; // 最多轮询40次 x 3秒 = 2分钟
+    var attempt=0;
+
+    var pollInterval=setInterval(async function(){
+      attempt++;
+      var statusEl=document.getElementById("guidePollStatus");
+      if(statusEl)statusEl.textContent="等待中... ("+attempt+"/"+maxAttempts+")";
+
+      if(attempt>=maxAttempts){
+        clearInterval(pollInterval);
+        content.innerHTML='<div class="guide-loading"><p style="color:var(--amber)">⏱️ 生成超时，请重试</p><div class="guide-actions"><button class="btn bg" onclick="generateShootingGuide()">🔄 重试</button><button class="btn bp" onclick="copyGuidePrompt()">📋 复制Prompt手动生成</button></div></div>';
+        btn.disabled=false;btn.innerHTML='📸 生成拍摄指导';
+        return;
       }
-      throw new Error(result.message||"生成失败");
-    }
+
+      try{
+        var pr=await fetch(qa("shooting_guide_tasks","id=eq."+taskId+"&select=status,result_text,error_message"),{headers:{"apikey":K}});
+        if(!pr.ok)return;
+        var rows=await pr.json();
+        if(!rows.length)return;
+        var task=rows[0];
+
+        if(task.status==="done"&&task.result_text){
+          clearInterval(pollInterval);
+          renderGuideResult(content,task.result_text);
+          btn.disabled=false;btn.innerHTML='📸 生成拍摄指导';
+        }else if(task.status==="error"){
+          clearInterval(pollInterval);
+          content.innerHTML='<div class="guide-loading"><p style="color:var(--rose)">⚠️ 生成失败: '+(task.error_message||"未知错误")+'</p><div class="guide-actions"><button class="btn bg" onclick="generateShootingGuide()">🔄 重试</button><button class="btn bp" onclick="copyGuidePrompt()">📋 复制Prompt手动生成</button></div></div>';
+          btn.disabled=false;btn.innerHTML='📸 生成拍摄指导';
+        }
+      }catch(pe){}
+    },3000);
+
   }catch(e){
-    console.error("拍摄指导生成失败:",e.message);
-    var isNotInstalled=e.message.includes("未安装");
-    var isTimeout=e.message.includes("TIMEOUT")||e.message.includes("timeout")||e.name==="AbortError";
-    if(isTimeout){
-      content.innerHTML='<div class="guide-loading"><p style="color:var(--amber)">⏱️ AI生成超时</p><p style="font-size:11px;color:var(--text3);margin-top:8px">拍摄指导内容较长，AI需要更多时间。请使用"复制Prompt"方式：复制后粘贴到 Claude.ai 对话中直接生成。</p><div class="guide-actions"><button class="btn bg" onclick="generateShootingGuide()">🔄 重试</button><button class="btn bp" onclick="copyGuidePrompt()">📋 复制Prompt手动生成</button></div></div>';
-    }else if(isNotInstalled){
-      content.innerHTML='<div class="guide-loading"><p style="color:var(--rose)">⚠️ 请先安装数据库函数</p><p style="font-size:11px;color:var(--text3);margin-top:8px">请在 Supabase SQL Editor 中执行 <strong>setup_shooting_guide.sql</strong>，安装 generate_shooting_guide 函数后重试。</p><div class="guide-actions"><button class="btn bp" onclick="copyGuidePrompt()">📋 复制Prompt手动生成</button></div></div>';
-    }else{
-      content.innerHTML='<div class="guide-loading"><p style="color:var(--rose)">⚠️ 生成失败: '+e.message+'</p><p style="font-size:11px;color:var(--text3);margin-top:8px">请检查数据库函数和API配置。</p><div class="guide-actions"><button class="btn bg" onclick="generateShootingGuide()">🔄 重试</button><button class="btn bp" onclick="copyGuidePrompt()">📋 复制Prompt手动生成</button></div></div>';
-    }
-  }finally{
+    console.error("拍摄指导提交失败:",e.message);
+    var isNotInstalled=e.message==="NOT_INSTALLED";
+    content.innerHTML='<div class="guide-loading"><p style="color:var(--rose)">⚠️ '+(isNotInstalled?'请先安装数据库函数':'提交失败: '+e.message)+'</p><p style="font-size:11px;color:var(--text3);margin-top:8px">'+(isNotInstalled?'请在 Supabase SQL Editor 中执行 <strong>setup_shooting_guide.sql</strong>':'请检查数据库函数配置')+'</p><div class="guide-actions"><button class="btn bg" onclick="generateShootingGuide()">🔄 重试</button><button class="btn bp" onclick="copyGuidePrompt()">📋 复制Prompt手动生成</button></div></div>';
     btn.disabled=false;btn.innerHTML='📸 生成拍摄指导';
   }
 }
