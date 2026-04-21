@@ -56,7 +56,10 @@ button{font-family:inherit;cursor:pointer;border:none;background:none}input,text
 .clear-all-filters:hover{background:var(--rose);color:#fff}
 .tc{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}.tsc{overflow-x:auto;max-height:75vh;overflow-y:auto;position:relative}
 table{width:100%;border-collapse:collapse;font-size:12px}
-thead{background:var(--surface2)}thead th{padding:8px 10px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none;position:sticky;top:0;z-index:3;background:var(--surface2)}
+thead{background:var(--surface2)}thead th{padding:8px 10px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;text-transform:uppercase;letter-spacing:0.3px;border-bottom:1px solid var(--border);white-space:nowrap;user-select:none;position:sticky;top:0;z-index:3;background:var(--surface2);cursor:pointer;transition:color .15s}
+thead th:hover{color:var(--indigo)}thead th.sort-active{color:var(--indigo)}
+thead th .sort-arrow{display:inline-block;margin-left:2px;font-size:8px;opacity:0.3;transition:opacity .15s}
+thead th:hover .sort-arrow{opacity:0.6}thead th.sort-active .sort-arrow{opacity:1;color:var(--indigo)}
 tbody tr{border-bottom:1px solid var(--border)}tbody tr:last-child{border-bottom:none}tbody tr:hover{background:#FAFBFC}
 tbody tr.retired{opacity:0.4}tbody tr.retired td{text-decoration:line-through;color:var(--text3)}
 tbody td{padding:8px 10px;color:var(--text);vertical-align:top;min-width:40px;max-width:200px}
@@ -319,14 +322,14 @@ var FD={
   rhythm_templates:{c:["sku","template_name","total_duration","target_framework","beat_structure","hook_content","middle_content","cta_content","transition_style","bgm_tempo","difficulty","source_link","rating","user_notes","created_at"],n:{sku:"编码",template_name:"模板",total_duration:"时长",target_framework:"框架",beat_structure:"节奏",hook_content:"钩子",middle_content:"中间",cta_content:"CTA",transition_style:"转场",bgm_tempo:"BGM",difficulty:"难度",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
   trending_tags:{c:["sku","tag_name","tag_category","current_heat","view_volume","related_tags","best_use_scenario","combo_suggestion","source_link","rating","user_notes","created_at"],n:{sku:"编码",tag_name:"标签",tag_category:"分类",current_heat:"热度",view_volume:"浏览量",related_tags:"关联标签",best_use_scenario:"场景",combo_suggestion:"组合",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
   posting_strategies:{c:["sku","strategy_name","strategy_type","target_audience","best_posting_time","posting_frequency","title_template","cover_strategy","engagement_tips","source_link","rating","user_notes","created_at"],n:{sku:"编码",strategy_name:"策略",strategy_type:"类型",target_audience:"受众",best_posting_time:"时间",posting_frequency:"频率",title_template:"标题模板",cover_strategy:"封面",engagement_tips:"互动",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  trending_videos:{c:["heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","rating","user_notes","created_at"],n:{heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","source_keyword","rating","user_notes","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"关联达人",category:"类目",source_keyword:"来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","top_video_ids","rating","user_notes","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",top_video_ids:"关联视频",rating:"评分",user_notes:"备注",created_at:"时间"}},
+  trending_videos:{c:["heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","rating","user_notes","video_publish_time","created_at"],n:{heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",rating:"评分",user_notes:"备注",video_publish_time:"发布时间",created_at:"抓取时间"}},
+  trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","source_keyword","rating","user_notes","music_publish_time","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"关联达人",category:"类目",source_keyword:"来源",rating:"评分",user_notes:"备注",music_publish_time:"发布时间",created_at:"抓取时间"}},
+  trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","top_video_ids","rating","user_notes","first_seen_at","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",top_video_ids:"关联视频",rating:"评分",user_notes:"备注",first_seen_at:"首次出现",created_at:"抓取时间"}},
   creator_rankings:{c:["heat_score","username","nickname","follower_count","trending_video_count","total_views_in_system","total_likes_in_system","avg_views_per_video","creator_type","category","rating","user_notes"],n:{heat_score:"🔥热度",username:"用户名",nickname:"昵称",follower_count:"粉丝",trending_video_count:"爆款数",total_views_in_system:"总播放",total_likes_in_system:"总赞",avg_views_per_video:"均播放",creator_type:"类型",category:"类目",rating:"评分",user_notes:"备注"}},
   brand_directory:{c:["heat_score","brand_name","total_accounts","total_followers","total_videos","total_views","total_likes","category","website","rating","user_notes"],n:{heat_score:"🔥热度",brand_name:"品牌",total_accounts:"账号数",total_followers:"总粉丝",total_videos:"总视频",total_views:"总播放",total_likes:"总赞",category:"类目",website:"官网",rating:"评分",user_notes:"备注"}}
 };
 var TG={video_structure:"ts2",bgm_used:"tv",hook_type:"to",content_tier:"ts2",emotion_type:"tv",proof_type:"tt2",benefit_type:"tt2",shot_type:"tp",action_type:"to",video_stage:"ts2",scene_category:"to",convertible_to:"te",emotion_tags:"tp",emotion_keywords:"tp",material_source:"ts2",applicable_scene:"ts2",applicable_category:"tt2",source_origin:"ts2",cost_level:"ta",trust_level:"ta",content_type:"tv",shot_category:"tp",framing:"ti",camera_angle:"ts2",camera_movement:"tv",lighting:"ta",total_duration:"ts2",beat_structure:"tv",transition_style:"to",bgm_tempo:"tv",target_framework:"tt2",tag_category:"to",current_heat:"ta",view_volume:"ti",strategy_type:"ts2",posting_frequency:"ta",heat_score:"tr",usage_count:"to",creator_followers:"ti",music_title:"tv",music_author:"ts2",creator_type:"ts2",total_accounts:"ti",trending_video_count:"to",avg_views_per_video:"ti"};
-var at="material_intake",ct={},allRows=[],sortDir="desc",searchTerm="",colFilter={},curPage=1,pageSize=20;
+var at="material_intake",ct={},allRows=[],sortDir="desc",sortCol="",searchTerm="",colFilter={},curPage=1,pageSize=20;
 
 // ==================== 素材库表格渲染 ====================
 function sH(s){var m={"待处理":"sp","处理中":"si","已分发":"sd","已驳回":"sr"};return '<span class="st '+(m[s]||"sp")+'"><span class="dot" style="background:currentColor"></span>'+(s||"未知")+'</span>'}
@@ -336,7 +339,7 @@ function starsHtml(id,val){var h='<span class="stars">';for(var i=1;i<=5;i++){h+
 function cV(r,c){
   var v=r[c];
   if(c==="sku")return v?'<span class="sku-cell">'+v+'</span>':'<span class="ce">—</span>';
-  if(c==="created_at")return '<span class="time-cell">'+fmtTime(v)+'</span>';
+  if(c==="created_at"||c==="video_publish_time"||c==="music_publish_time"||c==="first_seen_at")return '<span class="time-cell">'+fmtTime(v)+'</span>';
   if(c==="rating")return starsHtml(r.id,v||0);
   if(c==="user_notes")return '<input class="note-input" value="'+(v||"").replace(/"/g,"&quot;")+'" onblur="saveNote(\''+r.id+'\',this.value)" placeholder="...">';
   if(c==="source_link"){if(!v)return '<span class="ce">—</span>';if(v.startsWith("http"))return '<a class="cl" href="'+v+'" target="_blank">查看</a>';return '<span class="ct2" onclick="this.classList.toggle(\'expanded\')">'+v+'</span>'}
@@ -444,7 +447,43 @@ function filterRows(rows){
   Object.keys(colFilter).forEach(function(col){
     var fv=colFilter[col];if(fv){var fvl=fv.toLowerCase();res=res.filter(function(r){var val=r[col];if(val===null||val===undefined)return false;if(Array.isArray(val)){return val.some(function(item){return String(LN[item]||item).toLowerCase().indexOf(fvl)!==-1})}return String(val).toLowerCase().indexOf(fvl)!==-1})}
   });
+
+  // 列排序（前端排序，支持数字/时间/文本）
+  if(sortCol){
+    var dir=sortDir==="asc"?1:-1;
+    res=res.slice().sort(function(a,b){
+      var va=a[sortCol],vb=b[sortCol];
+      // null值排最后
+      if(va===null||va===undefined)return 1;
+      if(vb===null||vb===undefined)return -1;
+      // 时间列
+      if(sortCol.includes("_at")||sortCol.includes("_time")){
+        var da=new Date(va).getTime()||0,db=new Date(vb).getTime()||0;
+        return (da-db)*dir;
+      }
+      // 数字列
+      var na=Number(va),nb=Number(vb);
+      if(!isNaN(na)&&!isNaN(nb))return (na-nb)*dir;
+      // 文本列
+      return String(va).localeCompare(String(vb),"zh")*dir;
+    });
+  }
+
   var active=res.filter(function(r){return !r.is_retired});var retired=res.filter(function(r){return r.is_retired});return active.concat(retired);
+}
+
+// 列头排序切换
+function toggleColSort(col){
+  if(sortCol===col){
+    // 同一列：切换方向，第三次点击取消排序
+    if(sortDir==="desc"){sortDir="asc"}
+    else{sortCol="";sortDir="desc"} // 取消排序
+  }else{
+    sortCol=col;sortDir="desc"; // 新列默认降序
+  }
+  curPage=1;
+  document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
+  restoreFilters();setTimeout(triggerPageTranslation,50);
 }
 function updateActiveFiltersBar(){
   var cfg=FD[at];if(!cfg)return;var keys=Object.keys(colFilter).filter(function(k){return colFilter[k]});var bar=document.getElementById("activeFiltersBar");
@@ -462,7 +501,11 @@ function renderRows(rows){
   var start=(curPage-1)*pageSize;
   var pageRows=rows.slice(start,start+pageSize);
 
-  var h='<table><thead><tr>';cfg.c.forEach(function(c){h+='<th>'+cfg.n[c]+'</th>'});if(canOp)h+='<th>操作</th>';h+='</tr>';
+  var h='<table><thead><tr>';cfg.c.forEach(function(c){
+    var isActive=sortCol===c;
+    var arrow=isActive?(sortDir==="asc"?"▲":"▼"):"⇅";
+    h+='<th class="'+(isActive?"sort-active":"")+'" onclick="toggleColSort(\''+c+'\')" title="点击排序">'+cfg.n[c]+' <span class="sort-arrow">'+arrow+'</span></th>';
+  });if(canOp)h+='<th>操作</th>';h+='</tr>';
   h+='<tr class="col-filter-row">';cfg.c.forEach(function(c){if(c==="rating"||c==="user_notes"){h+='<td></td>'}else{var curVal=colFilter[c]||"";var hasClass=curVal?" has-value":"";h+='<td><input class="col-filter-input'+hasClass+'" data-col="'+c+'" value="'+curVal.replace(/"/g,"&quot;")+'" placeholder="筛选" oninput="onColFilter(this,\''+c+'\')"></td>'}});if(canOp)h+='<td></td>';h+='</tr></thead>';
   if(!rows.length)return h+'<tbody><tr><td colspan="'+(cfg.c.length+(canOp?1:0))+'" style="text-align:center;padding:40px;color:var(--text3)">'+(searchTerm||Object.keys(colFilter).length?"未找到匹配结果":"暂无数据")+'</td></tr></tbody></table>';
   h+='<tbody>';pageRows.forEach(function(r){var ret=r.is_retired;h+='<tr'+(ret?' class="retired"':'')+'>';cfg.c.forEach(function(c){h+='<td>'+cV(r,c)+'</td>'});if(canOp){if(!ret){
@@ -504,14 +547,25 @@ async function rT(){
     extraBtns=' <button class="btn bg" style="font-size:11px;padding:4px 8px" onclick="showCreatorModal()">+ 添加达人</button><button class="btn bg" style="font-size:11px;padding:4px 8px" id="syncCreatorsBtn" onclick="doSyncCreators()">同步详情</button>';
   }
   document.getElementById("tTitle").innerHTML='<span class="nc" style="background:'+clr.b+';color:'+clr.f+';width:20px;height:20px;border-radius:4px">'+IC[at]+'</span>'+LN[at]+' <span class="ct">'+(ct[at]!=null?ct[at]+"条":"")+'</span>'+extraBtns;
-  document.getElementById("sL").textContent=sortDir==="desc"?"最新":"最早";document.getElementById("sB").className="sort-btn"+(sortDir==="asc"?" active":"");
+  var sortLabel=sortCol?(FD[at]&&FD[at].n[sortCol]||sortCol)+(sortDir==="desc"?" ↓":" ↑"):"默认";
+  document.getElementById("sL").textContent=sortLabel;
+  document.getElementById("sB").className="sort-btn"+(sortCol?" active":"");
   var b=document.getElementById("tBody");b.innerHTML='<div class="loading">加载中...</div>';
   allRows=await fR(at);updateActiveFiltersBar();b.innerHTML=renderRows(filterRows(allRows));
   // 触发英文内容翻译
   setTimeout(triggerPageTranslation,50);
 }
 function doSearch(){searchTerm=document.getElementById("sI").value.trim();curPage=1;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters();setTimeout(triggerPageTranslation,50)}
-function toggleSort(){sortDir=sortDir==="desc"?"asc":"desc";curPage=1;rT()}
+function toggleSort(){
+  // 快捷排序按钮：在默认排序和当前列排序间切换
+  if(!sortCol){
+    var trendingTables=["trending_videos","trending_music","trending_hashtag_stats","creator_rankings","brand_directory"];
+    sortCol=trendingTables.includes(at)?"heat_score":"created_at";
+    sortDir="desc";
+  }else if(sortDir==="desc"){sortDir="asc"}
+  else{sortCol="";sortDir="desc"}
+  curPage=1;rT();
+}
 async function doRetire(id){if(!hasPerm("material_retire")){toast("无权限操作","tge");return}if(!confirm("确定要作废这条素材吗？"))return;try{await fetch(qa(at,"id=eq."+id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({is_retired:true})});toast("已作废","tgs");setTimeout(refreshAll,300)}catch(e){toast("失败","tge")}}
 
 // 把爆款视频投入素材总表进行AI拆解
@@ -564,7 +618,7 @@ async function doTriggerScrape(){
   }catch(e){toast("抓取失败: "+e.message,"tge");console.error(e)}
   finally{btn.disabled=false;btn.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="width:13px;height:13px"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>抓爆款'}
 }
-function sT(k){at=k;searchTerm="";colFilter={};curPage=1;if(document.getElementById("sI"))document.getElementById("sI").value="";rN();
+function sT(k){at=k;searchTerm="";colFilter={};curPage=1;sortCol="";sortDir="desc";if(document.getElementById("sI"))document.getElementById("sI").value="";rN();
   document.getElementById("tableView").style.display="none";
   document.getElementById("assembleView").style.display="none";
   document.getElementById("productionsView").style.display="none";
@@ -2972,4 +3026,3 @@ function initApp(){
 </script>
 </body>
 </html>
-
