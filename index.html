@@ -322,7 +322,7 @@ var FD={
   rhythm_templates:{c:["sku","template_name","total_duration","target_framework","beat_structure","hook_content","middle_content","cta_content","transition_style","bgm_tempo","difficulty","source_link","rating","user_notes","created_at"],n:{sku:"编码",template_name:"模板",total_duration:"时长",target_framework:"框架",beat_structure:"节奏",hook_content:"钩子",middle_content:"中间",cta_content:"CTA",transition_style:"转场",bgm_tempo:"BGM",difficulty:"难度",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
   trending_tags:{c:["sku","tag_name","tag_category","current_heat","view_volume","related_tags","best_use_scenario","combo_suggestion","source_link","rating","user_notes","created_at"],n:{sku:"编码",tag_name:"标签",tag_category:"分类",current_heat:"热度",view_volume:"浏览量",related_tags:"关联标签",best_use_scenario:"场景",combo_suggestion:"组合",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
   posting_strategies:{c:["sku","strategy_name","strategy_type","target_audience","best_posting_time","posting_frequency","title_template","cover_strategy","engagement_tips","source_link","rating","user_notes","created_at"],n:{sku:"编码",strategy_name:"策略",strategy_type:"类型",target_audience:"受众",best_posting_time:"时间",posting_frequency:"频率",title_template:"标题模板",cover_strategy:"封面",engagement_tips:"互动",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  trending_videos:{c:["heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","rating","user_notes","video_publish_time","created_at"],n:{heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",rating:"评分",user_notes:"备注",video_publish_time:"发布时间",created_at:"抓取时间"}},
+  trending_videos:{c:["heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","transcript_cn","rating","user_notes","video_publish_time","created_at"],n:{heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",transcript_cn:"台词",rating:"评分",user_notes:"备注",video_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","source_keyword","rating","user_notes","music_publish_time","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"关联达人",category:"类目",source_keyword:"来源",rating:"评分",user_notes:"备注",music_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","top_video_ids","rating","user_notes","first_seen_at","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",top_video_ids:"关联视频",rating:"评分",user_notes:"备注",first_seen_at:"首次出现",created_at:"抓取时间"}},
   creator_rankings:{c:["heat_score","username","nickname","follower_count","trending_video_count","total_views_in_system","total_likes_in_system","avg_views_per_video","creator_type","category","rating","user_notes"],n:{heat_score:"🔥热度",username:"用户名",nickname:"昵称",follower_count:"粉丝",trending_video_count:"爆款数",total_views_in_system:"总播放",total_likes_in_system:"总赞",avg_views_per_video:"均播放",creator_type:"类型",category:"类目",rating:"评分",user_notes:"备注"}},
@@ -352,6 +352,16 @@ function cV(r,c){
     return '<a class="cl" href="'+v+'" target="_blank" style="margin-right:4px">打开</a>'+(vid?'<button class="retire-btn" style="color:var(--indigo);border-color:var(--indigo-light);background:var(--indigo-light)" onclick="event.stopPropagation();showVideoPreview(\''+vid+'\')">▶预览</button>':'');
   }
   if(c==="source_video_url"||c==="reference_video_url")return '<a class="cl" href="'+v+'" target="_blank">查看</a>';
+  // 台词列：显示中文台词 + 提取按钮
+  if(c==="transcript_cn"){
+    var tStatus=r.transcript_status;
+    if(tStatus==="processing")return '<span class="ce" style="color:var(--sky)">⏳ 提取中...</span>';
+    if(v&&v.trim())return '<div><div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="max-width:160px;font-size:11px;line-height:1.4">'+String(v)+'</div></div>';
+    if(r.transcript_en)return '<div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="max-width:160px;font-size:11px">'+r.transcript_en+'</div>';
+    // 没有台词：显示提取按钮
+    if(r.video_play_url||r.video_url)return '<button class="retire-btn" style="color:var(--sky);border-color:var(--sky-light);background:var(--sky-light);font-size:9px" onclick="event.stopPropagation();extractTranscript(\''+r.id+'\')">🎙提取台词</button>';
+    return '<span class="ce">—</span>';
+  }
   // 音乐标题：加试听按钮
   if((c==="music_title"||c==="bgm_title")&&r.music_play_url){
     var msv=String(v).replace(/"/g,"&quot;");
@@ -545,6 +555,10 @@ async function rT(){
   var extraBtns="";
   if(at==="creator_rankings"){
     extraBtns=' <button class="btn bg" style="font-size:11px;padding:4px 8px" onclick="showCreatorModal()">+ 添加达人</button><button class="btn bg" style="font-size:11px;padding:4px 8px" id="syncCreatorsBtn" onclick="doSyncCreators()">同步详情</button>';
+  }
+  if(at==="trending_videos"){
+    extraBtns+=' <button class="btn bg" style="font-size:11px;padding:4px 8px" onclick="batchExtractTranscripts()">🎙 批量提取台词</button>';
+    extraBtns+=' <button class="btn bg" style="font-size:11px;padding:4px 8px" onclick="showWhisperKeyModal()">⚙️ Whisper设置</button>';
   }
   document.getElementById("tTitle").innerHTML='<span class="nc" style="background:'+clr.b+';color:'+clr.f+';width:20px;height:20px;border-radius:4px">'+IC[at]+'</span>'+LN[at]+' <span class="ct">'+(ct[at]!=null?ct[at]+"条":"")+'</span>'+extraBtns;
   var sortLabel=sortCol?(FD[at]&&FD[at].n[sortCol]||sortCol)+(sortDir==="desc"?" ↓":" ↑"):"默认";
@@ -2439,6 +2453,154 @@ async function downloadAIFile(url,label){
 // 发布视频（占位）
 async function publishVideo(outputId){
   toast("TikTok发布功能将在Phase 5中实现","tge");
+}
+
+// ==================== 视频语音转文字（Whisper API） ====================
+
+// OpenAI API Key 存储
+function getOpenAIKey(){return localStorage.getItem("openai_api_key")||""}
+function setOpenAIKey(key){localStorage.setItem("openai_api_key",key)}
+
+// 提取单条视频台词
+async function extractTranscript(videoId){
+  var apiKey=getOpenAIKey();
+  if(!apiKey){
+    showWhisperKeyModal(function(){extractTranscript(videoId)});
+    return;
+  }
+
+  var row=allRows.find(function(r){return r.id===videoId});
+  if(!row){toast("未找到视频数据","tge");return}
+
+  var audioUrl=row.video_play_url||"";
+  if(!audioUrl){toast("该视频无播放地址，无法提取","tge");return}
+
+  // 标记为处理中
+  await fetch(qa("trending_videos","id=eq."+videoId),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({transcript_status:"processing"})});
+  row.transcript_status="processing";
+  document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
+  restoreFilters();
+  toast("🎙 正在提取台词...（约15-30秒）","tgs");
+
+  try{
+    // 步骤1：下载视频音频
+    var audioResp=await fetch(audioUrl);
+    if(!audioResp.ok){
+      // CORS限制时尝试通过Supabase代理
+      audioResp=await fetch(U+"/rest/v1/rpc/proxy_download",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_url:audioUrl})});
+      if(!audioResp.ok)throw new Error("无法下载视频音频（可能有CORS限制）");
+    }
+    var audioBlob=await audioResp.blob();
+    // 限制25MB
+    if(audioBlob.size>25*1024*1024)throw new Error("视频文件过大（>25MB），请尝试较短的视频");
+
+    // 步骤2：发送给 OpenAI Whisper API 转文字
+    var formData=new FormData();
+    formData.append("file",audioBlob,"video.mp4");
+    formData.append("model","whisper-1");
+    formData.append("response_format","json");
+    formData.append("language","en");
+
+    var whisperResp=await fetch("https://api.openai.com/v1/audio/transcriptions",{
+      method:"POST",
+      headers:{"Authorization":"Bearer "+apiKey},
+      body:formData
+    });
+    if(!whisperResp.ok){
+      var errText=await whisperResp.text();
+      if(errText.includes("invalid_api_key")){
+        localStorage.removeItem("openai_api_key");
+        throw new Error("OpenAI API Key 无效，请重新设置");
+      }
+      throw new Error("Whisper API: "+errText.substring(0,150));
+    }
+    var whisperResult=await whisperResp.json();
+    var transcriptEn=whisperResult.text||"";
+
+    if(!transcriptEn.trim()){
+      await fetch(qa("trending_videos","id=eq."+videoId),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({transcript_status:"done",transcript_en:"(无语音内容)",transcript_cn:"(无语音内容)"})});
+      row.transcript_status="done";row.transcript_en="(无语音内容)";row.transcript_cn="(无语音内容)";
+      toast("该视频没有语音内容","tgs");
+      document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));restoreFilters();
+      return;
+    }
+
+    // 步骤3：用 OpenAI 翻译成中文
+    var translateResp=await fetch("https://api.openai.com/v1/chat/completions",{
+      method:"POST",
+      headers:{"Authorization":"Bearer "+apiKey,"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"gpt-4o-mini",
+        messages:[{role:"user",content:"请将以下TikTok视频台词翻译成中文，保持口语化风格，直接输出翻译结果：\n\n"+transcriptEn}],
+        max_tokens:2000
+      })
+    });
+    var transcriptCn="";
+    if(translateResp.ok){
+      var tlResult=await translateResp.json();
+      transcriptCn=(tlResult.choices&&tlResult.choices[0]&&tlResult.choices[0].message&&tlResult.choices[0].message.content)||"";
+    }
+
+    // 步骤4：保存到数据库
+    await fetch(qa("trending_videos","id=eq."+videoId),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({
+      transcript_en:transcriptEn,
+      transcript_cn:transcriptCn||transcriptEn,
+      transcript_status:"done"
+    })});
+
+    row.transcript_en=transcriptEn;
+    row.transcript_cn=transcriptCn||transcriptEn;
+    row.transcript_status="done";
+    toast("✅ 台词提取完成！","tgs");
+  }catch(e){
+    console.error("台词提取失败:",e);
+    await fetch(qa("trending_videos","id=eq."+videoId),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({transcript_status:"failed"})});
+    row.transcript_status="failed";
+    toast("台词提取失败: "+e.message,"tge");
+  }
+
+  document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
+  restoreFilters();setTimeout(triggerPageTranslation,50);
+}
+
+// 批量提取台词（最多10条）
+async function batchExtractTranscripts(){
+  var apiKey=getOpenAIKey();
+  if(!apiKey){showWhisperKeyModal(function(){batchExtractTranscripts()});return}
+
+  var pending=allRows.filter(function(r){return !r.transcript_status&&(r.video_play_url||r.video_url)}).slice(0,10);
+  if(!pending.length){toast("没有待提取的视频","tge");return}
+  if(!confirm("将提取 "+pending.length+" 条视频的台词，预计花费约 $"+(pending.length*0.01).toFixed(2)+"（Whisper API），继续？"))return;
+
+  toast("🎙 开始批量提取 "+pending.length+" 条台词...","tgs");
+  var success=0,fail=0;
+  for(var i=0;i<pending.length;i++){
+    try{
+      await extractTranscript(pending[i].id);
+      success++;
+    }catch(e){fail++}
+  }
+  toast("批量提取完成：成功 "+success+" 条，失败 "+fail+" 条","tgs");
+}
+
+// OpenAI Key 设置弹窗
+function showWhisperKeyModal(callback){
+  var el=document.getElementById("whisperKeyMO");
+  if(!el){
+    el=document.createElement("div");el.className="mo";el.id="whisperKeyMO";
+    el.onclick=function(e){if(e.target===el)el.style.display="none"};
+    el.innerHTML='<div class="modal" style="max-width:420px"><div class="mh"><h3>🎙 设置 OpenAI API Key</h3><button class="mx" onclick="document.getElementById(\'whisperKeyMO\').style.display=\'none\'"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div><div class="mbo"><p style="font-size:12px;color:var(--text2);margin-bottom:12px">用于提取视频语音台词（Whisper API: ~$0.006/分钟）+ 翻译成中文（GPT-4o-mini: 极低成本）</p><div class="fg"><label class="fl">OpenAI API Key</label><input class="finp" id="whisperKeyInput" type="password" placeholder="sk-..." value="'+getOpenAIKey()+'"></div><p style="font-size:10px;color:var(--text3);margin-bottom:10px">获取方式：<a href="https://platform.openai.com/api-keys" target="_blank" class="cl">platform.openai.com/api-keys</a></p><button class="bs" id="whisperKeySaveBtn">保存并继续</button></div></div>';
+    document.body.appendChild(el);
+  }
+  el.style.display="flex";
+  document.getElementById("whisperKeySaveBtn").onclick=function(){
+    var key=document.getElementById("whisperKeyInput").value.trim();
+    if(!key){toast("请输入API Key","tge");return}
+    setOpenAIKey(key);
+    el.style.display="none";
+    toast("OpenAI Key 已保存","tgs");
+    if(callback)callback();
+  };
 }
 
 // ==================== 英文内容实时翻译 ====================
