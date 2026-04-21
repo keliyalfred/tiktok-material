@@ -343,6 +343,15 @@ function cV(r,c){
   if(c==="rating")return starsHtml(r.id,v||0);
   if(c==="user_notes")return '<input class="note-input" value="'+(v||"").replace(/"/g,"&quot;")+'" onblur="saveNote(\''+r.id+'\',this.value)" placeholder="...">';
   if(c==="source_link"){if(!v)return '<span class="ce">—</span>';if(v.startsWith("http"))return '<a class="cl" href="'+v+'" target="_blank">查看</a>';return '<span class="ct2" onclick="this.classList.toggle(\'expanded\')">'+v+'</span>'}
+  // 台词列：必须在null检查之前，因为空值时要显示提取按钮
+  if(c==="transcript_cn"){
+    var tStatus=r.transcript_status;
+    if(tStatus==="processing")return '<span class="ce" style="color:var(--sky)">⏳ 提取中...</span>';
+    if(v&&v.trim())return '<div><div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="max-width:160px;font-size:11px;line-height:1.4">'+String(v)+'</div></div>';
+    if(r.transcript_en)return '<div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="max-width:160px;font-size:11px">'+r.transcript_en+'</div>';
+    if(tStatus==="failed")return '<button class="retire-btn" style="color:var(--rose);border-color:var(--rose-light);background:var(--rose-light);font-size:9px" onclick="event.stopPropagation();extractTranscript(\''+r.id+'\')">重试</button>';
+    return '<button class="retire-btn" style="color:var(--sky);border-color:var(--sky-light);background:var(--sky-light);font-size:9px" onclick="event.stopPropagation();extractTranscript(\''+r.id+'\')">🎙提取</button>';
+  }
   if(v===null||v===undefined||v==="")return '<span class="ce">—</span>';
   if(c==="status")return sH(v);
   if(c==="dispatched_to"){if(!Array.isArray(v)||!v.length)return '<span class="ce">—</span>';return v.map(function(t){return '<span class="tag">'+(LN[t]||t)+'</span>'}).join("")}
@@ -352,15 +361,6 @@ function cV(r,c){
     return '<a class="cl" href="'+v+'" target="_blank" style="margin-right:4px">打开</a>'+(vid?'<button class="retire-btn" style="color:var(--indigo);border-color:var(--indigo-light);background:var(--indigo-light)" onclick="event.stopPropagation();showVideoPreview(\''+vid+'\')">▶预览</button>':'');
   }
   if(c==="source_video_url"||c==="reference_video_url")return '<a class="cl" href="'+v+'" target="_blank">查看</a>';
-  // 台词列：显示中文台词 + 提取按钮
-  if(c==="transcript_cn"){
-    var tStatus=r.transcript_status;
-    if(tStatus==="processing")return '<span class="ce" style="color:var(--sky)">⏳ 提取中...</span>';
-    if(v&&v.trim())return '<div><div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="max-width:160px;font-size:11px;line-height:1.4">'+String(v)+'</div></div>';
-    if(r.transcript_en)return '<div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="max-width:160px;font-size:11px">'+r.transcript_en+'</div>';
-    if(tStatus==="failed")return '<button class="retire-btn" style="color:var(--rose);border-color:var(--rose-light);background:var(--rose-light);font-size:9px" onclick="event.stopPropagation();extractTranscript(\''+r.id+'\')">重试</button>';
-    return '<button class="retire-btn" style="color:var(--sky);border-color:var(--sky-light);background:var(--sky-light);font-size:9px" onclick="event.stopPropagation();extractTranscript(\''+r.id+'\')">🎙提取</button>';
-  }
   // 音乐标题：加试听按钮
   if((c==="music_title"||c==="bgm_title")&&r.music_play_url){
     var msv=String(v).replace(/"/g,"&quot;");
