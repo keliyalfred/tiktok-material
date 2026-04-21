@@ -359,9 +359,7 @@ function cV(r,c){
     if(v&&v.trim())return '<div><div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="max-width:160px;font-size:11px;line-height:1.4">'+String(v)+'</div></div>';
     if(r.transcript_en)return '<div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="max-width:160px;font-size:11px">'+r.transcript_en+'</div>';
     if(tStatus==="failed")return '<button class="retire-btn" style="color:var(--rose);border-color:var(--rose-light);background:var(--rose-light);font-size:9px" onclick="event.stopPropagation();extractTranscript(\''+r.id+'\')">重试</button>';
-    // 没有台词：只要是爆款视频就显示按钮
-    if(r.video_id||r.video_play_url||r.video_url)return '<button class="retire-btn" style="color:var(--sky);border-color:var(--sky-light);background:var(--sky-light);font-size:9px" onclick="event.stopPropagation();extractTranscript(\''+r.id+'\')">🎙提取台词</button>';
-    return '<span class="ce">—</span>';
+    return '<button class="retire-btn" style="color:var(--sky);border-color:var(--sky-light);background:var(--sky-light);font-size:9px" onclick="event.stopPropagation();extractTranscript(\''+r.id+'\')">🎙提取</button>';
   }
   // 音乐标题：加试听按钮
   if((c==="music_title"||c==="bgm_title")&&r.music_play_url){
