@@ -2490,16 +2490,47 @@ async function extractTranscript(videoId){
   toast("🎙 正在提取台词...（约15-30秒）","tgs");
 
   try{
-    // 步骤1：下载视频音频
-    var audioResp=await fetch(audioUrl);
-    if(!audioResp.ok){
-      // CORS限制时尝试通过Supabase代理
-      audioResp=await fetch(U+"/rest/v1/rpc/proxy_download",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_url:audioUrl})});
-      if(!audioResp.ok)throw new Error("无法下载视频音频（可能有CORS限制）");
+    // 步骤1：通过Supabase代理下载视频（绕过CORS）
+    var audioBlob=null;
+    toast("🎙 正在下载视频音频...","tgs");
+
+    // 方式1：Supabase代理下载
+    try{
+      var proxyResp=await fetch(U+"/rest/v1/rpc/proxy_download",{
+        method:"POST",
+        headers:{"Content-Type":"application/json","apikey":K},
+        body:JSON.stringify({p_url:audioUrl})
+      });
+      if(proxyResp.ok){
+        var proxyText=await proxyResp.text();
+        // 去掉JSON引号
+        var base64Data=proxyText.replace(/^"|"$/g,"");
+        if(base64Data&&base64Data.length>500){
+          try{
+            var byteStr=atob(base64Data);
+            var bytes=new Uint8Array(byteStr.length);
+            for(var bi=0;bi<byteStr.length;bi++)bytes[bi]=byteStr.charCodeAt(bi);
+            audioBlob=new Blob([bytes],{type:"video/mp4"});
+            toast("🎙 视频下载完成("+Math.round(audioBlob.size/1024)+"KB)，正在识别语音...","tgs");
+          }catch(decErr){console.warn("Base64解码失败:",decErr.message)}
+        }else{console.warn("代理返回数据太小:",base64Data?base64Data.length:0)}
+      }else{console.warn("代理返回非200:",proxyResp.status)}
+    }catch(proxyErr){console.warn("代理下载失败:",proxyErr.message)}
+
+    // 方式2：直连（可能因CORS失败）
+    if(!audioBlob||audioBlob.size<1000){
+      toast("🎙 代理下载失败，尝试直连...","tgs");
+      try{
+        var directResp=await fetch(audioUrl,{mode:"cors"});
+        if(directResp.ok){
+          audioBlob=await directResp.blob();
+          toast("🎙 直连下载成功("+Math.round(audioBlob.size/1024)+"KB)，正在识别语音...","tgs");
+        }
+      }catch(directErr){console.warn("直连也失败:",directErr.message)}
     }
-    var audioBlob=await audioResp.blob();
-    // 限制25MB
-    if(audioBlob.size>25*1024*1024)throw new Error("视频文件过大（>25MB），请尝试较短的视频");
+
+    if(!audioBlob||audioBlob.size<1000)throw new Error("无法下载视频音频（CORS限制），可尝试：1.检查Supabase是否启用http扩展 2.稍后重试");
+    if(audioBlob.size>25*1024*1024)throw new Error("视频文件过大（>25MB）");
 
     // 步骤2：发送给 OpenAI Whisper API 转文字
     var formData=new FormData();
