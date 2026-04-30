@@ -308,7 +308,7 @@ var CL={material_intake:{b:"var(--indigo-light)",f:"var(--indigo)"},viral_commen
 var LL=["material_intake","viral_comments","pain_points","cta_scripts","competitor_analysis","visual_shots","social_proofs","benefits","bgm_tracks","frameworks","shooting_params","rhythm_templates","trending_tags","posting_strategies","trending_videos","trending_music","trending_hashtag_stats","creator_rankings","brand_directory","__assemble__"];
 
 var FD={
-  material_intake:{c:["sku","raw_content","content_type","status","dispatched_to","source_platform","submitter","created_at"],n:{sku:"编码",raw_content:"素材内容",content_type:"类型",status:"状态",dispatched_to:"分发到",source_platform:"平台",submitter:"提交人",created_at:"时间"}},
+  material_intake:{c:["sku","raw_content","content_type","status","dispatched_to","source_link","source_platform","submitter","created_at"],n:{sku:"编码",raw_content:"素材内容",content_type:"类型",status:"状态",dispatched_to:"分发到",source_link:"来源链接",source_platform:"平台",submitter:"提交人",created_at:"时间"}},
   viral_comments:{c:["sku","comment_en","comment_cn","convertible_to","emotion_tags","source_video_url","source_link","applicable_category","rating","user_notes","created_at"],n:{sku:"编码",comment_en:"评论原文",comment_cn:"中文翻译",convertible_to:"可转化为",emotion_tags:"情绪标签",source_video_url:"来源视频",source_link:"素材来源",applicable_category:"品类",rating:"评分",user_notes:"备注",created_at:"时间"}},
   pain_points:{c:["sku","scene_name","scene_category","user_pain","emotion_keywords","product_angle","content_angle","script_example_cn","source_origin","source_link","applicable_category","rating","user_notes","created_at"],n:{sku:"编码",scene_name:"场景",scene_category:"分类",user_pain:"痛点",emotion_keywords:"情绪",product_angle:"切入点",content_angle:"角度",script_example_cn:"中文话术",source_origin:"来源",source_link:"素材来源",applicable_category:"品类",rating:"评分",user_notes:"备注",created_at:"时间"}},
   cta_scripts:{c:["sku","script_en","script_cn","video_stage","action_type","script_logic","combo_benefit","source_link","applicable_category","rating","user_notes","created_at"],n:{sku:"编码",script_en:"CTA英文",script_cn:"中文",video_stage:"阶段",action_type:"类型",script_logic:"逻辑",combo_benefit:"配合权益",source_link:"素材来源",applicable_category:"品类",rating:"评分",user_notes:"备注",created_at:"时间"}},
@@ -362,9 +362,14 @@ function cV(r,c){
   }
   if(c==="source_video_url"||c==="reference_video_url")return '<a class="cl" href="'+v+'" target="_blank">查看</a>';
   // 音乐标题：加试听按钮
-  if((c==="music_title"||c==="bgm_title")&&r.music_play_url){
+  if(c==="music_title"||c==="bgm_title"){
+    if(!v)return '<span class="ce">—</span>';
     var msv=String(v).replace(/"/g,"&quot;");
-    return '<div><div style="display:flex;align-items:center;gap:4px"><div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="flex:1" data-translate="'+msv+'">'+String(v)+'</div><button class="retire-btn" style="color:var(--violet);border-color:var(--violet-light);background:var(--violet-light);font-size:9px" onclick="event.stopPropagation();playMusic(\''+r.music_play_url.replace(/'/g,"\\'")+'\')">\u266B听</button></div></div>';
+    var authorInfo=r.bgm_author||r.music_author||"";
+    var displayText=String(v)+(authorInfo?' <span style="color:var(--text3);font-size:9px">- '+authorInfo+'</span>':"");
+    var playBtn=r.music_play_url?'<button class="retire-btn" style="color:var(--violet);border-color:var(--violet-light);background:var(--violet-light);font-size:9px;margin-top:2px" onclick="event.stopPropagation();playMusic(\''+r.music_play_url.replace(/'/g,"\\'")+'\')">\u266B听</button>':"";
+    var copyBtn='<button class="retire-btn" style="font-size:9px;margin-top:2px" onclick="event.stopPropagation();navigator.clipboard.writeText(\''+msv+'\');toast(\'已复制BGM名称\',\'tgs\')">📋复制</button>';
+    return '<div><div class="ct2" onclick="this.classList.toggle(\'expanded\')" style="max-width:140px" data-translate="'+msv+'">'+displayText+'</div><div style="display:flex;gap:3px">'+copyBtn+playBtn+'</div></div>';
   }
   if(c==="view_count"||c==="like_count"||c==="comment_count"||c==="share_count"||c==="collect_count"||c==="usage_count"||c==="total_views"||c==="video_count"||c==="total_likes")return '<span class="cn">'+fmtNum(v)+'</span>';
   if(c==="creator_followers")return v&&Number(v)>0?'<span class="cn">'+fmtNum(v)+'</span>':'<span class="ce">—</span>';
@@ -710,7 +715,7 @@ async function doSubmit(){
   var content=document.getElementById("fC").value.trim();if(!content){toast("请填写","tge");return}
   var btn=document.getElementById("bS");btn.disabled=true;btn.textContent="提交中...";
   var data={raw_content:content},url=document.getElementById("fU").value.trim(),pf=document.getElementById("fP").value,sb=document.getElementById("fS").value.trim();
-  if(url)data.source_url=url;if(pf)data.source_platform=pf;if(sb)data.submitter=sb;
+  if(url){data.source_url=url;data.source_link=url}if(pf)data.source_platform=pf;if(sb)data.submitter=sb;
   try{var r=await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(data)});
   if(!r.ok)throw new Error(await r.text());hideModal();toast("AI分析中...","tgs");at="material_intake";setTimeout(refreshAll,1000);setTimeout(refreshAll,70000)}
   catch(e){toast("失败:"+e.message,"tge")}finally{btn.disabled=false;btn.textContent="提交素材 · AI 自动分发"}
@@ -734,7 +739,7 @@ async function doLinkSubmit(){
       // 抖音链接：TikAPI不支持抖音，直接提交AI分析
       btn.textContent="抖音链接，提交AI分析...";
       setLinkProgress("⏳ 抖音链接不支持数据抓取，将直接提交AI进行内容分析...");
-      var douyinData={raw_content:"【抖音视频拆解】\n链接: "+url+"\n\n请根据此抖音视频链接，分析该视频的内容结构、钩子话术、拍摄手法、CTA策略、痛点切入等信息，拆解为可复用的素材。",source_url:url,source_platform:"抖音",submitter:sb,content_type:"competitor_video"};
+      var douyinData={raw_content:"【抖音视频拆解】\n链接: "+url+"\n\n请根据此抖音视频链接，分析该视频的内容结构、钩子话术、拍摄手法、CTA策略、痛点切入等信息，拆解为可复用的素材。",source_url:url,source_link:url,source_platform:"抖音",submitter:sb,content_type:"competitor_video"};
       await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(douyinData)});
       hideLinkModal();toast("抖音链接已提交，AI分析中...","tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
       return;
@@ -746,7 +751,7 @@ async function doLinkSubmit(){
       // 短链接：直接提交给AI分析
       btn.textContent="短链接，直接提交AI...";
       setLinkProgress("短链接无法直接解析，将作为素材提交AI分析...");
-      var fallbackData={raw_content:"【TikTok视频链接】\n链接: "+url+"\n\n请分析此TikTok视频链接对应的视频内容。",source_url:url,source_platform:"TikTok",submitter:sb,content_type:"link_scrape"};
+      var fallbackData={raw_content:"【TikTok视频链接】\n链接: "+url+"\n\n请分析此TikTok视频链接对应的视频内容。",source_url:url,source_link:url,source_platform:"TikTok",submitter:sb,content_type:"link_scrape"};
       await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(fallbackData)});
       hideLinkModal();toast("链接已提交，AI分析中...","tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
       return;
@@ -767,7 +772,7 @@ async function doLinkSubmit(){
       // 如果RPC函数不存在，回退到纯文本提交
       if(errText.includes("could not find") || errText.includes("does not exist")){
         setLinkProgress("⚠️ 代理函数未安装，回退到纯文本提交...");
-        var fallback2={raw_content:"【TikTok视频链接抓取】\n链接: "+url+"\n\n请根据此链接分析该视频的内容结构、钩子话术、评论区热度等信息。",source_url:url,source_platform:"TikTok",submitter:sb,content_type:"link_scrape"};
+        var fallback2={raw_content:"【TikTok视频链接抓取】\n链接: "+url+"\n\n请根据此链接分析该视频的内容结构、钩子话术、评论区热度等信息。",source_url:url,source_link:url,source_platform:"TikTok",submitter:sb,content_type:"link_scrape"};
         await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(fallback2)});
         hideLinkModal();toast("已提交AI分析（请先安装SQL代理函数以启用完整抓取）","tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
         return;
