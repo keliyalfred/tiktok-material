@@ -447,12 +447,15 @@ async function fR(t){
   try{
     var trendingTables=["trending_videos","trending_music","trending_hashtag_stats","creator_rankings","brand_directory"];
     var o;
-    if(trendingTables.includes(t)){
-      o=sortDir==="asc"?"order=heat_score.asc.nullslast":"order=heat_score.desc.nullslast";
+    // 如果用户选了列排序，后端也用对应列排序
+    if(sortCol){
+      o="order="+sortCol+"."+sortDir+".nullslast";
+    }else if(trendingTables.includes(t)){
+      o="order=heat_score.desc.nullslast";
     }else{
-      o=sortDir==="asc"?"order=created_at.asc":"order=created_at.desc";
+      o="order=created_at.desc";
     }
-    var r=await fetch(qa(t,o+"&limit=500"));if(!r.ok)return[];return await r.json();
+    var r=await fetch(qa(t,o+"&limit=2000"));if(!r.ok)return[];return await r.json();
   }catch(e){return[]}
 }
 function filterRows(rows){
@@ -489,15 +492,14 @@ function filterRows(rows){
 // 列头排序切换
 function toggleColSort(col){
   if(sortCol===col){
-    // 同一列：切换方向，第三次点击取消排序
     if(sortDir==="desc"){sortDir="asc"}
-    else{sortCol="";sortDir="desc"} // 取消排序
+    else{sortCol="";sortDir="desc"}
   }else{
-    sortCol=col;sortDir="desc"; // 新列默认降序
+    sortCol=col;sortDir="desc";
   }
   curPage=1;
-  document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
-  restoreFilters();setTimeout(triggerPageTranslation,50);
+  // 重新从后端获取数据（确保排序正确）
+  rT();
 }
 function updateActiveFiltersBar(){
   var cfg=FD[at];if(!cfg)return;var keys=Object.keys(colFilter).filter(function(k){return colFilter[k]});var bar=document.getElementById("activeFiltersBar");
