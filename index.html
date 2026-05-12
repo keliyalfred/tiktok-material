@@ -263,7 +263,16 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 <div class="mo" id="mO" style="display:none" onclick="if(event.target===this)hideModal()">
   <div class="modal wide"><div class="mh"><h3>投入新素材</h3><button class="mx" onclick="hideModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="mbo">
-    <div class="fg"><label class="fl">素材内容 <span class="rq">*</span></label><textarea class="finp" id="fC" placeholder="粘贴素材...AI自动识别并分发"></textarea></div>
+    <div class="fg"><label class="fl">素材内容 <span class="rq">*</span></label><textarea class="finp" id="fC" placeholder="粘贴素材...AI自动识别并分发" oninput="checkUrlInContent()"></textarea></div>
+    <!-- URL 检测提示（默认隐藏） -->
+    <div id="urlHintBanner" style="display:none;margin-bottom:10px;padding:10px 12px;background:var(--amber-light);border:1px solid var(--amber);border-radius:6px;font-size:11px;color:var(--amber-text)">
+      💡 <b>检测到你粘贴的是 TikTok/抖音 链接</b><br>
+      <span style="color:var(--text2)">投入素材是给 AI 拆"文字内容"用的。如果想让 AI 真的去看视频内容拆解，建议用「🔗 贴链接」入口。</span>
+      <div style="margin-top:6px;display:flex;gap:6px">
+        <button class="btn bp" style="font-size:11px;padding:3px 10px" onclick="switchToLinkModal()">🔗 跳到贴链接（推荐）</button>
+        <button class="btn bg" style="font-size:11px;padding:3px 10px" onclick="document.getElementById('urlHintBanner').style.display='none'">就在这里拆</button>
+      </div>
+    </div>
     <div class="fg"><label class="fl">来源链接</label><input class="finp" id="fU" type="url" placeholder="https://..."></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">来源平台</label><select class="finp" id="fP"><option>TikTok</option><option>Instagram</option><option>YouTube</option><option>小红书</option><option>其他</option></select></div>
@@ -284,11 +293,20 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 
 <!-- 贴链接弹窗 -->
 <div class="mo" id="linkMO" style="display:none" onclick="if(event.target===this)hideLinkModal()">
-  <div class="modal"><div class="mh"><h3>🔗 贴链接自动抓取</h3><button class="mx" onclick="hideLinkModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="modal wide"><div class="mh"><h3>🔗 贴链接自动抓取</h3><button class="mx" onclick="hideLinkModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="mbo">
     <div class="fg"><label class="fl">TikTok / 抖音 视频链接 <span class="rq">*</span></label><input class="finp" id="linkUrl" type="url" placeholder="粘贴TikTok或抖音链接，支持长链接和短链接"></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">提交人</label><input class="finp" id="linkSubmitter" type="text" placeholder="你的名字"></div>
+    </div>
+    <div class="fg" style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+      <label class="fl">🎯 指定拆解到这些库 <span style="font-weight:400;color:var(--text3)">不勾 = AI 自动判断（推荐）</span></label>
+      <div id="linkDispatchChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px"></div>
+      <div style="display:flex;gap:8px;font-size:10px;color:var(--text3)">
+        <a href="javascript:void(0)" onclick="toggleAllLinkDispatchChips(true)" style="color:var(--indigo);text-decoration:none">全选</a>
+        <a href="javascript:void(0)" onclick="toggleAllLinkDispatchChips(false)" style="color:var(--indigo);text-decoration:none">清空</a>
+        <a href="javascript:void(0)" onclick="selectFiveCoreLinkChips()" style="color:var(--indigo);text-decoration:none">五字诀（停病药信买）</a>
+      </div>
     </div>
     <p style="font-size:11px;color:var(--text3);margin-bottom:10px">TikTok链接：自动抓取视频数据+评论 → AI拆解入库<br>抖音链接：直接提交AI分析拆解（不抓取数据）</p>
     <div id="linkProgress" style="display:none;margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--sky-light);font-size:11px;color:var(--sky-text)"></div>
@@ -1191,10 +1209,93 @@ function selectFiveCoreDispatchChips(){
   renderDispatchChips();
 }
 
-function showModal(){if(!hasPerm("material_write")){toast("无权限操作","tge");return}selectedDispatchDims=[];renderDispatchChips();document.getElementById("mO").style.display="flex";setTimeout(function(){document.getElementById("fC").focus()},100)}
-function hideModal(){document.getElementById("mO").style.display="none";document.getElementById("fC").value="";document.getElementById("fU").value="";selectedDispatchDims=[]}
-function showLinkModal(){if(!hasPerm("material_write")){toast("无权限操作","tge");return}document.getElementById("linkMO").style.display="flex";var ls=localStorage.getItem("submitter");if(ls)document.getElementById("linkSubmitter").value=ls;setTimeout(function(){document.getElementById("linkUrl").focus()},100)}
-function hideLinkModal(){document.getElementById("linkMO").style.display="none";document.getElementById("linkUrl").value=""}
+// ========== 贴链接弹窗专用 chip 选择（独立于"投入素材"，避免相互覆盖）==========
+var selectedLinkDispatchDims=[];
+
+function renderLinkDispatchChips(){
+  var c=document.getElementById("linkDispatchChips");if(!c)return;
+  var h="";
+  DISPATCH_TABLES.forEach(function(t){
+    var on=selectedLinkDispatchDims.indexOf(t.k)!==-1;
+    h+='<span onclick="toggleLinkDispatchChip(\''+t.k+'\')" style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:500;cursor:pointer;transition:all .12s;border:1px solid '+(on?'var(--indigo)':'var(--border)')+';background:'+(on?'var(--indigo)':'var(--surface)')+';color:'+(on?'#fff':'var(--text2)')+'">'+(on?"✓ ":"")+t.l+'</span>';
+  });
+  c.innerHTML=h;
+}
+function toggleLinkDispatchChip(key){
+  var idx=selectedLinkDispatchDims.indexOf(key);
+  if(idx>=0)selectedLinkDispatchDims.splice(idx,1);
+  else selectedLinkDispatchDims.push(key);
+  renderLinkDispatchChips();
+}
+function toggleAllLinkDispatchChips(selectAll){
+  if(selectAll)selectedLinkDispatchDims=DISPATCH_TABLES.map(function(t){return t.k});
+  else selectedLinkDispatchDims=[];
+  renderLinkDispatchChips();
+}
+function selectFiveCoreLinkChips(){
+  selectedLinkDispatchDims=["viral_comments","pain_points","cta_scripts","social_proofs","visual_shots"];
+  renderLinkDispatchChips();
+}
+
+function showModal(){if(!hasPerm("material_write")){toast("无权限操作","tge");return}selectedDispatchDims=[];renderDispatchChips();document.getElementById("mO").style.display="flex";var hb=document.getElementById("urlHintBanner");if(hb)hb.style.display="none";setTimeout(function(){document.getElementById("fC").focus()},100)}
+function hideModal(){document.getElementById("mO").style.display="none";document.getElementById("fC").value="";document.getElementById("fU").value="";selectedDispatchDims=[];var hb=document.getElementById("urlHintBanner");if(hb)hb.style.display="none"}
+
+// 智能检测：投入素材的 textarea 里粘了视频链接 → 提示用户用「贴链接」入口
+function checkUrlInContent(){
+  var content=(document.getElementById("fC")||{}).value||"";
+  var hb=document.getElementById("urlHintBanner");
+  if(!hb)return;
+  // 检测 TikTok/抖音 URL 模式
+  var urlPattern=/https?:\/\/[^\s]*(tiktok\.com|douyin\.com|iesdouyin\.com)[^\s]*/i;
+  var match=content.match(urlPattern);
+  // 同时检测"内容是不是几乎只有这个 URL"（避免用户在长笔记里附带一个链接也弹提示）
+  if(match){
+    var contentNoUrl=content.replace(urlPattern,"").trim();
+    // 只有内容是"基本就是这个URL"时才提示（去掉URL后剩下不到20字）
+    if(contentNoUrl.length<20){
+      hb.style.display="block";
+      // 顺便把URL自动填到"来源链接"字段
+      var fu=document.getElementById("fU");
+      if(fu&&!fu.value)fu.value=match[0];
+      return;
+    }
+  }
+  hb.style.display="none";
+}
+
+// 从"投入素材"切到"贴链接"，带上 URL 和已勾选的拆解维度
+function switchToLinkModal(){
+  var content=(document.getElementById("fC")||{}).value||"";
+  var urlMatch=content.match(/https?:\/\/[^\s]+(tiktok\.com|douyin\.com|iesdouyin\.com)[^\s]*/i);
+  var url=urlMatch?urlMatch[0]:(document.getElementById("fU")||{}).value||"";
+  // 把投入素材的勾选带过去
+  var currentDims=selectedDispatchDims.slice();
+  var currentSubmitter=(document.getElementById("fS")||{}).value||"";
+  hideModal();
+  showLinkModal();
+  // 等弹窗显示后填充字段
+  setTimeout(function(){
+    if(url){var lu=document.getElementById("linkUrl");if(lu)lu.value=url}
+    if(currentSubmitter){var ls=document.getElementById("linkSubmitter");if(ls&&!ls.value)ls.value=currentSubmitter}
+    if(currentDims.length>0){
+      selectedLinkDispatchDims=currentDims;
+      renderLinkDispatchChips();
+    }
+  },150);
+}
+function showLinkModal(){
+  if(!hasPerm("material_write")){toast("无权限操作","tge");return}
+  selectedLinkDispatchDims=[];  // 复用全局变量但独立一份
+  renderLinkDispatchChips();
+  document.getElementById("linkMO").style.display="flex";
+  var ls=localStorage.getItem("submitter");if(ls)document.getElementById("linkSubmitter").value=ls;
+  setTimeout(function(){document.getElementById("linkUrl").focus()},100);
+}
+function hideLinkModal(){
+  document.getElementById("linkMO").style.display="none";
+  document.getElementById("linkUrl").value="";
+  selectedLinkDispatchDims=[];
+}
 
 // 视频预览弹窗
 function showVideoPreview(videoId,rowId){
@@ -1796,6 +1897,9 @@ async function doLinkSubmit(){
   var btn=document.getElementById("linkBtn");btn.disabled=true;btn.textContent="抓取中...";
   var sb=document.getElementById("linkSubmitter").value.trim()||"运营";
   localStorage.setItem("submitter",sb);
+  // 用户指定的拆解维度（不勾就是 null）
+  var dispatchDims=(selectedLinkDispatchDims&&selectedLinkDispatchDims.length>0)?selectedLinkDispatchDims.slice():null;
+  var dimMsgSuffix=dispatchDims?"（仅拆解到 "+dispatchDims.length+" 个指定库）":"";
 
   try{
     // 判断是否是抖音链接
@@ -1806,8 +1910,9 @@ async function doLinkSubmit(){
       btn.textContent="抖音链接，提交AI分析...";
       setLinkProgress("⏳ 抖音链接不支持数据抓取，将直接提交AI进行内容分析...");
       var douyinData={raw_content:"【抖音视频拆解】\n链接: "+url+"\n\n请根据此抖音视频链接，分析该视频的内容结构、钩子话术、拍摄手法、CTA策略、痛点切入等信息，拆解为可复用的素材。",source_url:url,source_link:url,source_platform:"抖音",submitter:sb,content_type:"competitor_video"};
+      if(dispatchDims)douyinData.dispatch_dimensions=dispatchDims;
       await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(douyinData)});
-      hideLinkModal();toast("抖音链接已提交，AI分析中...","tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
+      hideLinkModal();toast("抖音链接已提交，AI分析中..."+dimMsgSuffix,"tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
       return;
     }
 
@@ -1818,8 +1923,9 @@ async function doLinkSubmit(){
       btn.textContent="短链接，直接提交AI...";
       setLinkProgress("短链接无法直接解析，将作为素材提交AI分析...");
       var fallbackData={raw_content:"【TikTok视频链接】\n链接: "+url+"\n\n请分析此TikTok视频链接对应的视频内容。",source_url:url,source_link:url,source_platform:"TikTok",submitter:sb,content_type:"link_scrape"};
+      if(dispatchDims)fallbackData.dispatch_dimensions=dispatchDims;
       await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(fallbackData)});
-      hideLinkModal();toast("链接已提交，AI分析中...","tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
+      hideLinkModal();toast("链接已提交，AI分析中..."+dimMsgSuffix,"tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
       return;
     }
 
@@ -1827,10 +1933,13 @@ async function doLinkSubmit(){
     btn.textContent="正在抓取视频+评论...";
     setLinkProgress("⏳ 正在通过服务端抓取视频信息和评论（约5-10秒）...");
 
+    var rpcBody={tiktok_url:url,submitter_name:sb};
+    if(dispatchDims)rpcBody.dispatch_dimensions=dispatchDims;
+
     var rpcResp=await fetch(U+"/rest/v1/rpc/scrape_tiktok_link",{
       method:"POST",
       headers:{"Content-Type":"application/json","apikey":K},
-      body:JSON.stringify({tiktok_url:url,submitter_name:sb})
+      body:JSON.stringify(rpcBody)
     });
 
     if(!rpcResp.ok){
@@ -1839,8 +1948,9 @@ async function doLinkSubmit(){
       if(errText.includes("could not find") || errText.includes("does not exist")){
         setLinkProgress("⚠️ 代理函数未安装，回退到纯文本提交...");
         var fallback2={raw_content:"【TikTok视频链接抓取】\n链接: "+url+"\n\n请根据此链接分析该视频的内容结构、钩子话术、评论区热度等信息。",source_url:url,source_link:url,source_platform:"TikTok",submitter:sb,content_type:"link_scrape"};
+        if(dispatchDims)fallback2.dispatch_dimensions=dispatchDims;
         await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(fallback2)});
-        hideLinkModal();toast("已提交AI分析（请先安装SQL代理函数以启用完整抓取）","tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
+        hideLinkModal();toast("已提交AI分析（请先安装SQL代理函数以启用完整抓取）"+dimMsgSuffix,"tgs");at="material_intake";rN();setTimeout(refreshAll,1000);setTimeout(refreshAll,70000);
         return;
       }
       throw new Error("RPC调用失败: "+errText);
@@ -1849,8 +1959,14 @@ async function doLinkSubmit(){
     var result=await rpcResp.json();
 
     if(result.success){
+      // 如果 RPC 不接受 dispatch_dimensions 参数（旧版本），但前端已传，做一次补 PATCH
+      if(dispatchDims&&result.material_id){
+        try{
+          await fetch(qa("material_intake","id=eq."+result.material_id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({dispatch_dimensions:dispatchDims})});
+        }catch(e){/* 旧 RPC 可能没返回 material_id，忽略 */}
+      }
       hideLinkModal();
-      toast("抓取成功！播放"+Number(result.views||0).toLocaleString()+" 点赞"+Number(result.likes||0).toLocaleString()+"，AI正在分发...","tgs");
+      toast("抓取成功！播放"+Number(result.views||0).toLocaleString()+" 点赞"+Number(result.likes||0).toLocaleString()+"，AI正在分发..."+dimMsgSuffix,"tgs");
       at="material_intake";rN();
       setTimeout(refreshAll,2000);
       setTimeout(refreshAll,70000);
