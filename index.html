@@ -572,6 +572,9 @@ async function fR(t){
     }else if(t==="creator_rankings"){
       // 达人库默认：手动添加（📌）优先 → 添加时间倒序 → 系统抓的按热度
       o="order=is_focused.desc.nullslast,added_at.desc.nullslast,heat_score.desc.nullslast";
+    }else if(t==="trending_videos"){
+      // 爆款视频：按抓取时间倒序拉数据（让最新的肯定能进 limit 2000），前端再做 48h 分组
+      o="order=created_at.desc.nullslast";
     }else if(trendingTables.includes(t)){
       o="order=heat_score.desc.nullslast";
     }else{
@@ -605,6 +608,20 @@ function filterRows(rows){
       if(!isNaN(na)&&!isNaN(nb))return (na-nb)*dir;
       // 文本列
       return String(va).localeCompare(String(vb),"zh")*dir;
+    });
+  }else if(at==="trending_videos"){
+    // 默认排序：48 小时内抓的优先（组内按热度），48 小时外的按热度
+    var cutoff=Date.now()-48*3600*1000;
+    res=res.slice().sort(function(a,b){
+      var ta=new Date(a.created_at).getTime()||0;
+      var tb=new Date(b.created_at).getTime()||0;
+      var aFresh=ta>=cutoff?0:1;
+      var bFresh=tb>=cutoff?0:1;
+      if(aFresh!==bFresh)return aFresh-bFresh;  // 新鲜的在前
+      // 同组内按热度降序
+      var ha=Number(a.heat_score)||0;
+      var hb=Number(b.heat_score)||0;
+      return hb-ha;
     });
   }
 
@@ -646,7 +663,20 @@ function renderRows(rows){
   });if(canOp)h+='<th>操作</th>';h+='</tr>';
   h+='<tr class="col-filter-row">';cfg.c.forEach(function(c){if(c==="rating"||c==="user_notes"){h+='<td></td>'}else{var curVal=colFilter[c]||"";var hasClass=curVal?" has-value":"";h+='<td><input class="col-filter-input'+hasClass+'" data-col="'+c+'" value="'+curVal.replace(/"/g,"&quot;")+'" placeholder="筛选" oninput="onColFilter(this,\''+c+'\')"></td>'}});if(canOp)h+='<td></td>';h+='</tr></thead>';
   if(!rows.length)return h+'<tbody><tr><td colspan="'+(cfg.c.length+(canOp?1:0))+'" style="text-align:center;padding:40px;color:var(--text3)">'+(searchTerm||Object.keys(colFilter).length?"未找到匹配结果":"暂无数据")+'</td></tr></tbody></table>';
-  h+='<tbody>';pageRows.forEach(function(r){var ret=r.is_retired;h+='<tr'+(ret?' class="retired"':'')+'>';cfg.c.forEach(function(c){h+='<td>'+cV(r,c)+'</td>'});if(canOp){if(!ret){
+  h+='<tbody>';
+  // 在 trending_videos 默认排序时记录是否需要插入"老存量"分割线
+  var freshCutoff=(at==="trending_videos"&&!sortCol)?(Date.now()-48*3600*1000):null;
+  var dividerInserted=false;
+  pageRows.forEach(function(r){
+    // 检测是否从"新鲜组"切换到"存量组"，插入分割线
+    if(freshCutoff!==null&&!dividerInserted){
+      var rt=new Date(r.created_at).getTime()||0;
+      if(rt<freshCutoff){
+        h+='<tr style="background:var(--surface2)"><td colspan="'+(cfg.c.length+(canOp?1:0))+'" style="padding:6px 10px;font-size:10px;color:var(--text2);text-align:center;font-weight:500;border-top:2px solid var(--border);border-bottom:1px solid var(--border)">📚 以下为 48 小时之前抓取的存量爆款（按热度排序）</td></tr>';
+        dividerInserted=true;
+      }
+    }
+    var ret=r.is_retired;h+='<tr'+(ret?' class="retired"':'')+'>';cfg.c.forEach(function(c){h+='<td>'+cV(r,c)+'</td>'});if(canOp){if(!ret){
     var btns='<button class="retire-btn" onclick="doRetire(\''+r.id+'\')">作废</button>';
     // 爆款视频加"精准拆解"按钮
     if(at==="trending_videos"&&r.video_url){btns='<button class="retire-btn" style="color:var(--indigo);border-color:var(--indigo-light);background:var(--indigo-light);margin-bottom:3px" onclick="event.stopPropagation();dispatchTrending(\''+r.id+'\')">🎯精准拆解</button>'+btns}
