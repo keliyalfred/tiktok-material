@@ -502,17 +502,37 @@ function cV(r,c){
     return '<a class="cl" href="'+v+'" target="_blank" style="margin-right:4px">打开</a>'+(vid?'<button class="retire-btn" style="color:var(--indigo);border-color:var(--indigo-light);background:var(--indigo-light)" onclick="event.stopPropagation();showVideoPreview(\''+vid+'\',\''+r.id+'\')">▶预览</button>':'');
   }
   if(c==="source_video_url"||c==="reference_video_url"){
-    if(!v)return '<span class="ce" style="font-size:10px">—</span>';
     var stitle=(r.source_video_title||"").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
     var screator=r.source_creator||"";
     var tooltip=stitle?stitle+(screator?"\n@"+screator:""):"打开原视频";
-    return '<a href="'+v+'" target="_blank" title="'+tooltip+'" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:4px;background:var(--indigo-light);color:var(--indigo);font-size:10px;font-weight:600;text-decoration:none;border:1px solid '+(stitle?'var(--indigo)':'var(--indigo-light)')+'" onclick="event.stopPropagation()">🔗 看原片</a>';
+    if(v){
+      return '<a href="'+v+'" target="_blank" title="'+tooltip+'" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:4px;background:var(--indigo-light);color:var(--indigo);font-size:10px;font-weight:600;text-decoration:none;border:1px solid '+(stitle?'var(--indigo)':'var(--indigo-light)')+'" onclick="event.stopPropagation()">🔗 看原片</a>';
+    }
+    // 兜底 1：source_link 是 URL
+    if(r.source_link&&String(r.source_link).startsWith("http")){
+      return '<a href="'+r.source_link+'" target="_blank" title="打开原视频" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:4px;background:var(--indigo-light);color:var(--indigo);font-size:10px;font-weight:600;text-decoration:none" onclick="event.stopPropagation()">🔗 看原片</a>';
+    }
+    // 兜底 2：source_url 是 URL
+    if(r.source_url&&String(r.source_url).startsWith("http")){
+      return '<a href="'+r.source_url+'" target="_blank" title="打开原视频" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:4px;background:var(--indigo-light);color:var(--indigo);font-size:10px;font-weight:600;text-decoration:none" onclick="event.stopPropagation()">🔗 看原片</a>';
+    }
+    // 兜底 3：跳到母素材
+    if(r.source_intake_id){
+      return '<a href="javascript:void(0)" onclick="event.stopPropagation();jumpToSourceMaterial(\''+r.source_intake_id+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:4px;background:var(--violet-light);color:var(--violet);font-size:10px;font-weight:600;text-decoration:none;cursor:pointer">📦 来自素材</a>';
+    }
+    return '<span class="ce" style="font-size:10px">—</span>';
   }
   if(c==="source_video_title"){
-    if(!v)return '<span class="ce" style="font-size:10px">—</span>';
-    var sv2=String(v).replace(/</g,"&lt;").replace(/>/g,"&gt;");
-    var screator2=r.source_creator?'<div style="font-size:9px;color:var(--text3);margin-top:1px">@'+r.source_creator+'</div>':'';
-    return '<div style="max-width:160px"><div class="ct2" style="font-size:11px;-webkit-line-clamp:2" data-translate="'+sv2.replace(/"/g,"&quot;")+'">'+sv2+'</div>'+screator2+'</div>';
+    if(v){
+      var sv2=String(v).replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      var screator2=r.source_creator?'<div style="font-size:9px;color:var(--text3);margin-top:1px">@'+r.source_creator+'</div>':'';
+      return '<div style="max-width:160px"><div class="ct2" style="font-size:11px;-webkit-line-clamp:2" data-translate="'+sv2.replace(/"/g,"&quot;")+'">'+sv2+'</div>'+screator2+'</div>';
+    }
+    // 兜底：用 source_intake_id 取母素材的 raw_content 前几个字 / 或显示"贴链接"标签
+    if(r.source_intake_id){
+      return '<span style="font-size:9px;color:var(--text3);font-style:italic">📦 来自贴链接</span>';
+    }
+    return '<span class="ce" style="font-size:10px">—</span>';
   }
   if(c==="commenter_username"){
     if(!v)return '<span class="ce" style="font-size:10px">—</span>';
