@@ -298,6 +298,27 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
     <button class="bs" id="creatorBtn" onclick="doAddCreator()">抓取并添加监控</button>
   </div></div>
 </div>
+
+<!-- 添加品牌监控弹窗 -->
+<div class="mo" id="brandMO" style="display:none" onclick="if(event.target===this)hideBrandModal()">
+  <div class="modal"><div class="mh"><h3>🏪 添加品牌监控</h3><button class="mx" onclick="hideBrandModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="mbo">
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">品牌名 <span class="rq">*</span></label><input class="finp" id="brandName" type="text" placeholder="如 Dolls Kill"></div>
+      <div class="fg" style="flex:1"><label class="fl">主账号 username <span class="rq">*</span></label><input class="finp" id="brandUsername" type="text" placeholder="如 dollskill（不带@）"></div>
+    </div>
+    <div class="fg"><label class="fl">官网</label><input class="finp" id="brandWebsite" type="url" placeholder="https://..."></div>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">类目</label><select class="finp" id="brandCategory"><option>暗黑美学</option><option>美国女装</option><option>美妆</option><option>家居</option><option>其他</option></select></div>
+      <div class="fg" style="flex:1"><label class="fl">优先级 (0-10)</label><input class="finp" id="brandPriority" type="number" min="0" max="10" value="5"></div>
+    </div>
+    <div class="fg"><label class="fl">风格标签 <span style="font-weight:400;color:var(--text3)">英文逗号分隔，如 Goth,Y2K,Alt</span></label><input class="finp" id="brandStyleTags" type="text" placeholder="Goth, Coquette, Alt"></div>
+    <div class="fg"><label class="fl">备注</label><input class="finp" id="brandNotes" type="text" placeholder="比如：暗黑头牌 / 复古碎花 / 公主裙"></div>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">系统会自动从 TikAPI 抓取该账号的粉丝数、视频数、点赞数。<br>添加成功后会标记为<b style="color:var(--rose)">📌 重点监控</b>，在列表中优先排序。</p>
+    <div id="brandProgress" style="display:none;margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--sky-light);font-size:11px;color:var(--sky-text)"></div>
+    <button class="bs" id="brandBtn" onclick="doAddBrand()">添加品牌 · 抓取详情</button>
+  </div></div>
+</div>
 <script>
 var U="https://vjblxvebexpqlxfhwzlm.supabase.co",K="sb_publishable_TAtVWHXtEycUHu1xwslZSw_JdFOOg5l";
 // TikAPI直连模式（不依赖n8n）
@@ -328,7 +349,7 @@ var FD={
   trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","source_keyword","rating","user_notes","music_publish_time","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"关联达人",category:"类目",source_keyword:"来源",rating:"评分",user_notes:"备注",music_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","top_video_ids","rating","user_notes","first_seen_at","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",top_video_ids:"关联视频",rating:"评分",user_notes:"备注",first_seen_at:"首次出现",created_at:"抓取时间"}},
   creator_rankings:{c:["heat_score","username","nickname","follower_count","trending_video_count","total_views_in_system","total_likes_in_system","avg_views_per_video","creator_type","category","rating","user_notes"],n:{heat_score:"🔥热度",username:"用户名",nickname:"昵称",follower_count:"粉丝",trending_video_count:"爆款数",total_views_in_system:"总播放",total_likes_in_system:"总赞",avg_views_per_video:"均播放",creator_type:"类型",category:"类目",rating:"评分",user_notes:"备注"}},
-  brand_directory:{c:["heat_score","brand_name","total_accounts","total_followers","total_videos","total_views","total_likes","category","website","rating","user_notes"],n:{heat_score:"🔥热度",brand_name:"品牌",total_accounts:"账号数",total_followers:"总粉丝",total_videos:"总视频",total_views:"总播放",total_likes:"总赞",category:"类目",website:"官网",rating:"评分",user_notes:"备注"}},
+  brand_directory:{c:["is_focused","heat_score","brand_name","primary_username","total_followers","total_videos","total_likes","style_tags","category","website","focus_priority","notes","rating","user_notes"],n:{is_focused:"📌",heat_score:"🔥热度",brand_name:"品牌",primary_username:"主账号",total_followers:"粉丝",total_videos:"视频",total_likes:"总赞",style_tags:"风格",category:"类目",website:"官网",focus_priority:"优先级",notes:"备注",rating:"评分",user_notes:"我的备注"}},
   visual_inspiration:{c:["style_category","title","description","pinterest_search","key_elements","shooting_tips","product_match","mood","is_used","created_at"],n:{style_category:"风格",title:"灵感标题",description:"描述",pinterest_search:"Pinterest搜索词",key_elements:"关键元素",shooting_tips:"拍摄建议",product_match:"适配产品",mood:"氛围",is_used:"已使用",created_at:"时间"}}
 };
 var TG={video_structure:"ts2",bgm_used:"tv",hook_type:"to",content_tier:"ts2",emotion_type:"tv",proof_type:"tt2",benefit_type:"tt2",shot_type:"tp",action_type:"to",video_stage:"ts2",scene_category:"to",convertible_to:"te",emotion_tags:"tp",emotion_keywords:"tp",material_source:"ts2",applicable_scene:"ts2",applicable_category:"tt2",source_origin:"ts2",cost_level:"ta",trust_level:"ta",content_type:"tv",shot_category:"tp",framing:"ti",camera_angle:"ts2",camera_movement:"tv",lighting:"ta",total_duration:"ts2",beat_structure:"tv",transition_style:"to",bgm_tempo:"tv",target_framework:"tt2",tag_category:"to",current_heat:"ta",view_volume:"ti",strategy_type:"ts2",posting_frequency:"ta",heat_score:"tr",usage_count:"to",creator_followers:"ti",music_title:"tv",music_author:"ts2",creator_type:"ts2",total_accounts:"ti",trending_video_count:"to",avg_views_per_video:"ti"};
@@ -416,6 +437,37 @@ function cV(r,c){
   if(c==="hashtags"||c==="top_video_ids"||c==="top_creator_usernames"){if(Array.isArray(v)&&v.length)return v.slice(0,4).map(function(t){return '<span class="tag ti">'+t+'</span>'}).join("");return '<span class="ce">—</span>'}
   if(c==="tag_name")return '<span class="tag ti" style="font-size:12px;font-weight:600">#'+v+'</span>';
   if(c==="username")return '<a class="cl" href="https://www.tiktok.com/@'+v+'" target="_blank" style="font-weight:600">@'+v+'</a>';
+  if(c==="brand_name"){
+    var pu=r.primary_username||"";
+    var web=r.website||"";
+    var jumpUrl=pu?("https://www.tiktok.com/@"+pu):web;
+    var focusIcon=r.is_focused?'<span title="重点监控" style="color:var(--rose);margin-right:2px">📌</span>':"";
+    if(jumpUrl){
+      return '<a href="'+jumpUrl+'" target="_blank" title="点击跳转 TikTok 主账号" style="font-weight:600;color:var(--teal);text-decoration:none;display:inline-flex;align-items:center;gap:2px" onclick="event.stopPropagation()">'+focusIcon+v+' <span style="font-size:9px;opacity:0.6">↗</span></a>';
+    }
+    return '<span style="font-weight:600;color:var(--teal)">'+focusIcon+v+'</span>';
+  }
+  if(c==="is_focused"){
+    if(v===true)return '<span title="重点监控品牌" style="font-size:14px">📌</span>';
+    return '<span class="ce" style="font-size:10px">—</span>';
+  }
+  if(c==="primary_username"){
+    if(!v)return '<span class="ce" style="font-size:10px">—</span>';
+    return '<a class="cl" href="https://www.tiktok.com/@'+v+'" target="_blank" style="font-size:10px;font-weight:500" onclick="event.stopPropagation()">@'+v+' ↗</a>';
+  }
+  if(c==="focus_priority"){
+    if(v===null||v===undefined||v===0)return '<span class="ce" style="font-size:10px">—</span>';
+    var fpColor=v>=8?"var(--rose)":v>=5?"var(--amber)":"var(--text3)";
+    return '<span class="cn" style="color:'+fpColor+';font-weight:600">'+v+'</span>';
+  }
+  if(c==="style_tags"){
+    if(!Array.isArray(v)||!v.length)return '<span class="ce" style="font-size:10px">—</span>';
+    return v.slice(0,3).map(function(t){return '<span class="tag tv" style="font-size:9px">'+t+'</span>'}).join("");
+  }
+  if(c==="notes"){
+    if(!v)return '<span class="ce" style="font-size:10px">—</span>';
+    return '<span style="font-size:10px;color:var(--text2)">'+String(v).substring(0,40)+'</span>';
+  }
   if(c==="brand_name")return '<span style="font-weight:600;color:var(--teal)">'+v+'</span>';
   if(c==="creator_type"){var ct2={"creator":"达人","brand":"品牌号","shop":"店铺号"};return '<span class="tag '+(v==="brand"?"tt2":v==="shop"?"to":"ts2")+'">'+(ct2[v]||v)+'</span>'}
   if(c==="avg_views_per_video")return '<span class="cn">'+fmtNum(v)+'</span>';
@@ -491,6 +543,9 @@ async function fR(t){
     // 如果用户选了列排序，后端也用对应列排序
     if(sortCol){
       o="order="+sortCol+"."+sortDir+".nullslast";
+    }else if(t==="brand_directory"){
+      // 品牌库默认：重点监控（📌）优先 → 优先级降序 → 总粉丝降序
+      o="order=is_focused.desc.nullslast,focus_priority.desc.nullslast,total_followers.desc.nullslast";
     }else if(trendingTables.includes(t)){
       o="order=heat_score.desc.nullslast";
     }else{
@@ -602,6 +657,9 @@ async function rT(){
   var extraBtns="";
   if(at==="creator_rankings"){
     extraBtns=' <button class="btn bg" style="font-size:11px;padding:4px 8px" onclick="showCreatorModal()">+ 添加达人</button><button class="btn bg" style="font-size:11px;padding:4px 8px" id="syncCreatorsBtn" onclick="doSyncCreators()">同步详情</button>';
+  }
+  if(at==="brand_directory"){
+    extraBtns=' <button class="btn bp" style="font-size:11px;padding:4px 8px" onclick="showBrandModal()">+ 添加品牌</button><button class="btn bg" style="font-size:11px;padding:4px 8px" id="syncBrandsBtn" onclick="doSyncBrands()">🔄 同步详情</button>';
   }
   if(at==="trending_videos"){
     extraBtns+=' <button class="btn bg" style="font-size:11px;padding:4px 8px" onclick="batchExtractTranscripts()">🎙 批量提取台词</button>';
@@ -891,6 +949,86 @@ async function doSyncCreators(){
     if(at==="creator_rankings")rT();
   }catch(e){toast("同步失败: "+e.message,"tge")}
   finally{btn.disabled=false;btn.textContent="同步详情"}
+}
+
+// ===== 品牌监控 =====
+function showBrandModal(){
+  document.getElementById("brandMO").style.display="flex";
+  setTimeout(function(){document.getElementById("brandName").focus()},100);
+}
+function hideBrandModal(){
+  document.getElementById("brandMO").style.display="none";
+  ["brandName","brandUsername","brandWebsite","brandStyleTags","brandNotes"].forEach(function(id){var el=document.getElementById(id);if(el)el.value=""});
+  document.getElementById("brandPriority").value="5";
+  var p=document.getElementById("brandProgress");if(p)p.style.display="none";
+}
+
+async function doAddBrand(){
+  var name=document.getElementById("brandName").value.trim();
+  var username=document.getElementById("brandUsername").value.trim().replace(/^@/,"");
+  var website=document.getElementById("brandWebsite").value.trim();
+  var category=document.getElementById("brandCategory").value;
+  var priority=parseInt(document.getElementById("brandPriority").value)||5;
+  var styleTagsRaw=document.getElementById("brandStyleTags").value.trim();
+  var styleTags=styleTagsRaw?styleTagsRaw.split(/[,，]/).map(function(s){return s.trim()}).filter(function(s){return s}):null;
+  var notes=document.getElementById("brandNotes").value.trim();
+  var addedBy=(curUser&&curUser.display_name)||"admin";
+
+  if(!name){toast("请输入品牌名","tge");return}
+  if(!username){toast("请输入主账号 username","tge");return}
+
+  var btn=document.getElementById("brandBtn");
+  var prog=document.getElementById("brandProgress");
+  btn.disabled=true;btn.textContent="抓取中...";
+  prog.style.display="block";prog.textContent="⏳ 正在从 TikAPI 抓取 @"+username+" 的粉丝/视频/赞数...";
+
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/add_focused_brand",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":K},
+      body:JSON.stringify({
+        p_brand_name:name,p_username:username,p_website:website||null,
+        p_category:category,p_style_tags:styleTags,p_notes:notes||null,
+        p_added_by:addedBy,p_focus_priority:priority
+      })
+    });
+    if(!r.ok){
+      var errText=await r.text();
+      if(errText.includes("does not exist")||errText.includes("could not find")){
+        toast("请先执行 setup_brand_directory_upgrade.sql","tge");return;
+      }
+      throw new Error(errText);
+    }
+    var result=await r.json();
+    if(result.success){
+      var fetchedNote=result.fetched_from_tikapi?"（粉丝 "+Number(result.followers||0).toLocaleString()+"）":"（TikAPI 未拉到详情，可点'同步详情'重试）";
+      hideBrandModal();
+      toast("品牌已添加 "+fetchedNote,"tgs");
+      if(at==="brand_directory")rT();else{at="brand_directory";rN();rT()}
+    }else{
+      toast(result.message||"添加失败","tge");
+    }
+  }catch(e){toast("添加失败: "+e.message,"tge")}
+  finally{btn.disabled=false;btn.textContent="添加品牌 · 抓取详情";prog.style.display="none"}
+}
+
+async function doSyncBrands(){
+  var btn=document.getElementById("syncBrandsBtn");if(!btn)return;
+  btn.disabled=true;btn.textContent="同步中...";
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/sync_focused_brand_stats",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_max_count:20})});
+    if(!r.ok){
+      var errText=await r.text();
+      if(errText.includes("does not exist")||errText.includes("could not find")){
+        toast("请先执行 setup_brand_directory_upgrade.sql","tge");return;
+      }
+      throw new Error(errText);
+    }
+    var result=await r.json();
+    toast(result.message||"同步完成","tgs");
+    if(at==="brand_directory")rT();
+  }catch(e){toast("同步失败: "+e.message,"tge")}
+  finally{btn.disabled=false;btn.textContent="🔄 同步详情"}
 }
 function toast(m,t){var c=document.getElementById("toastW"),e=document.createElement("div");e.className="toast "+t;e.textContent=m;c.appendChild(e);setTimeout(function(){e.style.opacity="0";e.style.transition="opacity 0.3s";setTimeout(function(){e.remove()},300)},2000)}
 async function doSubmit(){
