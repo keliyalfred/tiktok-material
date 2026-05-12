@@ -372,6 +372,7 @@ var FD={
 };
 var TG={video_structure:"ts2",bgm_used:"tv",hook_type:"to",content_tier:"ts2",emotion_type:"tv",proof_type:"tt2",benefit_type:"tt2",shot_type:"tp",action_type:"to",video_stage:"ts2",scene_category:"to",convertible_to:"te",emotion_tags:"tp",emotion_keywords:"tp",material_source:"ts2",applicable_scene:"ts2",applicable_category:"tt2",source_origin:"ts2",cost_level:"ta",trust_level:"ta",content_type:"tv",shot_category:"tp",framing:"ti",camera_angle:"ts2",camera_movement:"tv",lighting:"ta",total_duration:"ts2",beat_structure:"tv",transition_style:"to",bgm_tempo:"tv",target_framework:"tt2",tag_category:"to",current_heat:"ta",view_volume:"ti",strategy_type:"ts2",posting_frequency:"ta",heat_score:"tr",usage_count:"to",creator_followers:"ti",music_title:"tv",music_author:"ts2",creator_type:"ts2",total_accounts:"ti",trending_video_count:"to",avg_views_per_video:"ti"};
 var at="material_intake",ct={},allRows=[],sortDir="desc",sortCol="",searchTerm="",colFilter={},curPage=1,pageSize=20;
+var videoAgeFilter=7;  // 爆款视频年龄筛选（单位：天，0=全部）
 
 // ==================== 素材库表格渲染 ====================
 function sH(s){var m={"待处理":"sp","处理中":"si","已分发":"sd","已驳回":"sr"};return '<span class="st '+(m[s]||"sp")+'"><span class="dot" style="background:currentColor"></span>'+(s||"未知")+'</span>'}
@@ -590,6 +591,16 @@ function filterRows(rows){
     var fv=colFilter[col];if(fv){var fvl=fv.toLowerCase();res=res.filter(function(r){var val=r[col];if(val===null||val===undefined)return false;if(Array.isArray(val)){return val.some(function(item){return String(LN[item]||item).toLowerCase().indexOf(fvl)!==-1})}return String(val).toLowerCase().indexOf(fvl)!==-1})}
   });
 
+  // 爆款视频：按发布时间筛选（发布时间为 NULL 的视频保留，避免误杀）
+  if(at==="trending_videos"&&videoAgeFilter>0){
+    var ageCutoff=Date.now()-videoAgeFilter*24*3600*1000;
+    res=res.filter(function(r){
+      if(!r.video_publish_time)return true;  // 未知发布时间的不过滤
+      var pt=new Date(r.video_publish_time).getTime();
+      return pt>=ageCutoff;
+    });
+  }
+
   // 列排序（前端排序，支持数字/时间/文本）
   if(sortCol){
     var dir=sortDir==="asc"?1:-1;
@@ -638,6 +649,13 @@ function toggleColSort(col){
   }
   curPage=1;
   // 重新从后端获取数据（确保排序正确）
+  rT();
+}
+
+// 爆款视频年龄筛选切换
+function setVideoAgeFilter(days){
+  videoAgeFilter=days;
+  curPage=1;
   rT();
 }
 function updateActiveFiltersBar(){
@@ -718,7 +736,15 @@ async function rT(){
     extraBtns=' <button class="btn bp" style="font-size:11px;padding:4px 8px" onclick="showBrandModal()">+ 添加品牌</button><button class="btn bg" style="font-size:11px;padding:4px 8px" id="syncBrandsBtn" onclick="doSyncBrands()">🔄 同步详情</button>';
   }
   if(at==="trending_videos"){
-    extraBtns+=' <button class="btn bg" style="font-size:11px;padding:4px 8px" onclick="batchExtractTranscripts()">🎙 批量提取台词</button>';
+    // 视频年龄筛选 chip
+    var ageOpts=[{v:3,l:"3天"},{v:7,l:"7天"},{v:15,l:"15天"},{v:30,l:"30天"},{v:60,l:"60天"},{v:0,l:"全部"}];
+    var ageChips=' <span style="display:inline-flex;align-items:center;gap:3px;margin-left:6px;font-size:10px;color:var(--text2)">📅 发布时间:</span>';
+    ageOpts.forEach(function(o){
+      var on=videoAgeFilter===o.v;
+      ageChips+=' <button onclick="setVideoAgeFilter('+o.v+')" style="padding:3px 9px;border-radius:12px;font-size:10px;font-weight:500;cursor:pointer;border:1px solid '+(on?'var(--indigo)':'var(--border)')+';background:'+(on?'var(--indigo)':'var(--surface)')+';color:'+(on?'#fff':'var(--text2)')+'">'+o.l+'</button>';
+    });
+    extraBtns+=ageChips;
+    extraBtns+=' <button class="btn bg" style="font-size:11px;padding:4px 8px;margin-left:6px" onclick="batchExtractTranscripts()">🎙 批量提取台词</button>';
     extraBtns+=' <button class="btn bg" style="font-size:11px;padding:4px 8px" onclick="showWhisperKeyModal()">⚙️ Whisper设置</button>';
   }
   document.getElementById("tTitle").innerHTML='<span class="nc" style="background:'+clr.b+';color:'+clr.f+';width:20px;height:20px;border-radius:4px">'+IC[at]+'</span>'+LN[at]+' <span class="ct">'+(ct[at]!=null?ct[at]+"条":"")+'</span>'+extraBtns;
