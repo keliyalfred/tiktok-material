@@ -415,7 +415,17 @@ function cV(r,c){
   }
   if(c==="rating")return starsHtml(r.id,v||0);
   if(c==="user_notes")return '<input class="note-input" value="'+(v||"").replace(/"/g,"&quot;")+'" onblur="saveNote(\''+r.id+'\',this.value)" placeholder="...">';
-  if(c==="source_link"){if(!v)return '<span class="ce">—</span>';if(v.startsWith("http"))return '<a class="cl" href="'+v+'" target="_blank">查看</a>';return '<span class="ct2" onclick="this.classList.toggle(\'expanded\')">'+v+'</span>'}
+  if(c==="source_link"){
+    if(v){
+      if(v.startsWith("http"))return '<a class="cl" href="'+v+'" target="_blank" style="font-size:11px" onclick="event.stopPropagation()">查看 ↗</a>';
+      return '<span class="ct2" onclick="this.classList.toggle(\'expanded\')">'+v+'</span>';
+    }
+    // 兜底 1：source_url 字段
+    if(r.source_url&&String(r.source_url).startsWith("http"))return '<a class="cl" href="'+r.source_url+'" target="_blank" style="font-size:11px" onclick="event.stopPropagation()">查看 ↗</a>';
+    // 兜底 2：source_material_id 跳到母素材
+    if(r.source_material_id)return '<a class="cl" href="javascript:void(0)" onclick="event.stopPropagation();jumpToSourceMaterial(\''+r.source_material_id+'\')" style="font-size:10px;color:var(--indigo)">📦 来自素材</a>';
+    return '<span class="ce">—</span>';
+  }
   // 美学风格列
   if(c==="aesthetic_style"){
     if(!v||v==="classifying...")return '<span class="ce" style="color:var(--text3);font-size:10px">'+(v==="classifying..."?"⏳分类中":"待标注")+'</span>';
@@ -1357,6 +1367,31 @@ async function doAddBrand(){
     }
   }catch(e){toast("添加失败: "+e.message,"tge")}
   finally{btn.disabled=false;btn.textContent="添加品牌 · 抓取详情";prog.style.display="none"}
+}
+
+// 从子库点击"来自素材"跳到母素材的具体行
+async function jumpToSourceMaterial(materialId){
+  if(!materialId){toast("没有源素材ID","tge");return}
+  toast("正在跳转...","tgs");
+  // 切到 material_intake tab
+  at="material_intake";rN();await rT();
+  // 在 allRows 里找到这条记录，高亮+滚动
+  setTimeout(function(){
+    var row=allRows.find(function(x){return x.id===materialId});
+    if(!row){toast("源素材已被删除或归档","tge");return}
+    // 用搜索框找到它（按 sku 搜索是最准的）
+    if(row.sku){
+      var si=document.getElementById("sI");
+      if(si){
+        si.value=row.sku;
+        searchTerm=row.sku;
+        curPage=1;
+        document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
+        restoreFilters();
+        toast("已定位到 "+row.sku,"tgs");
+      }
+    }
+  },500);
 }
 
 async function doSyncBrands(){
