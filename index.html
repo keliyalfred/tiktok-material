@@ -422,8 +422,8 @@ function cV(r,c){
     }
     // 兜底 1：source_url 字段
     if(r.source_url&&String(r.source_url).startsWith("http"))return '<a class="cl" href="'+r.source_url+'" target="_blank" style="font-size:11px" onclick="event.stopPropagation()">查看 ↗</a>';
-    // 兜底 2：source_material_id 跳到母素材
-    if(r.source_material_id)return '<a class="cl" href="javascript:void(0)" onclick="event.stopPropagation();jumpToSourceMaterial(\''+r.source_material_id+'\')" style="font-size:10px;color:var(--indigo)">📦 来自素材</a>';
+    // 兜底 2：source_intake_id 跳到母素材
+    if(r.source_intake_id)return '<a class="cl" href="javascript:void(0)" onclick="event.stopPropagation();jumpToSourceMaterial(\''+r.source_intake_id+'\')" style="font-size:10px;color:var(--indigo)">📦 来自素材</a>';
     return '<span class="ce">—</span>';
   }
   // 美学风格列
