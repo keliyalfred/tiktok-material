@@ -289,11 +289,22 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 
 <!-- 添加达人监控弹窗 -->
 <div class="mo" id="creatorMO" style="display:none" onclick="if(event.target===this)hideCreatorModal()">
-  <div class="modal"><div class="mh"><h3>👤 添加达人监控</h3><button class="mx" onclick="hideCreatorModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="modal wide"><div class="mh"><h3>👤 添加达人监控</h3><button class="mx" onclick="hideCreatorModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="mbo">
-    <div class="fg"><label class="fl">TikTok用户名 <span class="rq">*</span></label><input class="finp" id="creatorUsername" type="text" placeholder="输入用户名，如 shein_official（不带@）"></div>
-    <div class="fg"><label class="fl">类目</label><select class="finp" id="creatorCategory"><option>美国女装</option><option>美妆</option><option>家居</option><option>其他</option></select></div>
-    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">自动抓取该达人的粉丝数、视频数、简介等信息，并根据简介自动判断是达人/品牌/店铺</p>
+    <div style="display:flex;gap:8px">
+      <div class="fg" style="flex:1"><label class="fl">TikTok 用户名 <span class="rq">*</span></label><input class="finp" id="creatorUsername" type="text" placeholder="如 noogadlim（不带@）"></div>
+      <div class="fg" style="flex:1"><label class="fl">类目</label><select class="finp" id="creatorCategory"><option>暗黑美学</option><option>美国女装</option><option>美妆</option><option>家居</option><option>其他</option></select></div>
+    </div>
+    <div class="fg">
+      <label class="fl">风格标签 <span style="font-weight:400;color:var(--text3)">可多选</span></label>
+      <div id="creatorStyleChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px"></div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input class="finp" id="creatorCustomStyle" type="text" placeholder="其他风格（手输，回车添加）" style="flex:1;font-size:12px" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomStyle('creator')}">
+        <button class="btn bg" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="addCustomStyle('creator')">+ 加风格</button>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">💡 选她的理由 <span style="font-weight:400;color:var(--text3)">写下你为什么要监控这个达人，未来你会感谢现在的自己</span></label><textarea class="finp" id="creatorAddReason" rows="2" style="min-height:50px;font-size:12px" placeholder="如：钩子很犀利，3秒内必出爆款 / 卡点剪辑节奏特别清晰 / 蕾丝产品调色风格我们对得上"></textarea></div>
+    <p style="font-size:11px;color:var(--text3);margin-bottom:10px">系统会自动从 TikAPI 抓取粉丝数、视频数、简介。添加后标记为 <b style="color:var(--rose)">📌 重点监控</b>，按添加时间倒序排在最前面。</p>
     <div id="creatorProgress" style="display:none;margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--sky-light);font-size:11px;color:var(--sky-text)"></div>
     <button class="bs" id="creatorBtn" onclick="doAddCreator()">抓取并添加监控</button>
   </div></div>
@@ -301,7 +312,7 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 
 <!-- 添加品牌监控弹窗 -->
 <div class="mo" id="brandMO" style="display:none" onclick="if(event.target===this)hideBrandModal()">
-  <div class="modal"><div class="mh"><h3>🏪 添加品牌监控</h3><button class="mx" onclick="hideBrandModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="modal wide"><div class="mh"><h3>🏪 添加品牌监控</h3><button class="mx" onclick="hideBrandModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="mbo">
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">品牌名 <span class="rq">*</span></label><input class="finp" id="brandName" type="text" placeholder="如 Dolls Kill"></div>
@@ -312,8 +323,15 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
       <div class="fg" style="flex:1"><label class="fl">类目</label><select class="finp" id="brandCategory"><option>暗黑美学</option><option>美国女装</option><option>美妆</option><option>家居</option><option>其他</option></select></div>
       <div class="fg" style="flex:1"><label class="fl">优先级 (0-10)</label><input class="finp" id="brandPriority" type="number" min="0" max="10" value="5"></div>
     </div>
-    <div class="fg"><label class="fl">风格标签 <span style="font-weight:400;color:var(--text3)">英文逗号分隔，如 Goth,Y2K,Alt</span></label><input class="finp" id="brandStyleTags" type="text" placeholder="Goth, Coquette, Alt"></div>
-    <div class="fg"><label class="fl">备注</label><input class="finp" id="brandNotes" type="text" placeholder="比如：暗黑头牌 / 复古碎花 / 公主裙"></div>
+    <div class="fg">
+      <label class="fl">风格标签 <span style="font-weight:400;color:var(--text3)">可多选</span></label>
+      <div id="brandStyleChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px"></div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input class="finp" id="brandCustomStyle" type="text" placeholder="其他风格（手输，回车添加）" style="flex:1;font-size:12px" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomStyle('brand')}">
+        <button class="btn bg" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="addCustomStyle('brand')">+ 加风格</button>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">备注</label><input class="finp" id="brandNotes" type="text" placeholder="如：暗黑头牌 / 复古碎花 / 公主裙"></div>
     <p style="font-size:11px;color:var(--text3);margin-bottom:10px">系统会自动从 TikAPI 抓取该账号的粉丝数、视频数、点赞数。<br>添加成功后会标记为<b style="color:var(--rose)">📌 重点监控</b>，在列表中优先排序。</p>
     <div id="brandProgress" style="display:none;margin-bottom:10px;padding:8px 10px;border-radius:6px;background:var(--sky-light);font-size:11px;color:var(--sky-text)"></div>
     <button class="bs" id="brandBtn" onclick="doAddBrand()">添加品牌 · 抓取详情</button>
@@ -348,7 +366,7 @@ var FD={
   trending_videos:{c:["heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","aesthetic_style","replicability_score","transcript_cn","rating","user_notes","video_publish_time","created_at"],n:{heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",aesthetic_style:"风格",replicability_score:"可复制",transcript_cn:"台词",rating:"评分",user_notes:"备注",video_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","source_keyword","rating","user_notes","music_publish_time","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"关联达人",category:"类目",source_keyword:"来源",rating:"评分",user_notes:"备注",music_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","top_video_ids","rating","user_notes","first_seen_at","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",top_video_ids:"关联视频",rating:"评分",user_notes:"备注",first_seen_at:"首次出现",created_at:"抓取时间"}},
-  creator_rankings:{c:["heat_score","username","nickname","follower_count","trending_video_count","total_views_in_system","total_likes_in_system","avg_views_per_video","creator_type","category","rating","user_notes"],n:{heat_score:"🔥热度",username:"用户名",nickname:"昵称",follower_count:"粉丝",trending_video_count:"爆款数",total_views_in_system:"总播放",total_likes_in_system:"总赞",avg_views_per_video:"均播放",creator_type:"类型",category:"类目",rating:"评分",user_notes:"备注"}},
+  creator_rankings:{c:["is_focused","heat_score","username","nickname","follower_count","trending_video_count","total_views_in_system","total_likes_in_system","avg_views_per_video","creator_type","style_tags","add_reason","added_at","category","rating","user_notes"],n:{is_focused:"📌",heat_score:"🔥热度",username:"用户名",nickname:"昵称",follower_count:"粉丝",trending_video_count:"爆款数",total_views_in_system:"总播放",total_likes_in_system:"总赞",avg_views_per_video:"均播放",creator_type:"类型",style_tags:"风格",add_reason:"选她的理由",added_at:"添加时间",category:"类目",rating:"评分",user_notes:"我的备注"}},
   brand_directory:{c:["is_focused","heat_score","brand_name","primary_username","total_followers","total_videos","total_likes","style_tags","category","website","focus_priority","notes","rating","user_notes"],n:{is_focused:"📌",heat_score:"🔥热度",brand_name:"品牌",primary_username:"主账号",total_followers:"粉丝",total_videos:"视频",total_likes:"总赞",style_tags:"风格",category:"类目",website:"官网",focus_priority:"优先级",notes:"备注",rating:"评分",user_notes:"我的备注"}},
   visual_inspiration:{c:["style_category","title","description","pinterest_search","key_elements","shooting_tips","product_match","mood","is_used","created_at"],n:{style_category:"风格",title:"灵感标题",description:"描述",pinterest_search:"Pinterest搜索词",key_elements:"关键元素",shooting_tips:"拍摄建议",product_match:"适配产品",mood:"氛围",is_used:"已使用",created_at:"时间"}}
 };
@@ -363,7 +381,12 @@ function starsHtml(id,val){var h='<span class="stars">';for(var i=1;i<=5;i++){h+
 function cV(r,c){
   var v=r[c];
   if(c==="sku")return v?'<span class="sku-cell">'+v+'</span>':'<span class="ce">—</span>';
-  if(c==="created_at"||c==="video_publish_time"||c==="music_publish_time"||c==="first_seen_at")return '<span class="time-cell">'+fmtTime(v)+'</span>';
+  if(c==="created_at"||c==="video_publish_time"||c==="music_publish_time"||c==="first_seen_at"||c==="added_at")return '<span class="time-cell">'+fmtTime(v)+'</span>';
+  if(c==="add_reason"){
+    if(!v)return '<span class="ce" style="font-size:10px">—</span>';
+    var arSafe=String(v).replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    return '<div class="ct2" style="max-width:200px;font-size:11px;color:var(--text);line-height:1.5;font-style:italic" title="'+arSafe+'">💡 '+arSafe+'</div>';
+  }
   if(c==="rating")return starsHtml(r.id,v||0);
   if(c==="user_notes")return '<input class="note-input" value="'+(v||"").replace(/"/g,"&quot;")+'" onblur="saveNote(\''+r.id+'\',this.value)" placeholder="...">';
   if(c==="source_link"){if(!v)return '<span class="ce">—</span>';if(v.startsWith("http"))return '<a class="cl" href="'+v+'" target="_blank">查看</a>';return '<span class="ct2" onclick="this.classList.toggle(\'expanded\')">'+v+'</span>'}
@@ -546,6 +569,9 @@ async function fR(t){
     }else if(t==="brand_directory"){
       // 品牌库默认：重点监控（📌）优先 → 优先级降序 → 总粉丝降序
       o="order=is_focused.desc.nullslast,focus_priority.desc.nullslast,total_followers.desc.nullslast";
+    }else if(t==="creator_rankings"){
+      // 达人库默认：手动添加（📌）优先 → 添加时间倒序 → 系统抓的按热度
+      o="order=is_focused.desc.nullslast,added_at.desc.nullslast,heat_score.desc.nullslast";
     }else if(trendingTables.includes(t)){
       o="order=heat_score.desc.nullslast";
     }else{
@@ -918,17 +944,133 @@ function playMusic(url){
 function stopMusic(){if(currentAudio){currentAudio.pause();currentAudio=null;toast("已停止","tgs")}}
 
 // 达人监控
-function showCreatorModal(){document.getElementById("creatorMO").style.display="flex";setTimeout(function(){document.getElementById("creatorUsername").focus()},100)}
-function hideCreatorModal(){document.getElementById("creatorMO").style.display="none";document.getElementById("creatorUsername").value="";var p=document.getElementById("creatorProgress");if(p)p.style.display="none"}
+async function showCreatorModal(){
+  await loadStyleLibrary();
+  selectedStylesByCtx.creator=[];
+  renderStyleChips("creator");
+  document.getElementById("creatorMO").style.display="flex";
+  setTimeout(function(){document.getElementById("creatorUsername").focus()},100);
+}
+function hideCreatorModal(){
+  document.getElementById("creatorMO").style.display="none";
+  document.getElementById("creatorUsername").value="";
+  var ar=document.getElementById("creatorAddReason");if(ar)ar.value="";
+  var cs=document.getElementById("creatorCustomStyle");if(cs)cs.value="";
+  selectedStylesByCtx.creator=[];
+  var p=document.getElementById("creatorProgress");if(p)p.style.display="none";
+}
+// ========== 风格标签库（达人 + 品牌共用） ==========
+var STYLE_LIBRARY=[];          // 风格库缓存，从数据库加载
+var selectedStylesByCtx={creator:[],brand:[]};  // 当前弹窗已选风格
+
+async function loadStyleLibrary(){
+  if(STYLE_LIBRARY.length)return STYLE_LIBRARY;
+  try{
+    var r=await fetch(qa("style_tags_library","order=sort_order.asc&limit=100"));
+    if(r.ok)STYLE_LIBRARY=await r.json();
+  }catch(e){STYLE_LIBRARY=[]}
+  // 回退：如果数据库表不存在或为空，用本地 10 个预设
+  if(!STYLE_LIBRARY.length){
+    STYLE_LIBRARY=[
+      {name:"Dark Academia",name_cn:"暗黑学院",color:"#D97706"},
+      {name:"Whimsigoth",name_cn:"奇幻暗黑",color:"#7C3AED"},
+      {name:"Romantic Goth",name_cn:"浪漫哥特",color:"#E11D48"},
+      {name:"Coquette",name_cn:"少女蕾丝",color:"#DB2777"},
+      {name:"Dark Coquette",name_cn:"暗黑少女",color:"#9F1239"},
+      {name:"Victorian",name_cn:"维多利亚",color:"#0D9488"},
+      {name:"Y2K",name_cn:"Y2K千禧",color:"#EA580C"},
+      {name:"Goth",name_cn:"哥特",color:"#111827"},
+      {name:"Cottagecore",name_cn:"田园仙女",color:"#059669"},
+      {name:"Regencycore",name_cn:"摄政时代",color:"#0284C7"}
+    ];
+  }
+  return STYLE_LIBRARY;
+}
+
+function renderStyleChips(ctx){
+  // ctx = 'creator' | 'brand'
+  var container=document.getElementById(ctx+"StyleChips");
+  if(!container)return;
+  var selected=selectedStylesByCtx[ctx]||[];
+  var h="";
+  // 先渲染所有库里的风格
+  STYLE_LIBRARY.forEach(function(s){
+    var isOn=selected.indexOf(s.name)!==-1;
+    var col=s.color||"#7C3AED";
+    var label=s.name_cn?s.name+" / "+s.name_cn:s.name;
+    h+='<span class="style-chip" data-name="'+s.name.replace(/"/g,"&quot;")+'" onclick="toggleStyleChip(\''+ctx+'\',\''+s.name.replace(/'/g,"\\'")+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:14px;font-size:11px;font-weight:500;cursor:pointer;transition:all .12s;border:1.5px solid '+col+';background:'+(isOn?col:"transparent")+';color:'+(isOn?"#fff":col)+'">'+(isOn?"✓ ":"")+label+'</span>';
+  });
+  // 再渲染自定义的（不在库里的）
+  selected.forEach(function(name){
+    var inLib=STYLE_LIBRARY.some(function(s){return s.name===name});
+    if(!inLib){
+      h+='<span class="style-chip" data-name="'+name.replace(/"/g,"&quot;")+'" style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:14px;font-size:11px;font-weight:500;cursor:pointer;border:1.5px dashed var(--violet);background:var(--violet);color:#fff" onclick="toggleStyleChip(\''+ctx+'\',\''+name.replace(/'/g,"\\'")+'\')">✓ '+name+' <span style="opacity:0.7;font-size:9px">自定义</span></span>';
+    }
+  });
+  container.innerHTML=h;
+}
+
+function toggleStyleChip(ctx,name){
+  if(!selectedStylesByCtx[ctx])selectedStylesByCtx[ctx]=[];
+  var arr=selectedStylesByCtx[ctx];
+  var idx=arr.indexOf(name);
+  if(idx>=0)arr.splice(idx,1);else arr.push(name);
+  renderStyleChips(ctx);
+}
+
+async function addCustomStyle(ctx){
+  var inp=document.getElementById(ctx+"CustomStyle");
+  var name=inp.value.trim();
+  if(!name)return;
+  // 标准化：首字母大写
+  name=name.replace(/\b\w/g,function(c){return c.toUpperCase()});
+  if(!selectedStylesByCtx[ctx])selectedStylesByCtx[ctx]=[];
+  if(selectedStylesByCtx[ctx].indexOf(name)===-1){
+    selectedStylesByCtx[ctx].push(name);
+    // 同时尝试把这个新风格也写入风格库，下次别人就能选到
+    try{
+      await fetch(qa("style_tags_library"),{method:"POST",headers:{"Content-Type":"application/json","apikey":K,"Prefer":"resolution=ignore-duplicates"},body:JSON.stringify({name:name,is_preset:false,sort_order:999})});
+      // 重新加载风格库
+      STYLE_LIBRARY=[];await loadStyleLibrary();
+    }catch(e){/* 表不存在或重复，忽略 */}
+  }
+  inp.value="";
+  renderStyleChips(ctx);
+}
+
 async function doAddCreator(){
   var username=document.getElementById("creatorUsername").value.trim().replace(/^@/,"");
   if(!username){toast("请输入用户名","tge");return}
   var cat=document.getElementById("creatorCategory").value;
+  var addReason=document.getElementById("creatorAddReason").value.trim();
+  var styleTags=selectedStylesByCtx.creator.slice();
+  var addedBy=(curUser&&curUser.display_name)||"admin";
   var btn=document.getElementById("creatorBtn");btn.disabled=true;btn.textContent="抓取中...";
   var prog=document.getElementById("creatorProgress");prog.style.display="block";prog.textContent="⏳ 正在从TikAPI抓取 @"+username+" 的资料...";
   try{
-    var r=await fetch(U+"/rest/v1/rpc/add_creator_monitor",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_username:username,p_category:cat})});
-    if(!r.ok)throw new Error(await r.text());
+    var r=await fetch(U+"/rest/v1/rpc/add_creator_monitor",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":K},
+      body:JSON.stringify({
+        p_username:username,
+        p_category:cat,
+        p_style_tags:styleTags.length?styleTags:null,
+        p_add_reason:addReason||null,
+        p_added_by:addedBy
+      })
+    });
+    if(!r.ok){
+      var errText=await r.text();
+      // 旧版 RPC 不接受新参数，降级到只传基础参数
+      if(errText.includes("p_style_tags")||errText.includes("p_add_reason")||errText.includes("p_added_by")){
+        toast("请先执行 setup_creator_upgrade.sql 以启用新字段","tge");
+        // 用旧版参数兜底
+        var r2=await fetch(U+"/rest/v1/rpc/add_creator_monitor",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_username:username,p_category:cat})});
+        if(r2.ok){var fr=await r2.json();hideCreatorModal();toast(fr.message||"已添加（基础版）","tgs");if(at==="creator_rankings")rT();else{at="creator_rankings";rN();rT()}}
+        return;
+      }
+      throw new Error(errText);
+    }
     var result=await r.json();
     if(result.success){
       hideCreatorModal();toast(result.message,"tgs");
@@ -952,14 +1094,18 @@ async function doSyncCreators(){
 }
 
 // ===== 品牌监控 =====
-function showBrandModal(){
+async function showBrandModal(){
+  await loadStyleLibrary();
+  selectedStylesByCtx.brand=[];
+  renderStyleChips("brand");
   document.getElementById("brandMO").style.display="flex";
   setTimeout(function(){document.getElementById("brandName").focus()},100);
 }
 function hideBrandModal(){
   document.getElementById("brandMO").style.display="none";
-  ["brandName","brandUsername","brandWebsite","brandStyleTags","brandNotes"].forEach(function(id){var el=document.getElementById(id);if(el)el.value=""});
+  ["brandName","brandUsername","brandWebsite","brandNotes","brandCustomStyle"].forEach(function(id){var el=document.getElementById(id);if(el)el.value=""});
   document.getElementById("brandPriority").value="5";
+  selectedStylesByCtx.brand=[];
   var p=document.getElementById("brandProgress");if(p)p.style.display="none";
 }
 
@@ -969,8 +1115,7 @@ async function doAddBrand(){
   var website=document.getElementById("brandWebsite").value.trim();
   var category=document.getElementById("brandCategory").value;
   var priority=parseInt(document.getElementById("brandPriority").value)||5;
-  var styleTagsRaw=document.getElementById("brandStyleTags").value.trim();
-  var styleTags=styleTagsRaw?styleTagsRaw.split(/[,，]/).map(function(s){return s.trim()}).filter(function(s){return s}):null;
+  var styleTags=selectedStylesByCtx.brand.slice();
   var notes=document.getElementById("brandNotes").value.trim();
   var addedBy=(curUser&&curUser.display_name)||"admin";
 
@@ -988,7 +1133,7 @@ async function doAddBrand(){
       headers:{"Content-Type":"application/json","apikey":K},
       body:JSON.stringify({
         p_brand_name:name,p_username:username,p_website:website||null,
-        p_category:category,p_style_tags:styleTags,p_notes:notes||null,
+        p_category:category,p_style_tags:styleTags.length?styleTags:null,p_notes:notes||null,
         p_added_by:addedBy,p_focus_priority:priority
       })
     });
