@@ -66,6 +66,8 @@ tbody td{padding:8px 10px;color:var(--text);vertical-align:top;min-width:40px;ma
 .ct2{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5;cursor:pointer;word-break:break-all}.ct2.expanded{-webkit-line-clamp:unset}
 .cl{color:var(--sky);text-decoration:none;font-weight:500;font-size:11px}.cl:hover{text-decoration:underline}
 .cn{font-variant-numeric:tabular-nums;font-weight:500}.ce{color:var(--text3);font-size:11px}
+.edit-hint{cursor:pointer;transition:all .15s;border-radius:3px;padding:0 2px}
+.edit-hint:hover{background:var(--indigo-light);color:var(--indigo)}
 .sku-cell{font-family:'Inter',monospace;font-size:10px;color:var(--indigo);font-weight:600;white-space:nowrap}
 .time-cell{font-size:10px;color:var(--text3);white-space:nowrap}
 .st{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:600}
@@ -366,7 +368,7 @@ var FD={
   trending_videos:{c:["heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","aesthetic_style","replicability_score","transcript_cn","rating","user_notes","video_publish_time","created_at"],n:{heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",aesthetic_style:"风格",replicability_score:"可复制",transcript_cn:"台词",rating:"评分",user_notes:"备注",video_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","source_keyword","rating","user_notes","music_publish_time","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"关联达人",category:"类目",source_keyword:"来源",rating:"评分",user_notes:"备注",music_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","top_video_ids","rating","user_notes","first_seen_at","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",top_video_ids:"关联视频",rating:"评分",user_notes:"备注",first_seen_at:"首次出现",created_at:"抓取时间"}},
-  creator_rankings:{c:["is_focused","heat_score","username","nickname","follower_count","trending_video_count","total_views_in_system","total_likes_in_system","avg_views_per_video","creator_type","style_tags","add_reason","added_at","category","rating","user_notes"],n:{is_focused:"📌",heat_score:"🔥热度",username:"用户名",nickname:"昵称",follower_count:"粉丝",trending_video_count:"爆款数",total_views_in_system:"总播放",total_likes_in_system:"总赞",avg_views_per_video:"均播放",creator_type:"类型",style_tags:"风格",add_reason:"选她的理由",added_at:"添加时间",category:"类目",rating:"评分",user_notes:"我的备注"}},
+  creator_rankings:{c:["staff_mark","is_focused","heat_score","username","nickname","follower_count","trending_video_count","total_views_in_system","total_likes_in_system","avg_views_per_video","creator_type","style_tags","add_reason","added_at","category","rating","user_notes"],n:{staff_mark:"标记",is_focused:"📌",heat_score:"🔥热度",username:"用户名",nickname:"昵称",follower_count:"粉丝",trending_video_count:"爆款数",total_views_in_system:"总播放",total_likes_in_system:"总赞",avg_views_per_video:"均播放",creator_type:"类型",style_tags:"风格",add_reason:"选她的理由",added_at:"添加时间",category:"类目",rating:"评分",user_notes:"我的备注"}},
   brand_directory:{c:["is_focused","heat_score","brand_name","primary_username","total_followers","total_videos","total_likes","style_tags","category","website","focus_priority","notes","rating","user_notes"],n:{is_focused:"📌",heat_score:"🔥热度",brand_name:"品牌",primary_username:"主账号",total_followers:"粉丝",total_videos:"视频",total_likes:"总赞",style_tags:"风格",category:"类目",website:"官网",focus_priority:"优先级",notes:"备注",rating:"评分",user_notes:"我的备注"}},
   visual_inspiration:{c:["style_category","title","description","pinterest_search","key_elements","shooting_tips","product_match","mood","is_used","created_at"],n:{style_category:"风格",title:"灵感标题",description:"描述",pinterest_search:"Pinterest搜索词",key_elements:"关键元素",shooting_tips:"拍摄建议",product_match:"适配产品",mood:"氛围",is_used:"已使用",created_at:"时间"}}
 };
@@ -382,11 +384,25 @@ function starsHtml(id,val){var h='<span class="stars">';for(var i=1;i<=5;i++){h+
 function cV(r,c){
   var v=r[c];
   if(c==="sku")return v?'<span class="sku-cell">'+v+'</span>':'<span class="ce">—</span>';
-  if(c==="created_at"||c==="video_publish_time"||c==="music_publish_time"||c==="first_seen_at"||c==="added_at")return '<span class="time-cell">'+fmtTime(v)+'</span>';
+  if(c==="added_at"){
+    var canEditTime=(at==="creator_rankings"&&r.id);
+    if(!v){
+      if(canEditTime)return '<span class="ce edit-hint" style="font-size:10px" ondblclick="editCreatorCell(\''+r.id+'\',\'added_at\',this)" title="双击添加">— ✎</span>';
+      return '<span class="ce" style="font-size:10px">—</span>';
+    }
+    var atAttr=canEditTime?' ondblclick="editCreatorCell(\''+r.id+'\',\'added_at\',this)" title="双击编辑"':'';
+    return '<span class="time-cell" style="cursor:'+(canEditTime?'pointer':'default')+'"'+atAttr+'>'+fmtTime(v)+'</span>';
+  }
+  if(c==="created_at"||c==="video_publish_time"||c==="music_publish_time"||c==="first_seen_at")return '<span class="time-cell">'+fmtTime(v)+'</span>';
   if(c==="add_reason"){
-    if(!v)return '<span class="ce" style="font-size:10px">—</span>';
-    var arSafe=String(v).replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-    return '<div class="ct2" style="max-width:200px;font-size:11px;color:var(--text);line-height:1.5;font-style:italic" title="'+arSafe+'">💡 '+arSafe+'</div>';
+    var arSafe=v?String(v).replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"):"";
+    var canEdit=(at==="creator_rankings"&&r.id);
+    var dblattr=canEdit?' ondblclick="editCreatorCell(\''+r.id+'\',\'add_reason\',this)" title="双击编辑"':' title="'+arSafe+'"';
+    if(!v){
+      if(canEdit)return '<span class="ce edit-hint" style="font-size:10px" ondblclick="editCreatorCell(\''+r.id+'\',\'add_reason\',this)" title="双击添加">— ✎</span>';
+      return '<span class="ce" style="font-size:10px">—</span>';
+    }
+    return '<div class="ct2" style="max-width:200px;font-size:11px;color:var(--text);line-height:1.5;font-style:italic;cursor:'+(canEdit?'text':'default')+'"'+dblattr+'>💡 '+arSafe+'</div>';
   }
   if(c==="rating")return starsHtml(r.id,v||0);
   if(c==="user_notes")return '<input class="note-input" value="'+(v||"").replace(/"/g,"&quot;")+'" onblur="saveNote(\''+r.id+'\',this.value)" placeholder="...">';
@@ -471,6 +487,23 @@ function cV(r,c){
     }
     return '<span style="font-weight:600;color:var(--teal)">'+focusIcon+v+'</span>';
   }
+  if(c==="staff_mark"){
+    if(at!=="creator_rankings"){
+      if(v==="match")return '<span title="符合" style="font-size:14px">⭐</span>';
+      if(v==="mismatch")return '<span title="不符合" style="font-size:14px;opacity:0.5">❌</span>';
+      return '<span class="ce" style="font-size:10px">—</span>';
+    }
+    var rid=r.id;
+    var mc=v==="match",mm=v==="mismatch";
+    var bs="font-size:13px;padding:2px 5px;border-radius:4px;cursor:pointer;border:1px solid transparent;background:transparent;line-height:1;transition:all .12s";
+    var matchStyle=mc?";background:#FEF3C7;border-color:#F59E0B":";opacity:0.45";
+    var mismatchStyle=mm?";background:#FEE2E2;border-color:#DC2626":";opacity:0.45";
+    return '<div style="display:inline-flex;gap:1px;align-items:center" onclick="event.stopPropagation()">'+
+      '<button title="标记符合（弹窗补备注）" onclick="openMarkMatchModal(\''+rid+'\')" style="'+bs+matchStyle+'">⭐</button>'+
+      '<button title="标记不符合" onclick="markCreatorQuick(\''+rid+'\',\'mismatch\')" style="'+bs+mismatchStyle+'">❌</button>'+
+      (v?'<button title="清除标记" onclick="markCreatorQuick(\''+rid+'\',\'clear\')" style="'+bs+';opacity:0.6;color:var(--text3)">↻</button>':'')+
+      '</div>';
+  }
   if(c==="is_focused"){
     if(v===true)return '<span title="重点监控品牌" style="font-size:14px">📌</span>';
     return '<span class="ce" style="font-size:10px">—</span>';
@@ -485,8 +518,26 @@ function cV(r,c){
     return '<span class="cn" style="color:'+fpColor+';font-weight:600">'+v+'</span>';
   }
   if(c==="style_tags"){
-    if(!Array.isArray(v)||!v.length)return '<span class="ce" style="font-size:10px">—</span>';
-    return v.slice(0,3).map(function(t){return '<span class="tag tv" style="font-size:9px">'+t+'</span>'}).join("");
+    var canEditStyle=(at==="creator_rankings"&&r.id);
+    var stAttr=canEditStyle?' ondblclick="editCreatorCell(\''+r.id+'\',\'style_tags\',this)" title="双击编辑风格"':'';
+    if(!Array.isArray(v)||!v.length){
+      if(canEditStyle)return '<span class="ce edit-hint" style="font-size:10px"'+stAttr+'>— ✎</span>';
+      return '<span class="ce" style="font-size:10px">—</span>';
+    }
+    var moreTxt=v.length>3?' <span style="font-size:9px;color:var(--text3)">+'+(v.length-3)+'</span>':'';
+    return '<div style="cursor:'+(canEditStyle?'pointer':'default')+'"'+stAttr+'>'+v.slice(0,3).map(function(t){return '<span class="tag tv" style="font-size:9px">'+t+'</span>'}).join("")+moreTxt+'</div>';
+  }
+  // creator_rankings 表的 category 双击编辑
+  if(c==="category"&&at==="creator_rankings"&&r.id){
+    var catSafe=v?String(v).replace(/</g,"&lt;").replace(/>/g,"&gt;"):"";
+    if(!v)return '<span class="ce edit-hint" style="font-size:10px" ondblclick="editCreatorCell(\''+r.id+'\',\'category\',this)" title="双击编辑">— ✎</span>';
+    return '<span class="tag te" style="cursor:pointer" ondblclick="editCreatorCell(\''+r.id+'\',\'category\',this)" title="双击编辑">'+catSafe+'</span>';
+  }
+  // creator_rankings 表的 user_notes 双击编辑（覆盖通用 user_notes 的 input 渲染）
+  if(c==="user_notes"&&at==="creator_rankings"&&r.id){
+    var unSafe=v?String(v).replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"):"";
+    if(!v)return '<span class="ce edit-hint" style="font-size:10px" ondblclick="editCreatorCell(\''+r.id+'\',\'user_notes\',this)" title="双击添加">— ✎</span>';
+    return '<div class="ct2" style="max-width:160px;font-size:11px;cursor:pointer" ondblclick="editCreatorCell(\''+r.id+'\',\'user_notes\',this)" title="'+unSafe+'">'+unSafe+'</div>';
   }
   if(c==="notes"){
     if(!v)return '<span class="ce" style="font-size:10px">—</span>';
@@ -571,8 +622,11 @@ async function fR(t){
       // 品牌库默认：重点监控（📌）优先 → 优先级降序 → 总粉丝降序
       o="order=is_focused.desc.nullslast,focus_priority.desc.nullslast,total_followers.desc.nullslast";
     }else if(t==="creator_rankings"){
-      // 达人库默认：手动添加（📌）优先 → 添加时间倒序 → 系统抓的按热度
-      o="order=is_focused.desc.nullslast,added_at.desc.nullslast,heat_score.desc.nullslast";
+      // 达人库默认 4 档：📌手动添加 > ⭐符合 > 未标记 > ❌不符合
+      // 组内：手动添加按 added_at 倒序，其他按 heat_score 倒序
+      // PostgREST 不能直接做 CASE 排序，所以这里只先把 is_focused 和 staff_mark 分开
+      // 真正的 4 档排序在前端 filterRows 里补
+      o="order=is_focused.desc.nullslast,staff_mark.asc.nullslast,added_at.desc.nullslast,heat_score.desc.nullslast";
     }else if(t==="trending_videos"){
       // 爆款视频：按抓取时间倒序拉数据（让最新的肯定能进 limit 2000），前端再做 48h 分组
       o="order=created_at.desc.nullslast";
@@ -633,6 +687,28 @@ function filterRows(rows){
       var ha=Number(a.heat_score)||0;
       var hb=Number(b.heat_score)||0;
       return hb-ha;
+    });
+  }else if(at==="creator_rankings"){
+    // 默认排序 4 档：📌手动添加 > ⭐符合 > 未标记 > ❌不符合
+    // 组内：手动添加 / 符合的按 added_at 倒序；其余按 heat_score 倒序
+    res=res.slice().sort(function(a,b){
+      var ag=a.is_focused?0:(a.staff_mark==="match"?1:(a.staff_mark==="mismatch"?3:2));
+      var bg=b.is_focused?0:(b.staff_mark==="match"?1:(b.staff_mark==="mismatch"?3:2));
+      if(ag!==bg)return ag-bg;
+      // 组内：📌组和⭐组按 added_at / staff_mark_at 倒序；其余按 heat_score 倒序
+      if(ag===0){
+        var taA=new Date(a.added_at||0).getTime();
+        var tbA=new Date(b.added_at||0).getTime();
+        return tbA-taA;
+      }
+      if(ag===1){
+        var taM=new Date(a.staff_mark_at||0).getTime();
+        var tbM=new Date(b.staff_mark_at||0).getTime();
+        return tbM-taM;
+      }
+      var haC=Number(a.heat_score)||0;
+      var hbC=Number(b.heat_score)||0;
+      return hbC-haC;
     });
   }
 
@@ -1230,6 +1306,260 @@ async function doSyncBrands(){
     if(at==="brand_directory")rT();
   }catch(e){toast("同步失败: "+e.message,"tge")}
   finally{btn.disabled=false;btn.textContent="🔄 同步详情"}
+}
+
+// ========== Staff Mark：达人「符合 / 不符合」标记 ==========
+async function markCreatorQuick(creatorId,mark){
+  if(!confirm(mark==="mismatch"?"标记为不符合？\n（标记后会沉到列表底部）":"清除标记？"))return;
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/mark_creator_staff",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_creator_id:creatorId,p_mark:mark})});
+    if(!r.ok){
+      var errText=await r.text();
+      if(errText.includes("does not exist")||errText.includes("could not find")){toast("请先执行 setup_creator_inline_edit.sql","tge");return}
+      throw new Error(errText);
+    }
+    var result=await r.json();
+    if(result.success){toast(result.message||"已更新","tgs");if(at==="creator_rankings")rT()}
+    else{toast(result.message||"失败","tge")}
+  }catch(e){toast("操作失败: "+e.message,"tge")}
+}
+
+function openMarkMatchModal(creatorId){
+  // 取当前 add_reason
+  var row=allRows.find(function(x){return x.id===creatorId});
+  var curReason=row?(row.add_reason||""):"";
+  var curUserName=row?("@"+(row.username||"")):"";
+  // 动态创建弹窗
+  var el=document.getElementById("staffMarkMO");
+  if(el)el.remove();
+  el=document.createElement("div");
+  el.id="staffMarkMO";
+  el.className="mo";
+  el.style.display="flex";
+  el.onclick=function(ev){if(ev.target===this)this.remove()};
+  el.innerHTML='<div class="modal"><div class="mh"><h3>⭐ 标记为符合 '+curUserName+'</h3><button class="mx" onclick="document.getElementById(\'staffMarkMO\').remove()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>'+
+    '<div class="mbo">'+
+      '<div class="fg"><label class="fl">💡 她做对了什么？<span style="font-weight:400;color:var(--text3)">（可选，未填会保留原备注）</span></label>'+
+      '<textarea class="finp" id="staffMarkReason" rows="3" style="min-height:60px;font-size:12px" placeholder="如：钩子犀利 / BGM很有标志性 / 卡点节奏值得学">'+curReason.replace(/</g,"&lt;").replace(/>/g,"&gt;")+'</textarea></div>'+
+      '<p style="font-size:11px;color:var(--text3);margin-bottom:10px">标记符合后，这个达人会浮到列表前面（仅次于📌手动添加的）</p>'+
+      '<button class="bs" onclick="confirmMarkMatch(\''+creatorId+'\')">保存</button>'+
+    '</div></div>';
+  document.body.appendChild(el);
+  setTimeout(function(){var t=document.getElementById("staffMarkReason");if(t)t.focus()},80);
+}
+
+async function confirmMarkMatch(creatorId){
+  var reason=(document.getElementById("staffMarkReason")||{}).value||"";
+  reason=reason.trim();
+  var addedBy=(typeof curUser!=="undefined"&&curUser&&curUser.display_name)||"admin";
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/mark_creator_staff",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_creator_id:creatorId,p_mark:"match",p_add_reason:reason||null,p_marked_by:addedBy})});
+    if(!r.ok){
+      var errText=await r.text();
+      if(errText.includes("does not exist")||errText.includes("could not find")){toast("请先执行 setup_creator_inline_edit.sql","tge");return}
+      throw new Error(errText);
+    }
+    var result=await r.json();
+    if(result.success){
+      var m=document.getElementById("staffMarkMO");if(m)m.remove();
+      toast(result.message||"已标记","tgs");
+      if(at==="creator_rankings")rT();
+    }else{toast(result.message||"失败","tge")}
+  }catch(e){toast("失败: "+e.message,"tge")}
+}
+
+// ========== 单元格双击编辑 ==========
+async function editCreatorCell(creatorId,field,el){
+  var row=allRows.find(function(x){return x.id===creatorId});
+  if(!row){toast("找不到行数据","tge");return}
+  var curVal=row[field];
+
+  // 风格字段：弹 chip 选择器
+  if(field==="style_tags"){
+    await loadStyleLibrary();
+    var ctx="cellStyle_"+creatorId;
+    selectedStylesByCtx[ctx]=Array.isArray(curVal)?curVal.slice():[];
+    openCellStyleEditor(creatorId,ctx);
+    return;
+  }
+
+  // 类目字段：原地下拉
+  if(field==="category"){
+    var opts=["暗黑美学","美国女装","美妆","家居","其他"];
+    var sel=document.createElement("select");
+    sel.className="finp";
+    sel.style.cssText="font-size:11px;padding:2px 5px;width:auto;min-width:90px";
+    opts.forEach(function(o){var op=document.createElement("option");op.value=o;op.textContent=o;if(o===curVal)op.selected=true;sel.appendChild(op)});
+    el.replaceWith(sel);
+    sel.focus();
+    var saved=false;
+    var save=async function(){
+      if(saved)return;saved=true;
+      var newVal=sel.value;
+      if(newVal!==curVal)await saveCreatorField(creatorId,"category",newVal);
+      else if(at==="creator_rankings")rT();
+    };
+    sel.onchange=save;
+    sel.onblur=save;
+    return;
+  }
+
+  // 时间字段：原地 input type=datetime-local
+  if(field==="added_at"){
+    var inp=document.createElement("input");
+    inp.type="datetime-local";
+    inp.className="finp";
+    inp.style.cssText="font-size:10px;padding:2px 4px;width:auto;min-width:140px";
+    if(curVal){
+      var d=new Date(curVal);
+      var pad=function(n){return String(n).padStart(2,"0")};
+      inp.value=d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())+"T"+pad(d.getHours())+":"+pad(d.getMinutes());
+    }
+    el.replaceWith(inp);
+    inp.focus();
+    var savedT=false;
+    var saveT=async function(){
+      if(savedT)return;savedT=true;
+      var newVal=inp.value?new Date(inp.value).toISOString():null;
+      await saveCreatorField(creatorId,"added_at",newVal);
+    };
+    inp.onblur=saveT;
+    inp.onkeydown=function(ev){if(ev.key==="Enter"){ev.preventDefault();inp.blur()}else if(ev.key==="Escape"){savedT=true;if(at==="creator_rankings")rT()}};
+    return;
+  }
+
+  // 评分字段：直接复用现有的 starsHtml 不在这里处理（评分有专门的点击交互）
+  if(field==="rating"){
+    toast("评分请直接点击星星修改","tgs");
+    return;
+  }
+
+  // 普通文本字段：add_reason / user_notes — 原地 textarea
+  var isLong=(field==="add_reason");
+  var ta=document.createElement("textarea");
+  ta.className="finp";
+  ta.style.cssText="font-size:11px;padding:4px 6px;width:100%;min-width:180px;max-width:280px;line-height:1.4;resize:vertical;"+(isLong?"min-height:50px":"min-height:32px");
+  ta.value=curVal||"";
+  ta.placeholder=isLong?"为什么选她？":"备注...";
+  el.replaceWith(ta);
+  ta.focus();
+  ta.setSelectionRange(ta.value.length,ta.value.length);
+  var savedTA=false;
+  var saveTA=async function(){
+    if(savedTA)return;savedTA=true;
+    var newVal=ta.value.trim();
+    if(newVal!==(curVal||""))await saveCreatorField(creatorId,field,newVal||null);
+    else if(at==="creator_rankings")rT();
+  };
+  ta.onblur=saveTA;
+  ta.onkeydown=function(ev){
+    if(ev.key==="Enter"&&!ev.shiftKey){ev.preventDefault();ta.blur()}
+    else if(ev.key==="Escape"){savedTA=true;if(at==="creator_rankings")rT()}
+  };
+}
+
+function openCellStyleEditor(creatorId,ctx){
+  var el=document.getElementById("cellStyleMO");
+  if(el)el.remove();
+  el=document.createElement("div");
+  el.id="cellStyleMO";
+  el.className="mo";
+  el.style.display="flex";
+  el.onclick=function(ev){if(ev.target===this)this.remove()};
+  el.innerHTML='<div class="modal wide"><div class="mh"><h3>✎ 编辑风格标签</h3><button class="mx" onclick="document.getElementById(\'cellStyleMO\').remove()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>'+
+    '<div class="mbo">'+
+      '<div class="fg"><label class="fl">风格标签 <span style="font-weight:400;color:var(--text3)">点击切换选中状态</span></label>'+
+      '<div id="cellStyleChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;min-height:40px"></div>'+
+      '<div style="display:flex;gap:6px;align-items:center">'+
+        '<input class="finp" id="cellCustomStyle" type="text" placeholder="其他风格（回车添加）" style="flex:1;font-size:12px" onkeydown="if(event.key===\'Enter\'){event.preventDefault();addCellCustomStyle()}">'+
+        '<button class="btn bg" style="font-size:11px;padding:4px 10px;white-space:nowrap" onclick="addCellCustomStyle()">+ 加风格</button>'+
+      '</div></div>'+
+      '<button class="bs" onclick="saveCellStyleTags(\''+creatorId+'\',\''+ctx+'\')">保存</button>'+
+    '</div></div>';
+  document.body.appendChild(el);
+  renderCellStyleChips(ctx);
+}
+
+function renderCellStyleChips(ctx){
+  var c=document.getElementById("cellStyleChips");if(!c)return;
+  var selected=selectedStylesByCtx[ctx]||[];
+  var h="";
+  STYLE_LIBRARY.forEach(function(s){
+    var isOn=selected.indexOf(s.name)!==-1;
+    var col=s.color||"#7C3AED";
+    var label=s.name_cn?s.name+" / "+s.name_cn:s.name;
+    h+='<span class="style-chip" onclick="toggleCellStyleChip(\''+ctx+'\',\''+s.name.replace(/\'/g,"\\\\'")+'\')" style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:14px;font-size:11px;font-weight:500;cursor:pointer;transition:all .12s;border:1.5px solid '+col+';background:'+(isOn?col:"transparent")+';color:'+(isOn?"#fff":col)+'">'+(isOn?"✓ ":"")+label+'</span>';
+  });
+  selected.forEach(function(name){
+    var inLib=STYLE_LIBRARY.some(function(s){return s.name===name});
+    if(!inLib){
+      h+='<span class="style-chip" style="display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:14px;font-size:11px;font-weight:500;cursor:pointer;border:1.5px dashed var(--violet);background:var(--violet);color:#fff" onclick="toggleCellStyleChip(\''+ctx+'\',\''+name.replace(/\'/g,"\\\\'")+'\')">✓ '+name+' <span style="opacity:0.7;font-size:9px">自定义</span></span>';
+    }
+  });
+  c.innerHTML=h;
+}
+
+function toggleCellStyleChip(ctx,name){
+  if(!selectedStylesByCtx[ctx])selectedStylesByCtx[ctx]=[];
+  var arr=selectedStylesByCtx[ctx];
+  var idx=arr.indexOf(name);
+  if(idx>=0)arr.splice(idx,1);else arr.push(name);
+  renderCellStyleChips(ctx);
+}
+
+async function addCellCustomStyle(){
+  var inp=document.getElementById("cellCustomStyle");
+  var name=inp.value.trim();if(!name)return;
+  name=name.replace(/\b\w/g,function(c){return c.toUpperCase()});
+  // 找出当前是哪个 ctx
+  var ctxKey=Object.keys(selectedStylesByCtx).find(function(k){return k.indexOf("cellStyle_")===0});
+  if(!ctxKey)return;
+  if(selectedStylesByCtx[ctxKey].indexOf(name)===-1){
+    selectedStylesByCtx[ctxKey].push(name);
+    try{
+      await fetch(qa("style_tags_library"),{method:"POST",headers:{"Content-Type":"application/json","apikey":K,"Prefer":"resolution=ignore-duplicates"},body:JSON.stringify({name:name,is_preset:false,sort_order:999})});
+      STYLE_LIBRARY=[];await loadStyleLibrary();
+    }catch(e){}
+  }
+  inp.value="";
+  renderCellStyleChips(ctxKey);
+}
+
+async function saveCellStyleTags(creatorId,ctx){
+  var tags=selectedStylesByCtx[ctx]||[];
+  // 后端 RPC 需要用 | 分隔的字符串（避免 JSON 数组的转义复杂性）
+  var serialized=tags.join("|");
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/update_creator_field",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_creator_id:creatorId,p_field:"style_tags",p_value:serialized||null})});
+    if(!r.ok){
+      var errText=await r.text();
+      if(errText.includes("does not exist")||errText.includes("could not find")){toast("请先执行 setup_creator_inline_edit.sql","tge");return}
+      throw new Error(errText);
+    }
+    var result=await r.json();
+    if(result.success){
+      var m=document.getElementById("cellStyleMO");if(m)m.remove();
+      delete selectedStylesByCtx[ctx];
+      toast("风格已保存","tgs");
+      if(at==="creator_rankings")rT();
+    }else{toast(result.message||"失败","tge")}
+  }catch(e){toast("失败: "+e.message,"tge")}
+}
+
+async function saveCreatorField(creatorId,field,value){
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/update_creator_field",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_creator_id:creatorId,p_field:field,p_value:value===null?null:String(value)})});
+    if(!r.ok){
+      var errText=await r.text();
+      if(errText.includes("does not exist")||errText.includes("could not find")){toast("请先执行 setup_creator_inline_edit.sql","tge");return}
+      throw new Error(errText);
+    }
+    var result=await r.json();
+    if(result.success){
+      toast("已保存","tgs");
+      if(at==="creator_rankings")rT();
+    }else{toast(result.message||"失败","tge")}
+  }catch(e){toast("失败: "+e.message,"tge")}
 }
 function toast(m,t){var c=document.getElementById("toastW"),e=document.createElement("div");e.className="toast "+t;e.textContent=m;c.appendChild(e);setTimeout(function(){e.style.opacity="0";e.style.transition="opacity 0.3s";setTimeout(function(){e.remove()},300)},2000)}
 async function doSubmit(){
