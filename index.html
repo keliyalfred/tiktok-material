@@ -493,7 +493,10 @@ function cV(r,c){
   if(at==="creator_rankings"&&r.id&&(v===null||v===undefined||v==="")&&(c==="style_tags"||c==="add_reason"||c==="user_notes"||c==="category"||c==="added_at")){
     return '<span class="ce edit-hint" style="font-size:10px" ondblclick="editCreatorCell(\''+r.id+'\',\''+c+'\',this)" title="双击编辑">— ✎</span>';
   }
-  if(v===null||v===undefined||v==="")return '<span class="ce">—</span>';
+  // source_video_url / source_video_title / source_link：空值时也要走 fallback 链（用 source_intake_id 等兜底）
+  if((c==="source_video_url"||c==="reference_video_url"||c==="source_video_title"||c==="source_link")&&(v===null||v===undefined||v==="")){
+    // 不在这里返回，跳过兜底，让后面的专属 if 分支处理 fallback
+  }else if(v===null||v===undefined||v==="")return '<span class="ce">—</span>';
   if(c==="status")return sH(v);
   if(c==="dispatched_to"){if(!Array.isArray(v)||!v.length)return '<span class="ce">—</span>';return v.map(function(t){return '<span class="tag">'+(LN[t]||t)+'</span>'}).join("")}
   // 视频链接：加预览按钮
