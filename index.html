@@ -261,13 +261,22 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
 
 <!-- 投入素材弹窗 -->
 <div class="mo" id="mO" style="display:none" onclick="if(event.target===this)hideModal()">
-  <div class="modal"><div class="mh"><h3>投入新素材</h3><button class="mx" onclick="hideModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
+  <div class="modal wide"><div class="mh"><h3>投入新素材</h3><button class="mx" onclick="hideModal()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div>
   <div class="mbo">
     <div class="fg"><label class="fl">素材内容 <span class="rq">*</span></label><textarea class="finp" id="fC" placeholder="粘贴素材...AI自动识别并分发"></textarea></div>
     <div class="fg"><label class="fl">来源链接</label><input class="finp" id="fU" type="url" placeholder="https://..."></div>
     <div style="display:flex;gap:8px">
       <div class="fg" style="flex:1"><label class="fl">来源平台</label><select class="finp" id="fP"><option>TikTok</option><option>Instagram</option><option>YouTube</option><option>小红书</option><option>其他</option></select></div>
       <div class="fg" style="flex:1"><label class="fl">提交人</label><input class="finp" id="fS" type="text" placeholder="你的名字"></div>
+    </div>
+    <div class="fg" style="border-top:1px solid var(--border);padding-top:10px;margin-top:4px">
+      <label class="fl">🎯 指定拆解到这些库 <span style="font-weight:400;color:var(--text3)">不勾 = AI 自动判断（推荐）</span></label>
+      <div id="dispatchChips" style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:4px"></div>
+      <div style="display:flex;gap:8px;font-size:10px;color:var(--text3)">
+        <a href="javascript:void(0)" onclick="toggleAllDispatchChips(true)" style="color:var(--indigo);text-decoration:none">全选</a>
+        <a href="javascript:void(0)" onclick="toggleAllDispatchChips(false)" style="color:var(--indigo);text-decoration:none">清空</a>
+        <a href="javascript:void(0)" onclick="selectFiveCoreDispatchChips()" style="color:var(--indigo);text-decoration:none">五字诀（停病药信买）</a>
+      </div>
     </div>
     <button class="bs" id="bS" onclick="doSubmit()">提交素材 · AI 自动分发</button>
   </div></div>
@@ -1060,8 +1069,52 @@ function sT(k){at=k;searchTerm="";colFilter={};curPage=1;sortCol="";sortDir="des
   else if(k==="__events__"){showEventsView()}
   else{document.getElementById("tableView").style.display="block";rT()}
 }
-function showModal(){if(!hasPerm("material_write")){toast("无权限操作","tge");return}document.getElementById("mO").style.display="flex";setTimeout(function(){document.getElementById("fC").focus()},100)}
-function hideModal(){document.getElementById("mO").style.display="none";document.getElementById("fC").value="";document.getElementById("fU").value=""}
+// 投入素材时用户勾选的"指定拆解库"
+var DISPATCH_TABLES=[
+  {k:"viral_comments",l:"💬 爆款评论"},
+  {k:"pain_points",l:"🩹 痛点场景"},
+  {k:"cta_scripts",l:"📣 CTA话术"},
+  {k:"competitor_analysis",l:"🔍 竞品拆解"},
+  {k:"visual_shots",l:"🖼 卖点画面"},
+  {k:"social_proofs",l:"⭐ 社会证明"},
+  {k:"benefits",l:"🎁 权益库"},
+  {k:"bgm_tracks",l:"🎵 BGM情绪"},
+  {k:"frameworks",l:"🧩 框架结构"},
+  {k:"shooting_params",l:"📹 拍摄参数"},
+  {k:"rhythm_templates",l:"🎬 节奏模板"},
+  {k:"trending_tags",l:"#️⃣ 热门标签"},
+  {k:"posting_strategies",l:"🚀 发布策略"}
+];
+var selectedDispatchDims=[];
+
+function renderDispatchChips(){
+  var c=document.getElementById("dispatchChips");if(!c)return;
+  var h="";
+  DISPATCH_TABLES.forEach(function(t){
+    var on=selectedDispatchDims.indexOf(t.k)!==-1;
+    h+='<span onclick="toggleDispatchChip(\''+t.k+'\')" style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:500;cursor:pointer;transition:all .12s;border:1px solid '+(on?'var(--indigo)':'var(--border)')+';background:'+(on?'var(--indigo)':'var(--surface)')+';color:'+(on?'#fff':'var(--text2)')+'">'+(on?"✓ ":"")+t.l+'</span>';
+  });
+  c.innerHTML=h;
+}
+function toggleDispatchChip(key){
+  var idx=selectedDispatchDims.indexOf(key);
+  if(idx>=0)selectedDispatchDims.splice(idx,1);
+  else selectedDispatchDims.push(key);
+  renderDispatchChips();
+}
+function toggleAllDispatchChips(selectAll){
+  if(selectAll)selectedDispatchDims=DISPATCH_TABLES.map(function(t){return t.k});
+  else selectedDispatchDims=[];
+  renderDispatchChips();
+}
+function selectFiveCoreDispatchChips(){
+  // 停（评论钩子）、病（痛点）、药（CTA）、信（社会证明）、买（卖点画面）
+  selectedDispatchDims=["viral_comments","pain_points","cta_scripts","social_proofs","visual_shots"];
+  renderDispatchChips();
+}
+
+function showModal(){if(!hasPerm("material_write")){toast("无权限操作","tge");return}selectedDispatchDims=[];renderDispatchChips();document.getElementById("mO").style.display="flex";setTimeout(function(){document.getElementById("fC").focus()},100)}
+function hideModal(){document.getElementById("mO").style.display="none";document.getElementById("fC").value="";document.getElementById("fU").value="";selectedDispatchDims=[]}
 function showLinkModal(){if(!hasPerm("material_write")){toast("无权限操作","tge");return}document.getElementById("linkMO").style.display="flex";var ls=localStorage.getItem("submitter");if(ls)document.getElementById("linkSubmitter").value=ls;setTimeout(function(){document.getElementById("linkUrl").focus()},100)}
 function hideLinkModal(){document.getElementById("linkMO").style.display="none";document.getElementById("linkUrl").value=""}
 
@@ -1615,8 +1668,17 @@ async function doSubmit(){
   var btn=document.getElementById("bS");btn.disabled=true;btn.textContent="提交中...";
   var data={raw_content:content},url=document.getElementById("fU").value.trim(),pf=document.getElementById("fP").value,sb=document.getElementById("fS").value.trim();
   if(url){data.source_url=url;data.source_link=url}if(pf)data.source_platform=pf;if(sb)data.submitter=sb;
+  // 用户指定的拆解范围（不勾就是 null，AI 自由发挥）
+  if(selectedDispatchDims&&selectedDispatchDims.length>0)data.dispatch_dimensions=selectedDispatchDims.slice();
   try{var r=await fetch(qa("material_intake"),{method:"POST",headers:{"Content-Type":"application/json","Prefer":"return=representation","apikey":K},body:JSON.stringify(data)});
-  if(!r.ok)throw new Error(await r.text());hideModal();toast("AI分析中...","tgs");at="material_intake";setTimeout(refreshAll,1000);setTimeout(refreshAll,70000)}
+  if(!r.ok){
+    var errText=await r.text();
+    if(errText.includes("dispatch_dimensions")){toast("请先执行 setup_material_dispatch_field.sql","tge");return}
+    throw new Error(errText);
+  }
+  hideModal();
+  var msgSuffix=selectedDispatchDims.length>0?"（仅拆解到 "+selectedDispatchDims.length+" 个指定库）":"";
+  toast("AI分析中..."+msgSuffix,"tgs");at="material_intake";setTimeout(refreshAll,1000);setTimeout(refreshAll,70000)}
   catch(e){toast("失败:"+e.message,"tge")}finally{btn.disabled=false;btn.textContent="提交素材 · AI 自动分发"}
 }
 // TikAPI 通过 Supabase RPC 代理调用（解决浏览器 CORS 限制）
