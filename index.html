@@ -1319,7 +1319,17 @@ async function markCreatorQuick(creatorId,mark){
       throw new Error(errText);
     }
     var result=await r.json();
-    if(result.success){toast(result.message||"已更新","tgs");if(at==="creator_rankings")rT()}
+    if(result.success){
+      // 本地更新 + 轻量重渲染
+      var row=allRows.find(function(x){return x.id===creatorId});
+      if(row){
+        row.staff_mark=mark==="clear"?null:mark;
+        row.staff_mark_at=mark==="clear"?null:new Date().toISOString();
+      }
+      document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
+      restoreFilters();
+      toast(result.message||"已更新","tgs");
+    }
     else{toast(result.message||"失败","tge")}
   }catch(e){toast("操作失败: "+e.message,"tge")}
 }
@@ -1362,8 +1372,17 @@ async function confirmMarkMatch(creatorId){
     var result=await r.json();
     if(result.success){
       var m=document.getElementById("staffMarkMO");if(m)m.remove();
+      // 本地更新 + 轻量重渲染
+      var row=allRows.find(function(x){return x.id===creatorId});
+      if(row){
+        row.staff_mark="match";
+        row.staff_mark_at=new Date().toISOString();
+        row.staff_mark_by=addedBy;
+        if(reason)row.add_reason=reason;
+      }
+      document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
+      restoreFilters();
       toast(result.message||"已标记","tgs");
-      if(at==="creator_rankings")rT();
     }else{toast(result.message||"失败","tge")}
   }catch(e){toast("失败: "+e.message,"tge")}
 }
@@ -1397,7 +1416,7 @@ async function editCreatorCell(creatorId,field,el){
       if(saved)return;saved=true;
       var newVal=sel.value;
       if(newVal!==curVal)await saveCreatorField(creatorId,"category",newVal);
-      else if(at==="creator_rankings")rT();
+      else document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
     };
     sel.onchange=save;
     sel.onblur=save;
@@ -1424,7 +1443,7 @@ async function editCreatorCell(creatorId,field,el){
       await saveCreatorField(creatorId,"added_at",newVal);
     };
     inp.onblur=saveT;
-    inp.onkeydown=function(ev){if(ev.key==="Enter"){ev.preventDefault();inp.blur()}else if(ev.key==="Escape"){savedT=true;if(at==="creator_rankings")rT()}};
+    inp.onkeydown=function(ev){if(ev.key==="Enter"){ev.preventDefault();inp.blur()}else if(ev.key==="Escape"){savedT=true;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows))}};
     return;
   }
 
@@ -1449,12 +1468,12 @@ async function editCreatorCell(creatorId,field,el){
     if(savedTA)return;savedTA=true;
     var newVal=ta.value.trim();
     if(newVal!==(curVal||""))await saveCreatorField(creatorId,field,newVal||null);
-    else if(at==="creator_rankings")rT();
+    else document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
   };
   ta.onblur=saveTA;
   ta.onkeydown=function(ev){
     if(ev.key==="Enter"&&!ev.shiftKey){ev.preventDefault();ta.blur()}
-    else if(ev.key==="Escape"){savedTA=true;if(at==="creator_rankings")rT()}
+    else if(ev.key==="Escape"){savedTA=true;document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows))}
   };
 }
 
@@ -1527,7 +1546,6 @@ async function addCellCustomStyle(){
 
 async function saveCellStyleTags(creatorId,ctx){
   var tags=selectedStylesByCtx[ctx]||[];
-  // 后端 RPC 需要用 | 分隔的字符串（避免 JSON 数组的转义复杂性）
   var serialized=tags.join("|");
   try{
     var r=await fetch(U+"/rest/v1/rpc/update_creator_field",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_creator_id:creatorId,p_field:"style_tags",p_value:serialized||null})});
@@ -1540,8 +1558,12 @@ async function saveCellStyleTags(creatorId,ctx){
     if(result.success){
       var m=document.getElementById("cellStyleMO");if(m)m.remove();
       delete selectedStylesByCtx[ctx];
+      // 本地更新 + 轻量重渲染
+      var row=allRows.find(function(x){return x.id===creatorId});
+      if(row){row.style_tags=tags.length?tags:null}
+      document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
+      restoreFilters();
       toast("风格已保存","tgs");
-      if(at==="creator_rankings")rT();
     }else{toast(result.message||"失败","tge")}
   }catch(e){toast("失败: "+e.message,"tge")}
 }
@@ -1556,8 +1578,17 @@ async function saveCreatorField(creatorId,field,value){
     }
     var result=await r.json();
     if(result.success){
+      // 本地更新 allRows 中的对应行，不重拉数据
+      var row=allRows.find(function(x){return x.id===creatorId});
+      if(row){
+        if(field==="added_at"){row.added_at=value}
+        else if(field==="rating"){row.rating=value===null?null:Number(value)}
+        else{row[field]=value}
+      }
+      // 只重渲染 body，不动表头不动数据请求
+      document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
+      restoreFilters();
       toast("已保存","tgs");
-      if(at==="creator_rankings")rT();
     }else{toast(result.message||"失败","tge")}
   }catch(e){toast("失败: "+e.message,"tge")}
 }
