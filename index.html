@@ -1933,13 +1933,12 @@ async function doLinkSubmit(){
     btn.textContent="正在抓取视频+评论...";
     setLinkProgress("⏳ 正在通过服务端抓取视频信息和评论（约5-10秒）...");
 
-    var rpcBody={tiktok_url:url,submitter_name:sb};
-    if(dispatchDims)rpcBody.dispatch_dimensions=dispatchDims;
-
+    // RPC 只能传它支持的参数（旧版仅支持 tiktok_url + submitter_name）
+    // dispatch_dimensions 在 RPC 成功后通过 PATCH 单独更新
     var rpcResp=await fetch(U+"/rest/v1/rpc/scrape_tiktok_link",{
       method:"POST",
       headers:{"Content-Type":"application/json","apikey":K},
-      body:JSON.stringify(rpcBody)
+      body:JSON.stringify({tiktok_url:url,submitter_name:sb})
     });
 
     if(!rpcResp.ok){
@@ -1959,11 +1958,18 @@ async function doLinkSubmit(){
     var result=await rpcResp.json();
 
     if(result.success){
-      // 如果 RPC 不接受 dispatch_dimensions 参数（旧版本），但前端已传，做一次补 PATCH
-      if(dispatchDims&&result.material_id){
+      // 如果用户勾选了拆解维度，RPC 成功后立即 PATCH 这条记录
+      if(dispatchDims){
         try{
-          await fetch(qa("material_intake","id=eq."+result.material_id),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({dispatch_dimensions:dispatchDims})});
-        }catch(e){/* 旧 RPC 可能没返回 material_id，忽略 */}
+          var matId=result.material_id||result.id||result.intake_id;
+          if(matId){
+            // 优先用 RPC 返回的 ID
+            await fetch(qa("material_intake","id=eq."+matId),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({dispatch_dimensions:dispatchDims})});
+          }else{
+            // 兜底：用 source_url 查最新一条
+            await fetch(qa("material_intake","source_url=eq."+encodeURIComponent(url)+"&order=created_at.desc&limit=1"),{method:"PATCH",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({dispatch_dimensions:dispatchDims})});
+          }
+        }catch(e){console.warn("更新 dispatch_dimensions 失败:",e)}
       }
       hideLinkModal();
       toast("抓取成功！播放"+Number(result.views||0).toLocaleString()+" 点赞"+Number(result.likes||0).toLocaleString()+"，AI正在分发..."+dimMsgSuffix,"tgs");
