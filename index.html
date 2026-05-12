@@ -324,7 +324,7 @@ var FD={
   rhythm_templates:{c:["sku","template_name","total_duration","target_framework","beat_structure","hook_content","middle_content","cta_content","transition_style","bgm_tempo","difficulty","source_link","rating","user_notes","created_at"],n:{sku:"编码",template_name:"模板",total_duration:"时长",target_framework:"框架",beat_structure:"节奏",hook_content:"钩子",middle_content:"中间",cta_content:"CTA",transition_style:"转场",bgm_tempo:"BGM",difficulty:"难度",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
   trending_tags:{c:["sku","tag_name","tag_category","current_heat","view_volume","related_tags","best_use_scenario","combo_suggestion","source_link","rating","user_notes","created_at"],n:{sku:"编码",tag_name:"标签",tag_category:"分类",current_heat:"热度",view_volume:"浏览量",related_tags:"关联标签",best_use_scenario:"场景",combo_suggestion:"组合",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
   posting_strategies:{c:["sku","strategy_name","strategy_type","target_audience","best_posting_time","posting_frequency","title_template","cover_strategy","engagement_tips","source_link","rating","user_notes","created_at"],n:{sku:"编码",strategy_name:"策略",strategy_type:"类型",target_audience:"受众",best_posting_time:"时间",posting_frequency:"频率",title_template:"标题模板",cover_strategy:"封面",engagement_tips:"互动",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  trending_videos:{c:["heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","transcript_cn","rating","user_notes","video_publish_time","created_at"],n:{heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",transcript_cn:"台词",rating:"评分",user_notes:"备注",video_publish_time:"发布时间",created_at:"抓取时间"}},
+  trending_videos:{c:["heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","aesthetic_style","replicability_score","transcript_cn","rating","user_notes","video_publish_time","created_at"],n:{heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",aesthetic_style:"风格",replicability_score:"可复制",transcript_cn:"台词",rating:"评分",user_notes:"备注",video_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","source_keyword","rating","user_notes","music_publish_time","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"关联达人",category:"类目",source_keyword:"来源",rating:"评分",user_notes:"备注",music_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","top_video_ids","rating","user_notes","first_seen_at","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",top_video_ids:"关联视频",rating:"评分",user_notes:"备注",first_seen_at:"首次出现",created_at:"抓取时间"}},
   creator_rankings:{c:["heat_score","username","nickname","follower_count","trending_video_count","total_views_in_system","total_likes_in_system","avg_views_per_video","creator_type","category","rating","user_notes"],n:{heat_score:"🔥热度",username:"用户名",nickname:"昵称",follower_count:"粉丝",trending_video_count:"爆款数",total_views_in_system:"总播放",total_likes_in_system:"总赞",avg_views_per_video:"均播放",creator_type:"类型",category:"类目",rating:"评分",user_notes:"备注"}},
@@ -345,6 +345,20 @@ function cV(r,c){
   if(c==="rating")return starsHtml(r.id,v||0);
   if(c==="user_notes")return '<input class="note-input" value="'+(v||"").replace(/"/g,"&quot;")+'" onblur="saveNote(\''+r.id+'\',this.value)" placeholder="...">';
   if(c==="source_link"){if(!v)return '<span class="ce">—</span>';if(v.startsWith("http"))return '<a class="cl" href="'+v+'" target="_blank">查看</a>';return '<span class="ct2" onclick="this.classList.toggle(\'expanded\')">'+v+'</span>'}
+  // 美学风格列
+  if(c==="aesthetic_style"){
+    if(!v||v==="classifying...")return '<span class="ce" style="color:var(--text3);font-size:10px">'+(v==="classifying..."?"⏳分类中":"待标注")+'</span>';
+    var styleColors={"Dark Academia":"var(--amber)","Whimsigoth":"var(--violet)","Romantic Goth":"var(--rose)","Goth":"var(--text)","Coquette":"var(--pink)","Dark Coquette":"var(--rose)","Victorian":"var(--teal)","Regencycore":"var(--sky)","Y2K":"var(--orange)","Vampire":"var(--rose)","Cottagecore":"var(--emerald)","Mainstream":"var(--text3)","Other":"var(--text3)"};
+    var sc=styleColors[v]||"var(--indigo)";
+    return '<span class="tag" style="font-size:9px;background:'+sc+'15;color:'+sc+';border:1px solid '+sc+'30">'+v+'</span>';
+  }
+  // 可复制性评分列
+  if(c==="replicability_score"){
+    if(!v)return '<span class="ce">—</span>';
+    var rs=parseFloat(v);
+    var rc=rs>=7?"var(--emerald)":rs>=4?"var(--amber)":"var(--rose)";
+    return '<div style="display:flex;align-items:center;gap:4px"><div style="width:40px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden"><div style="height:100%;width:'+rs*10+'%;background:'+rc+';border-radius:2px"></div></div><span style="font-size:10px;font-weight:600;color:'+rc+'">'+rs+'</span></div>';
+  }
   // 台词列：必须在null检查之前，因为空值时要显示提取按钮
   if(c==="transcript_cn"){
     var tStatus=r.transcript_status;
