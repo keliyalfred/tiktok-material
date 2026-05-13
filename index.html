@@ -396,7 +396,7 @@ var FD={
   trending_videos:{c:["seen_at","heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","aesthetic_style","replicability_score","transcript_cn","rating","user_notes","video_publish_time","created_at"],n:{seen_at:"👁",heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",aesthetic_style:"风格",replicability_score:"可复制",transcript_cn:"台词",rating:"评分",user_notes:"备注",video_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","source_keyword","rating","user_notes","music_publish_time","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"关联达人",category:"类目",source_keyword:"来源",rating:"评分",user_notes:"备注",music_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","top_video_ids","rating","user_notes","first_seen_at","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",top_video_ids:"关联视频",rating:"评分",user_notes:"备注",first_seen_at:"首次出现",created_at:"抓取时间"}},
-  creator_rankings:{c:["staff_mark","is_focused","heat_score","username","nickname","follower_count","trending_video_count","total_views_in_system","total_likes_in_system","avg_views_per_video","creator_type","style_tags","add_reason","added_at","category","rating","user_notes"],n:{staff_mark:"标记",is_focused:"📌",heat_score:"🔥热度",username:"用户名",nickname:"昵称",follower_count:"粉丝",trending_video_count:"爆款数",total_views_in_system:"总播放",total_likes_in_system:"总赞",avg_views_per_video:"均播放",creator_type:"类型",style_tags:"风格",add_reason:"选她的理由",added_at:"添加时间",category:"类目",rating:"评分",user_notes:"我的备注"}},
+  creator_rankings:{c:["staff_mark","seen_at","is_focused","heat_score","username","nickname","follower_count","trending_video_count","total_views_in_system","total_likes_in_system","avg_views_per_video","creator_type","style_tags","add_reason","added_at","category","rating","user_notes"],n:{staff_mark:"标记",seen_at:"👁",is_focused:"📌",heat_score:"🔥热度",username:"用户名",nickname:"昵称",follower_count:"粉丝",trending_video_count:"爆款数",total_views_in_system:"总播放",total_likes_in_system:"总赞",avg_views_per_video:"均播放",creator_type:"类型",style_tags:"风格",add_reason:"选她的理由",added_at:"添加时间",category:"类目",rating:"评分",user_notes:"我的备注"}},
   brand_directory:{c:["is_focused","heat_score","brand_name","primary_username","total_followers","total_videos","total_likes","style_tags","category","website","focus_priority","notes","rating","user_notes"],n:{is_focused:"📌",heat_score:"🔥热度",brand_name:"品牌",primary_username:"主账号",total_followers:"粉丝",total_videos:"视频",total_likes:"总赞",style_tags:"风格",category:"类目",website:"官网",focus_priority:"优先级",notes:"备注",rating:"评分",user_notes:"我的备注"}},
   visual_inspiration:{c:["style_category","title","description","pinterest_search","key_elements","shooting_tips","product_match","mood","is_used","created_at"],n:{style_category:"风格",title:"灵感标题",description:"描述",pinterest_search:"Pinterest搜索词",key_elements:"关键元素",shooting_tips:"拍摄建议",product_match:"适配产品",mood:"氛围",is_used:"已使用",created_at:"时间"}}
 };
@@ -404,6 +404,7 @@ var TG={video_structure:"ts2",bgm_used:"tv",hook_type:"to",content_tier:"ts2",em
 var at="material_intake",ct={},allRows=[],sortDir="desc",sortCol="",searchTerm="",colFilter={},curPage=1,pageSize=20;
 var videoAgeFilter=7;  // 爆款视频年龄筛选（单位：天，0=全部）
 var onlyUnseenVideos=false;  // 爆款视频：只看未看过的
+var onlyUnseenCreators=false;  // 达人排行：只看未看过的
 var onlyMySubmissions=false;  // 子库：只看我提交的素材
 
 // ==================== 素材库表格渲染 ====================
@@ -477,6 +478,14 @@ function cV(r,c){
     var eyeTitle=seen?"已看过（点击标为未看）":"未看过（点击标为已看）";
     var eyeColor=seen?"opacity:0.45":"color:var(--indigo)";
     return '<button class="retire-btn" title="'+eyeTitle+'" onclick="event.stopPropagation();toggleVideoSeen(\''+r.id+'\','+seen+')" style="font-size:14px;padding:1px 5px;border:none;background:transparent;cursor:pointer;'+eyeColor+'">'+eyeIcon+'</button>';
+  }
+  // 达人排行「已看/未看」眼睛切换
+  if(c==="seen_at"&&at==="creator_rankings"){
+    var seenC=!!v;
+    var eyeIconC=seenC?"👁":"⚪";
+    var eyeTitleC=seenC?"已看过（点击标为未看）":"未看过（点击标为已看）";
+    var eyeColorC=seenC?"opacity:0.45":"color:var(--indigo)";
+    return '<button class="retire-btn" title="'+eyeTitleC+'" onclick="event.stopPropagation();toggleCreatorSeen(\''+r.id+'\','+seenC+')" style="font-size:14px;padding:1px 5px;border:none;background:transparent;cursor:pointer;'+eyeColorC+'">'+eyeIconC+'</button>';
   }
   // 提交人字段：显示提交者名字，自己的素材高亮
   if(c==="submitter"){
@@ -591,7 +600,10 @@ function cV(r,c){
   if(c==="heat_score")return '<span class="cn" style="color:var(--rose);font-weight:700">'+fmtNum(v)+'</span>';
   if(c==="hashtags"||c==="top_video_ids"||c==="top_creator_usernames"){if(Array.isArray(v)&&v.length)return v.slice(0,4).map(function(t){return '<span class="tag ti">'+t+'</span>'}).join("");return '<span class="ce">—</span>'}
   if(c==="tag_name")return '<span class="tag ti" style="font-size:12px;font-weight:600">#'+v+'</span>';
-  if(c==="username")return '<a class="cl" href="https://www.tiktok.com/@'+v+'" target="_blank" style="font-weight:600">@'+v+'</a>';
+  if(c==="username"){
+    var clickHandler=(at==="creator_rankings"&&r.id)?' onclick="markCreatorSeenSilently(\''+r.id+'\')"':'';
+    return '<a class="cl" href="https://www.tiktok.com/@'+v+'" target="_blank" style="font-weight:600"'+clickHandler+'>@'+v+'</a>';
+  }
   if(c==="brand_name"){
     var pu=r.primary_username||"";
     var web=r.website||"";
@@ -773,6 +785,10 @@ function filterRows(rows){
   if(at==="trending_videos"&&onlyUnseenVideos){
     res=res.filter(function(r){return !r.seen_at});
   }
+  // 达人排行：只看未看过的
+  if(at==="creator_rankings"&&onlyUnseenCreators){
+    res=res.filter(function(r){return !r.seen_at});
+  }
   // 全局：只看我提交的素材（适用于 material_intake + 13 个子库）
   if(onlyMySubmissions){
     var meSubmitter=(typeof curUser!=="undefined"&&curUser&&curUser.display_name)?curUser.display_name:"";
@@ -893,9 +909,43 @@ async function markVideoSeenSilently(videoId){
   }catch(e){/* 静默失败 */}
 }
 
+// ===== 达人版「已看/未看」=====
+async function toggleCreatorSeen(creatorId,currentlySeen){
+  var newSeen=!currentlySeen;
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/mark_creator_seen",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_creator_id:creatorId,p_seen:newSeen,p_seen_by:(typeof curUser!=="undefined"&&curUser&&curUser.display_name)||"admin"})});
+    if(!r.ok){
+      var errText=await r.text();
+      if(errText.includes("does not exist")||errText.includes("could not find")){toast("请先执行 setup_creator_seen_status.sql","tge");return}
+      throw new Error(errText);
+    }
+    var row=allRows.find(function(x){return x.id===creatorId});
+    if(row){row.seen_at=newSeen?new Date().toISOString():null}
+    document.getElementById("tBody").innerHTML=renderRows(filterRows(allRows));
+    restoreFilters();
+  }catch(e){toast("失败: "+e.message,"tge")}
+}
+
+async function markCreatorSeenSilently(creatorId){
+  if(!creatorId)return;
+  var row=allRows&&allRows.find(function(x){return x.id===creatorId});
+  if(row&&row.seen_at)return;
+  try{
+    var r=await fetch(U+"/rest/v1/rpc/mark_creator_seen",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_creator_id:creatorId,p_seen:true,p_seen_by:(typeof curUser!=="undefined"&&curUser&&curUser.display_name)||"admin"})});
+    if(r.ok&&row){row.seen_at=new Date().toISOString()}
+  }catch(e){/* 静默 */}
+}
+
 // 切换「只看未看」
 function toggleOnlyUnseen(){
   onlyUnseenVideos=!onlyUnseenVideos;
+  curPage=1;
+  rT();
+}
+
+// 达人版「只看未看」
+function toggleOnlyUnseenCreators(){
+  onlyUnseenCreators=!onlyUnseenCreators;
   curPage=1;
   rT();
 }
@@ -992,6 +1042,9 @@ async function rT(){
   var extraBtns="";
   if(at==="creator_rankings"){
     extraBtns=' <button class="btn bg" style="font-size:11px;padding:4px 8px" onclick="showCreatorModal()">+ 添加达人</button><button class="btn bg" style="font-size:11px;padding:4px 8px" id="syncCreatorsBtn" onclick="doSyncCreators()">同步详情</button>';
+    // 「只看未看」切换
+    var unseenCreatorOn=onlyUnseenCreators;
+    extraBtns+=' <button onclick="toggleOnlyUnseenCreators()" style="padding:3px 10px;border-radius:12px;font-size:10px;font-weight:500;cursor:pointer;margin-left:8px;border:1px solid '+(unseenCreatorOn?'var(--rose)':'var(--border)')+';background:'+(unseenCreatorOn?'var(--rose)':'var(--surface)')+';color:'+(unseenCreatorOn?'#fff':'var(--text2)')+'">'+(unseenCreatorOn?"⚪ 只看未看":"👁 全部")+'</button>';
   }
   if(at==="brand_directory"){
     extraBtns=' <button class="btn bp" style="font-size:11px;padding:4px 8px" onclick="showBrandModal()">+ 添加品牌</button><button class="btn bg" style="font-size:11px;padding:4px 8px" id="syncBrandsBtn" onclick="doSyncBrands()">🔄 同步详情</button>';
@@ -1669,6 +1722,8 @@ async function doSyncBrands(){
 async function markCreatorQuick(creatorId,mark){
   if(!confirm(mark==="mismatch"?"标记为不符合？\n（标记后会沉到列表底部）":"清除标记？"))return;
   try{
+    // 自动标记已看（静默）
+    markCreatorSeenSilently(creatorId);
     var r=await fetch(U+"/rest/v1/rpc/mark_creator_staff",{method:"POST",headers:{"Content-Type":"application/json","apikey":K},body:JSON.stringify({p_creator_id:creatorId,p_mark:mark})});
     if(!r.ok){
       var errText=await r.text();
