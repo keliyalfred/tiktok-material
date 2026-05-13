@@ -219,6 +219,7 @@ select.finp{appearance:none;background-image:url("data:image/svg+xml,%3Csvg widt
       <button class="btn bg" onclick="showLinkModal()" id="btnLink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>贴链接</button>
       <button class="btn bg" onclick="doTriggerScrape()" id="scrapeBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>抓爆款</button>
       <button class="btn bg" onclick="refreshAll()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0115.4-6.4L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 01-15.4 6.4L3 16"/></svg>刷新</button>
+      <button class="btn bg" id="onlyMyBtn" onclick="toggleOnlyMine()" title="切换：只看自己提交的素材"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span id="onlyMyBtnText">全部</span></button>
       <button class="btn bp" onclick="showModal()" id="btnAddMaterial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>投入素材</button>
       <div class="user-badge" id="userBadge" onclick="showUserMenu()"><span class="avatar" id="userAvatar">A</span><span id="userDisplayName">管理员</span></div>
     </div>
@@ -379,19 +380,19 @@ var LL=["material_intake","viral_comments","pain_points","cta_scripts","competit
 
 var FD={
   material_intake:{c:["sku","raw_content","content_type","status","dispatched_to","source_link","source_platform","submitter","created_at"],n:{sku:"编码",raw_content:"素材内容",content_type:"类型",status:"状态",dispatched_to:"分发到",source_link:"来源链接",source_platform:"平台",submitter:"提交人",created_at:"时间"}},
-  viral_comments:{c:["sku","comment_en","comment_cn","convertible_to","emotion_tags","commenter_username","comment_like_count","source_video_url","source_video_title","applicable_category","rating","user_notes","created_at"],n:{sku:"编码",comment_en:"评论原文",comment_cn:"中文翻译",convertible_to:"可转化为",emotion_tags:"情绪标签",commenter_username:"评论作者",comment_like_count:"点赞",source_video_url:"🔗看原片",source_video_title:"来源视频",applicable_category:"品类",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  pain_points:{c:["sku","scene_name","scene_category","user_pain","emotion_keywords","product_angle","content_angle","script_example_cn","source_origin","source_video_url","source_video_title","applicable_category","rating","user_notes","created_at"],n:{sku:"编码",scene_name:"场景",scene_category:"分类",user_pain:"痛点",emotion_keywords:"情绪",product_angle:"切入点",content_angle:"角度",script_example_cn:"中文话术",source_origin:"来源",source_video_url:"🔗看原片",source_video_title:"来源视频",applicable_category:"品类",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  cta_scripts:{c:["sku","script_en","script_cn","video_stage","action_type","script_logic","combo_benefit","source_video_url","source_video_title","applicable_category","rating","user_notes","created_at"],n:{sku:"编码",script_en:"CTA英文",script_cn:"中文",video_stage:"阶段",action_type:"类型",script_logic:"逻辑",combo_benefit:"配合权益",source_video_url:"🔗看原片",source_video_title:"来源视频",applicable_category:"品类",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  competitor_analysis:{c:["sku","title","account_name","view_count","like_count","video_url","hook_script","video_structure","bgm_used","source_link","rating","user_notes","created_at"],n:{sku:"编码",title:"标题",account_name:"账号",view_count:"播放量",like_count:"点赞",video_url:"视频链接",hook_script:"钩子话术",video_structure:"结构",bgm_used:"BGM",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  visual_shots:{c:["sku","shot_description","shot_type","purpose","video_stage","source_video_url","source_video_title","applicable_category","rating","user_notes","created_at"],n:{sku:"编码",shot_description:"拍摄说明",shot_type:"类型",purpose:"作用",video_stage:"阶段",source_video_url:"🔗看原片",source_video_title:"来源视频",applicable_category:"品类",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  social_proofs:{c:["sku","name","proof_type","material_source","usage_note","trust_level","source_link","rating","user_notes","created_at"],n:{sku:"编码",name:"名称",proof_type:"证明类型",material_source:"来源",usage_note:"使用场景",trust_level:"信任度",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  benefits:{c:["sku","name","benefit_type","description","applicable_scene","cost_level","combo_suggestion","source_link","applicable_category","rating","user_notes","created_at"],n:{sku:"编码",name:"权益",benefit_type:"类型",description:"描述",applicable_scene:"场景",cost_level:"成本",combo_suggestion:"组合",source_link:"素材来源",applicable_category:"品类",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  bgm_tracks:{c:["sku","name","emotion_type","applicable_content","features","source_video_url","source_video_title","rating","user_notes","created_at"],n:{sku:"编码",name:"BGM",emotion_type:"情绪",applicable_content:"适用内容",features:"特征",source_video_url:"🔗看原片",source_video_title:"来源视频",rating:"评分",user_notes:"备注",created_at:"时间"}},
+  viral_comments:{c:["sku","comment_en","comment_cn","convertible_to","emotion_tags","commenter_username","comment_like_count","source_video_url","source_video_title","applicable_category","rating","user_notes","submitter","created_at"],n:{sku:"编码",comment_en:"评论原文",comment_cn:"中文翻译",convertible_to:"可转化为",emotion_tags:"情绪标签",commenter_username:"评论作者",comment_like_count:"点赞",source_video_url:"🔗看原片",source_video_title:"来源视频",applicable_category:"品类",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
+  pain_points:{c:["sku","scene_name","scene_category","user_pain","emotion_keywords","product_angle","content_angle","script_example_cn","source_origin","source_video_url","source_video_title","applicable_category","rating","user_notes","submitter","created_at"],n:{sku:"编码",scene_name:"场景",scene_category:"分类",user_pain:"痛点",emotion_keywords:"情绪",product_angle:"切入点",content_angle:"角度",script_example_cn:"中文话术",source_origin:"来源",source_video_url:"🔗看原片",source_video_title:"来源视频",applicable_category:"品类",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
+  cta_scripts:{c:["sku","script_en","script_cn","video_stage","action_type","script_logic","combo_benefit","source_video_url","source_video_title","applicable_category","rating","user_notes","submitter","created_at"],n:{sku:"编码",script_en:"CTA英文",script_cn:"中文",video_stage:"阶段",action_type:"类型",script_logic:"逻辑",combo_benefit:"配合权益",source_video_url:"🔗看原片",source_video_title:"来源视频",applicable_category:"品类",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
+  competitor_analysis:{c:["sku","title","account_name","view_count","like_count","video_url","hook_script","video_structure","bgm_used","source_link","rating","user_notes","submitter","created_at"],n:{sku:"编码",title:"标题",account_name:"账号",view_count:"播放量",like_count:"点赞",video_url:"视频链接",hook_script:"钩子话术",video_structure:"结构",bgm_used:"BGM",source_link:"素材来源",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
+  visual_shots:{c:["sku","shot_description","shot_type","purpose","video_stage","source_video_url","source_video_title","applicable_category","rating","user_notes","submitter","created_at"],n:{sku:"编码",shot_description:"拍摄说明",shot_type:"类型",purpose:"作用",video_stage:"阶段",source_video_url:"🔗看原片",source_video_title:"来源视频",applicable_category:"品类",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
+  social_proofs:{c:["sku","name","proof_type","material_source","usage_note","trust_level","source_link","rating","user_notes","submitter","created_at"],n:{sku:"编码",name:"名称",proof_type:"证明类型",material_source:"来源",usage_note:"使用场景",trust_level:"信任度",source_link:"素材来源",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
+  benefits:{c:["sku","name","benefit_type","description","applicable_scene","cost_level","combo_suggestion","source_link","applicable_category","rating","user_notes","submitter","created_at"],n:{sku:"编码",name:"权益",benefit_type:"类型",description:"描述",applicable_scene:"场景",cost_level:"成本",combo_suggestion:"组合",source_link:"素材来源",applicable_category:"品类",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
+  bgm_tracks:{c:["sku","name","emotion_type","applicable_content","features","source_video_url","source_video_title","rating","user_notes","submitter","created_at"],n:{sku:"编码",name:"BGM",emotion_type:"情绪",applicable_content:"适用内容",features:"特征",source_video_url:"🔗看原片",source_video_title:"来源视频",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
   frameworks:{c:["formula","name","hook_type","core_logic","applicable_scene","content_tier","difficulty","created_at"],n:{formula:"公式",name:"框架",hook_type:"钩子",core_logic:"逻辑",applicable_scene:"场景",content_tier:"层级",difficulty:"难度",created_at:"时间"}},
-  shooting_params:{c:["sku","shot_name","shot_category","framing","camera_angle","camera_movement","lighting","shooting_tips","source_link","rating","user_notes","created_at"],n:{sku:"编码",shot_name:"镜头",shot_category:"分类",framing:"景别",camera_angle:"角度",camera_movement:"运镜",lighting:"光线",shooting_tips:"要点",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  rhythm_templates:{c:["sku","template_name","total_duration","target_framework","beat_structure","hook_content","middle_content","cta_content","transition_style","bgm_tempo","difficulty","source_video_url","source_video_title","rating","user_notes","created_at"],n:{sku:"编码",template_name:"模板",total_duration:"时长",target_framework:"框架",beat_structure:"节奏",hook_content:"钩子",middle_content:"中间",cta_content:"CTA",transition_style:"转场",bgm_tempo:"BGM",difficulty:"难度",source_video_url:"🔗看原片",source_video_title:"来源视频",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  trending_tags:{c:["sku","tag_name","tag_category","current_heat","view_volume","related_tags","best_use_scenario","combo_suggestion","source_video_url","source_video_title","rating","user_notes","created_at"],n:{sku:"编码",tag_name:"标签",tag_category:"分类",current_heat:"热度",view_volume:"浏览量",related_tags:"关联标签",best_use_scenario:"场景",combo_suggestion:"组合",source_video_url:"🔗看原片",source_video_title:"来源视频",rating:"评分",user_notes:"备注",created_at:"时间"}},
-  posting_strategies:{c:["sku","strategy_name","strategy_type","target_audience","best_posting_time","posting_frequency","title_template","cover_strategy","engagement_tips","source_link","rating","user_notes","created_at"],n:{sku:"编码",strategy_name:"策略",strategy_type:"类型",target_audience:"受众",best_posting_time:"时间",posting_frequency:"频率",title_template:"标题模板",cover_strategy:"封面",engagement_tips:"互动",source_link:"素材来源",rating:"评分",user_notes:"备注",created_at:"时间"}},
+  shooting_params:{c:["sku","shot_name","shot_category","framing","camera_angle","camera_movement","lighting","shooting_tips","source_link","rating","user_notes","submitter","created_at"],n:{sku:"编码",shot_name:"镜头",shot_category:"分类",framing:"景别",camera_angle:"角度",camera_movement:"运镜",lighting:"光线",shooting_tips:"要点",source_link:"素材来源",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
+  rhythm_templates:{c:["sku","template_name","total_duration","target_framework","beat_structure","hook_content","middle_content","cta_content","transition_style","bgm_tempo","difficulty","source_video_url","source_video_title","rating","user_notes","submitter","created_at"],n:{sku:"编码",template_name:"模板",total_duration:"时长",target_framework:"框架",beat_structure:"节奏",hook_content:"钩子",middle_content:"中间",cta_content:"CTA",transition_style:"转场",bgm_tempo:"BGM",difficulty:"难度",source_video_url:"🔗看原片",source_video_title:"来源视频",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
+  trending_tags:{c:["sku","tag_name","tag_category","current_heat","view_volume","related_tags","best_use_scenario","combo_suggestion","source_video_url","source_video_title","rating","user_notes","submitter","created_at"],n:{sku:"编码",tag_name:"标签",tag_category:"分类",current_heat:"热度",view_volume:"浏览量",related_tags:"关联标签",best_use_scenario:"场景",combo_suggestion:"组合",source_video_url:"🔗看原片",source_video_title:"来源视频",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
+  posting_strategies:{c:["sku","strategy_name","strategy_type","target_audience","best_posting_time","posting_frequency","title_template","cover_strategy","engagement_tips","source_link","rating","user_notes","submitter","created_at"],n:{sku:"编码",strategy_name:"策略",strategy_type:"类型",target_audience:"受众",best_posting_time:"时间",posting_frequency:"频率",title_template:"标题模板",cover_strategy:"封面",engagement_tips:"互动",source_link:"素材来源",rating:"评分",user_notes:"备注",submitter:"提交人",created_at:"时间"}},
   trending_videos:{c:["seen_at","heat_score","title","creator_username","creator_followers","view_count","like_count","comment_count","share_count","bgm_title","hashtags","video_url","aesthetic_style","replicability_score","transcript_cn","rating","user_notes","video_publish_time","created_at"],n:{seen_at:"👁",heat_score:"🔥热度",title:"标题",creator_username:"达人",creator_followers:"粉丝",view_count:"播放",like_count:"赞",comment_count:"评论",share_count:"分享",bgm_title:"BGM",hashtags:"标签",video_url:"链接",aesthetic_style:"风格",replicability_score:"可复制",transcript_cn:"台词",rating:"评分",user_notes:"备注",video_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_music:{c:["heat_score","music_title","music_author","usage_count","total_views","top_creator_usernames","category","source_keyword","rating","user_notes","music_publish_time","created_at"],n:{heat_score:"🔥热度",music_title:"歌曲",music_author:"歌手",usage_count:"使用",total_views:"总播放",top_creator_usernames:"关联达人",category:"类目",source_keyword:"来源",rating:"评分",user_notes:"备注",music_publish_time:"发布时间",created_at:"抓取时间"}},
   trending_hashtag_stats:{c:["heat_score","tag_name","video_count","total_views","total_likes","top_creator_usernames","top_video_ids","rating","user_notes","first_seen_at","created_at"],n:{heat_score:"🔥热度",tag_name:"标签",video_count:"视频数",total_views:"总播放",total_likes:"总赞",top_creator_usernames:"关联达人",top_video_ids:"关联视频",rating:"评分",user_notes:"备注",first_seen_at:"首次出现",created_at:"抓取时间"}},
@@ -403,6 +404,7 @@ var TG={video_structure:"ts2",bgm_used:"tv",hook_type:"to",content_tier:"ts2",em
 var at="material_intake",ct={},allRows=[],sortDir="desc",sortCol="",searchTerm="",colFilter={},curPage=1,pageSize=20;
 var videoAgeFilter=7;  // 爆款视频年龄筛选（单位：天，0=全部）
 var onlyUnseenVideos=false;  // 爆款视频：只看未看过的
+var onlyMySubmissions=false;  // 子库：只看我提交的素材
 
 // ==================== 素材库表格渲染 ====================
 function sH(s){var m={"待处理":"sp","处理中":"si","已分发":"sd","已驳回":"sr"};return '<span class="st '+(m[s]||"sp")+'"><span class="dot" style="background:currentColor"></span>'+(s||"未知")+'</span>'}
@@ -475,6 +477,16 @@ function cV(r,c){
     var eyeTitle=seen?"已看过（点击标为未看）":"未看过（点击标为已看）";
     var eyeColor=seen?"opacity:0.45":"color:var(--indigo)";
     return '<button class="retire-btn" title="'+eyeTitle+'" onclick="event.stopPropagation();toggleVideoSeen(\''+r.id+'\','+seen+')" style="font-size:14px;padding:1px 5px;border:none;background:transparent;cursor:pointer;'+eyeColor+'">'+eyeIcon+'</button>';
+  }
+  // 提交人字段：显示提交者名字，自己的素材高亮
+  if(c==="submitter"){
+    if(!v)return '<span class="ce" style="font-size:10px">—</span>';
+    var meName=(typeof curUser!=="undefined"&&curUser&&curUser.display_name)?curUser.display_name:"";
+    var isMine=(meName&&String(v)===meName);
+    if(isMine){
+      return '<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;background:var(--emerald-light);color:var(--emerald);border:1px solid var(--emerald)">👤 '+v+'</span>';
+    }
+    return '<span style="font-size:10px;color:var(--text2)">'+v+'</span>';
   }
   // staff_mark 字段例外：它的"空"是一个有意义的状态（"未标记，可点⭐❌"），让它走专属渲染分支
   if(c==="staff_mark"&&at==="creator_rankings"){
@@ -761,6 +773,13 @@ function filterRows(rows){
   if(at==="trending_videos"&&onlyUnseenVideos){
     res=res.filter(function(r){return !r.seen_at});
   }
+  // 全局：只看我提交的素材（适用于 material_intake + 13 个子库）
+  if(onlyMySubmissions){
+    var meSubmitter=(typeof curUser!=="undefined"&&curUser&&curUser.display_name)?curUser.display_name:"";
+    if(meSubmitter){
+      res=res.filter(function(r){return r.submitter===meSubmitter});
+    }
+  }
 
   // 列排序（前端排序，支持数字/时间/文本）
   if(sortCol){
@@ -878,6 +897,26 @@ async function markVideoSeenSilently(videoId){
 function toggleOnlyUnseen(){
   onlyUnseenVideos=!onlyUnseenVideos;
   curPage=1;
+  rT();
+}
+
+// 切换「只看我提交的」— 全局
+function toggleOnlyMine(){
+  onlyMySubmissions=!onlyMySubmissions;
+  curPage=1;
+  // 更新按钮显示
+  var btn=document.getElementById("onlyMyBtn");
+  var txt=document.getElementById("onlyMyBtnText");
+  if(onlyMySubmissions){
+    if(btn){btn.classList.remove("bg");btn.classList.add("bp")}
+    if(txt){
+      var meName=(typeof curUser!=="undefined"&&curUser&&curUser.display_name)?curUser.display_name:"我";
+      txt.textContent="只看 "+meName;
+    }
+  }else{
+    if(btn){btn.classList.remove("bp");btn.classList.add("bg")}
+    if(txt)txt.textContent="全部";
+  }
   rT();
 }
 function updateActiveFiltersBar(){
@@ -1328,7 +1367,9 @@ function showLinkModal(){
   selectedLinkDispatchDims=[];  // 复用全局变量但独立一份
   renderLinkDispatchChips();
   document.getElementById("linkMO").style.display="flex";
-  var ls=localStorage.getItem("submitter");if(ls)document.getElementById("linkSubmitter").value=ls;
+  // submitter 默认值：curUser > localStorage（这样切换登录账号时跟着变）
+  var defaultName=(curUser&&curUser.display_name)||localStorage.getItem("submitter")||"";
+  if(defaultName)document.getElementById("linkSubmitter").value=defaultName;
   setTimeout(function(){document.getElementById("linkUrl").focus()},100);
 }
 function hideLinkModal(){
@@ -1913,6 +1954,8 @@ async function doSubmit(){
   var content=document.getElementById("fC").value.trim();if(!content){toast("请填写","tge");return}
   var btn=document.getElementById("bS");btn.disabled=true;btn.textContent="提交中...";
   var data={raw_content:content},url=document.getElementById("fU").value.trim(),pf=document.getElementById("fP").value,sb=document.getElementById("fS").value.trim();
+  // submitter 优先级：弹窗手填 > curUser
+  if(!sb){sb=(curUser&&curUser.display_name)||""}
   if(url){data.source_url=url;data.source_link=url}if(pf)data.source_platform=pf;if(sb)data.submitter=sb;
   // 用户指定的拆解范围（不勾就是 null，AI 自由发挥）
   // 用 user_dispatch_filter 字段（专给投入素材/贴链接用），不冲突 dispatch_dimensions（精准拆解占用）
