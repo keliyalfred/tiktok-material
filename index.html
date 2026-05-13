@@ -4788,13 +4788,21 @@ async function toggleUserActive(userId,active){
 }
 
 // ==================== 导航权限控制 ====================
-// 重写导航分组：根据权限过滤
+// NAV_GROUPS 索引：0=今日必看, 1=素材拆分, 2=爆款抓取, 3=借势日历, 4=成片组装, 5=成品管理
 function getVisibleNavGroups(){
   var groups=[];
-  if(hasPerm("material_read"))groups.push(NAV_GROUPS[0]);
-  if(hasPerm("trending_read"))groups.push(NAV_GROUPS[1]);
-  if(hasPerm("assemble_read"))groups.push(NAV_GROUPS[2]);
-  if(hasPerm("production_read"))groups.push(NAV_GROUPS[3]);
+  // 今日必看：所有人可见
+  groups.push(NAV_GROUPS[0]);
+  // 素材拆分（13个子库 + 母表）
+  if(hasPerm("material_read"))groups.push(NAV_GROUPS[1]);
+  // 爆款抓取
+  if(hasPerm("trending_read"))groups.push(NAV_GROUPS[2]);
+  // 借势日历：所有人可见
+  groups.push(NAV_GROUPS[3]);
+  // 成片组装
+  if(hasPerm("assemble_read"))groups.push(NAV_GROUPS[4]);
+  // 成品管理
+  if(hasPerm("production_read"))groups.push(NAV_GROUPS[5]);
   return groups;
 }
 
