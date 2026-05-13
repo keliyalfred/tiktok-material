@@ -504,6 +504,23 @@ function cV(r,c){
     var vid=r.video_id||"";
     return '<a class="cl" href="'+v+'" target="_blank" style="margin-right:4px">打开</a>'+(vid?'<button class="retire-btn" style="color:var(--indigo);border-color:var(--indigo-light);background:var(--indigo-light)" onclick="event.stopPropagation();showVideoPreview(\''+vid+'\',\''+r.id+'\')">▶预览</button>':'');
   }
+  // BGM 库的"BGM 名字"列：加 🔍 搜 TikTok 和 ▶ 听源视频 两个按钮
+  if(c==="name"&&at==="bgm_tracks"){
+    if(!v)return '<span class="ce" style="font-size:10px">—</span>';
+    var bgmSafe=String(v).replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    // 清理 BGM 名字（去掉作者后缀，例如 "Sonido de Marie - LAUV" 只取前半）
+    var bgmCleanForSearch=String(v).split(/\s+[-—]\s+/)[0].trim();
+    var searchQuery=encodeURIComponent(bgmCleanForSearch);
+    // 提取 video_id 用于 embed 预览（如果有 source_video_url）
+    var sourceVid=r.source_video_url||"";
+    var vidMatch=sourceVid.match(/video\/(\d+)/);
+    var videoId=vidMatch?vidMatch[1]:"";
+    var previewBtn=videoId?'<button class="retire-btn" title="听源视频里的BGM" onclick="event.stopPropagation();showVideoPreview(\''+videoId+'\',\''+(r.id||'')+'\')" style="font-size:9px;padding:2px 5px;color:var(--violet);border-color:var(--violet-light);background:var(--violet-light);margin-left:3px">▶ 听源视频</button>':'';
+    return '<div style="display:inline-flex;align-items:center;flex-wrap:wrap;gap:3px"><span style="font-weight:600;color:var(--text)">'+bgmSafe+'</span>'+
+      '<a href="https://www.tiktok.com/search?q='+searchQuery+'" target="_blank" title="去 TikTok 搜索这个 BGM（试听+看其他用法）" style="font-size:9px;padding:2px 5px;background:var(--sky-light);color:var(--sky);border:1px solid var(--sky-light);border-radius:4px;text-decoration:none;font-weight:600" onclick="event.stopPropagation()">🔍 搜 TikTok</a>'+
+      previewBtn+
+      '</div>';
+  }
   if(c==="source_video_url"||c==="reference_video_url"){
     var stitle=(r.source_video_title||"").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
     var screator=r.source_creator||"";
