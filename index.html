@@ -4924,8 +4924,10 @@ function showGeminiKeyModal(callback){
 var REFVID_PROMPT=`你是一位 TikTok 短视频拆解专家，专注跨境女装类目。请详细拆解这条视频，严格按以下 JSON 格式输出（只输出 JSON，不要任何前后说明文字，不要 markdown 代码块标记）：
 
 {
-  "script": "完整逐镜头脚本。按时间线分段，每段写明：时间区间、画面内容、字幕/配音文案、动作。用换行分隔每个镜头。",
-  "shooting": "拍摄手法详解：景别（特写/中景/全景）、运镜（固定/推拉/跟拍/手持）、灯光、转场技巧。用换行分点。",
+  "script": "完整逐镜头脚本。按时间线分段，每个镜头必须写明这5行：①时间区间 ②画面内容 ③字幕/配音文案 ④运镜手法（机位/景别/运镜方式，如：固定机位中景平拍 / 手持跟拍推近 / 俯拍环绕）⑤模特走位（模特/被摄主体在画面里怎么移动站位，如：从画面右侧走向左侧、原地转身正对镜头、静止站姿手部展示细节）。每个镜头之间用空行分隔。",
+  "shooting": "拍摄手法总览：常用景别、灯光、转场技巧。用换行分点。",
+  "camera": "运镜手法汇总：整片用到的机位与运镜套路（固定/推拉/跟拍/手持/环绕/甩镜等），按出现顺序列出，每条注明大致用在哪个时间段。用换行分点。",
+  "blocking": "模特走位汇总：模特（或被摄主体）在整片中的走位与站位变化、入画出画方式、关键肢体动作。按时间顺序列出。用换行分点。",
   "hook": "前3秒钩子分析：用了什么手法抓住注意力（画面/文案/声音）。",
   "rhythm": "节奏与卡点分析：整片节奏快慢、BGM卡点位置、时间分配。",
   "bgm": "BGM/音乐分析：风格、情绪基调、是否卡点。",
@@ -5230,13 +5232,15 @@ async function startRefAnalysis(videoId,fileObj){
       ai_bgm:result.bgm||"",
       ai_style:result.style||"",
       ai_replicability:result.replicability||"",
+      ai_camera:result.camera||"",
+      ai_blocking:result.blocking||"",
       key_frames:result.key_frames||[],
       raw_response:result._raw||""
     });
     // 同步本地
     Object.assign(v,{analysis_status:"done",ai_script:result.script,ai_shooting:result.shooting,
       ai_hook:result.hook,ai_rhythm:result.rhythm,ai_bgm:result.bgm,ai_style:result.style,
-      ai_replicability:result.replicability,key_frames:result.key_frames});
+      ai_replicability:result.replicability,ai_camera:result.camera,ai_blocking:result.blocking,key_frames:result.key_frames});
 
     toast("✅ 拆解完成！正在生成关键帧...","tgs");
     renderRefVidList();
@@ -5363,6 +5367,8 @@ async function openRefVideo(videoId){
   var blocks=[
     {label:"🎬 完整脚本",val:v.ai_script},
     {label:"📐 拍摄手法",val:v.ai_shooting},
+    {label:"🎥 运镜手法",val:v.ai_camera},
+    {label:"🚶 模特走位",val:v.ai_blocking},
     {label:"🪝 钩子分析",val:v.ai_hook},
     {label:"⏱️ 节奏卡点",val:v.ai_rhythm},
     {label:"🎵 BGM 分析",val:v.ai_bgm},
