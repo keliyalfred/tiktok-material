@@ -4921,25 +4921,61 @@ function showGeminiKeyModal(callback){
 // ──────────────────────────────────────────────────────────────────────────
 // 1. Gemini 视频拆解 prompt（结构化输出，方便解析）
 // ──────────────────────────────────────────────────────────────────────────
-var REFVID_PROMPT=`你是一位 TikTok 短视频拆解专家，专注跨境女装类目。请详细拆解这条视频，严格按以下 JSON 格式输出（只输出 JSON，不要任何前后说明文字，不要 markdown 代码块标记）：
+var REFVID_PROMPT=`你是一位 TikTok 短视频拆解专家 + Google Veo 3 / Flow 提示词工程师，专注跨境女装类目。请详细拆解这条视频，严格按以下 JSON 格式输出（只输出 JSON，不要任何前后说明文字，不要 markdown 代码块标记）。
 
+【三位一体硬约束 · 必须遵守】
+shots 表的每一行，"模特动作+走位"、"机位+景别"、"运镜手法" 这三件事必须是同一秒内同时发生的、时间锁死配套的。
+- ✅ 正确：{n:1, time:"0:00-0:01.5", action:"模特背对镜头静止站立，仅微微抬手整理领带", framing:"中景，机位在模特左后方约2米，平拍", camera_move:"固定机位无运镜"} ← 三件事都是这1.5秒内同时发生的
+- ❌ 错误：{action:"模特转身、抬手、走两步", framing:"全景", camera_move:"先固定后跟拍后定格"} ← action列写了3个动作、camera_move列写了3个状态、framing却只写一个，时间对不上
+
+如果同一分镜内相机或模特节奏发生变化（如先静止后转身、先推近后定格），必须拆成多个子镜头（编号用 n:2, n:3 而不是合并），保证读任意一行三件事都是同一秒发生的。这是新手能照着拍的关键。
+
+【拆解粒度】
+目标是让一个完全没拍摄经验的新手能照着拍出来。每个"相机做什么 + 人做什么"的独立组合作为一镜。15 秒短视频典型拆 6-10 镜，25 秒拆 10-15 镜，节奏密集允许更细。
+
+【Veo 3 / Flow 复刻脚本规则】
+1. 按 8 秒一段切分（Veo 3 每段 clip 默认 8 秒），视频总时长除以 8 向上取整决定 clip 数量
+2. 每段 prompt 严格按顺序：[相机镜头 Camera] → [主体描述 Subject（每段重复声明模特长相+穿着，禁止"continues from previous"）] → [动作 Action（用现在进行时动词）] → [场景 Setting] → [灯光 Lighting] → [风格/比例 Style（cinematic 9:16 vertical）] → [时长 Duration: 8 seconds]
+3. 角色一致性：每个 prompt 都要重新写一遍模特的具体特征（发型/肤色/身材/穿着），不省略；同时在 ingredients_hint 里告诉用户上传关键帧第几张作为 Flow 的 Ingredients 锁角色
+4. 避免：版权品牌名（Dior/Chanel/Gucci 等）、明星名、明确年龄数字（用 "young woman" 不用 "22-year-old"）、过度性感描述
+5. 中文版要语义对齐英文版，不要意译，让中国用户读起来跟英文版指代相同
+
+输出 JSON：
 {
-  "script": "完整逐镜头脚本。按时间线分段，每个镜头必须写明这5行：①时间区间 ②画面内容 ③字幕/配音文案 ④运镜手法（机位/景别/运镜方式，如：固定机位中景平拍 / 手持跟拍推近 / 俯拍环绕）⑤模特走位（模特/被摄主体在画面里怎么移动站位，如：从画面右侧走向左侧、原地转身正对镜头、静止站姿手部展示细节）。每个镜头之间用空行分隔。",
-  "shooting": "拍摄手法总览：常用景别、灯光、转场技巧。用换行分点。",
-  "camera": "运镜手法汇总：整片用到的机位与运镜套路（固定/推拉/跟拍/手持/环绕/甩镜等），按出现顺序列出，每条注明大致用在哪个时间段。用换行分点。",
-  "blocking": "模特走位汇总：模特（或被摄主体）在整片中的走位与站位变化、入画出画方式、关键肢体动作。按时间顺序列出。用换行分点。",
-  "hook": "前3秒钩子分析：用了什么手法抓住注意力（画面/文案/声音）。",
-  "rhythm": "节奏与卡点分析：整片节奏快慢、BGM卡点位置、时间分配。",
-  "bgm": "BGM/音乐分析：风格、情绪基调、是否卡点。",
-  "style": "美学风格判断：如 Dark Academia / Coquette / Y2K / Goth 等，给出英文风格名。",
-  "replicability": "可复刻性评估：普通卖家照搬需要什么资源（场地/道具/模特/设备），难度如何。",
+  "shots": [
+    {
+      "n": 1,
+      "time": "0:00-0:02",
+      "duration": "2s",
+      "scene": "看到什么：场景描述+服装+道具",
+      "action": "模特动作+走位（同一秒内的，禁止串多个动作）",
+      "framing": "机位+景别（如：中景，机位在左前方约1.5米，平拍）",
+      "camera_move": "运镜手法（如：固定无运镜 / 慢推 / 手持轻晃跟拍 / 从上往下俯拍推近）",
+      "transition": "转场方式（如：硬切 / 手遮镜过渡 / 弯腰带动镜头）",
+      "audio": "BGM节拍/音效（如：BGM前奏第1拍 / 鼓点 / 人声起）"
+    }
+  ],
+  "flow_guide": "Flow 操作总指南：1)推荐用哪个模型（Veo 3 Quality 还是 Veo 2，Veo 2 才支持 Ingredients）；2)上传哪几张关键帧作为 Ingredients 锁角色（指明编号）；3)总共拆成几段 clip 生成；4)注意事项",
+  "flow_clips": [
+    {
+      "n": 1,
+      "time_range": "0:00-0:08",
+      "prompt_en": "完整 Veo 3 英文 prompt，严格按 Camera→Subject→Action→Setting→Lighting→Style→Duration 顺序",
+      "prompt_cn": "对应的中文版本，语义对齐",
+      "ingredients_hint": "建议上传关键帧第 X 张（或第 X、Y 张）作为 Ingredients，锁定模特长相和服装"
+    }
+  ],
+  "hook": "前3秒钩子分析：用了什么手法抓住注意力（画面/文案/声音）",
+  "rhythm": "节奏与卡点分析：整片节奏快慢、BGM卡点位置、时间分配",
+  "bgm": "BGM/音乐分析：风格、情绪基调、是否卡点",
+  "style": "美学风格判断（给出英文风格名：Dark Academia / Coquette / Y2K / Goth 等）",
+  "replicability": "可复刻性评估：普通卖家照搬需要什么资源（场地/道具/模特/设备），难度如何",
   "key_frames": [
-    {"t": "0:03", "desc": "这一帧的内容说明（如：钩子特写镜头）"},
-    {"t": "0:08", "desc": "..."}
+    {"t": "0:03", "desc": "这一帧的内容说明"}
   ]
 }
 
-key_frames 请标出 5-10 个最关键的帧时间点（用于后续截图），时间格式 "分:秒"。`;
+key_frames 标出 5-10 个最关键的帧时间点，时间格式 "分:秒"。`;
 
 // 时间字符串 "0:08" → 秒数
 function parseTimePoint(t){
@@ -5232,15 +5268,16 @@ async function startRefAnalysis(videoId,fileObj){
       ai_bgm:result.bgm||"",
       ai_style:result.style||"",
       ai_replicability:result.replicability||"",
-      ai_camera:result.camera||"",
-      ai_blocking:result.blocking||"",
+      ai_shots:result.shots||[],
+      ai_flow_guide:result.flow_guide||"",
+      ai_flow_clips:result.flow_clips||[],
       key_frames:result.key_frames||[],
       raw_response:result._raw||""
     });
     // 同步本地
     Object.assign(v,{analysis_status:"done",ai_script:result.script,ai_shooting:result.shooting,
       ai_hook:result.hook,ai_rhythm:result.rhythm,ai_bgm:result.bgm,ai_style:result.style,
-      ai_replicability:result.replicability,ai_camera:result.camera,ai_blocking:result.blocking,key_frames:result.key_frames});
+      ai_replicability:result.replicability,ai_shots:result.shots,ai_flow_guide:result.flow_guide,ai_flow_clips:result.flow_clips,key_frames:result.key_frames});
 
     toast("✅ 拆解完成！正在生成关键帧...","tgs");
     renderRefVidList();
@@ -5363,23 +5400,87 @@ async function openRefVideo(videoId){
   }
   h+='</div>';
 
-  // 拆解结果（分块）
+  // ===== 区1: 分镜表（人看的，三位一体）=====
+  if(v.ai_shots && Array.isArray(v.ai_shots) && v.ai_shots.length){
+    h+='<div class="preview-card" style="margin-bottom:10px"><h5>📋 分镜表 ('+v.ai_shots.length+'镜) <span style="font-size:10px;font-weight:400;color:var(--text3);margin-left:6px">三位一体：每行机位/运镜/动作同步发生</span></h5>';
+    h+='<div style="overflow-x:auto;border:1px solid var(--border);border-radius:6px"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:900px">';
+    h+='<thead style="background:var(--surface2)"><tr>'+
+       '<th style="padding:6px 4px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;width:36px">#</th>'+
+       '<th style="padding:6px 4px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;width:74px">时间</th>'+
+       '<th style="padding:6px 4px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;width:42px">时长</th>'+
+       '<th style="padding:6px 4px;text-align:left;font-weight:600;color:var(--text2);font-size:10px">画面&场景</th>'+
+       '<th style="padding:6px 4px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;background:#FEF3C7">模特动作+走位</th>'+
+       '<th style="padding:6px 4px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;background:#FEF3C7">机位&景别</th>'+
+       '<th style="padding:6px 4px;text-align:left;font-weight:600;color:var(--text2);font-size:10px;background:#FEF3C7">运镜手法</th>'+
+       '<th style="padding:6px 4px;text-align:left;font-weight:600;color:var(--text2);font-size:10px">转场</th>'+
+       '<th style="padding:6px 4px;text-align:left;font-weight:600;color:var(--text2);font-size:10px">BGM/音效</th>'+
+       '</tr></thead><tbody>';
+    v.ai_shots.forEach(function(sh){
+      var esc=function(x){return (x==null?"":String(x)).replace(/</g,"&lt;").replace(/>/g,"&gt;")};
+      h+='<tr style="border-top:1px solid var(--border);vertical-align:top">'+
+         '<td style="padding:6px 4px;font-weight:600;color:var(--indigo)">'+esc(sh.n)+'</td>'+
+         '<td style="padding:6px 4px;font-family:monospace;color:var(--text2);font-size:10px;white-space:nowrap">'+esc(sh.time)+'</td>'+
+         '<td style="padding:6px 4px;color:var(--text2);font-size:10px;white-space:nowrap">'+esc(sh.duration)+'</td>'+
+         '<td style="padding:6px 4px;line-height:1.5">'+esc(sh.scene)+'</td>'+
+         '<td style="padding:6px 4px;line-height:1.5;background:#FFFBEB">'+esc(sh.action)+'</td>'+
+         '<td style="padding:6px 4px;line-height:1.5;background:#FFFBEB">'+esc(sh.framing)+'</td>'+
+         '<td style="padding:6px 4px;line-height:1.5;background:#FFFBEB">'+esc(sh.camera_move)+'</td>'+
+         '<td style="padding:6px 4px;line-height:1.5;font-size:10px;color:var(--text2)">'+esc(sh.transition)+'</td>'+
+         '<td style="padding:6px 4px;line-height:1.5;font-size:10px;color:var(--text2)">'+esc(sh.audio)+'</td>'+
+         '</tr>';
+    });
+    h+='</tbody></table></div>';
+    h+='<div style="margin-top:6px;font-size:10px;color:var(--text3)">💡 黄色三列是"三位一体"核心：拍摄时机位/运镜/演员动作必须同步配合</div>';
+    h+='</div>';
+  }else if(v.ai_script){
+    // 老视频（重拆前）回退显示文本脚本
+    h+='<div class="preview-card" style="margin-bottom:10px"><h5>🎬 完整脚本 <span style="font-size:10px;font-weight:400;color:var(--amber)">（旧格式，点"重新拆解"升级为分镜表）</span></h5>';
+    h+='<div style="font-size:12px;line-height:1.6;color:var(--text);white-space:pre-wrap">'+String(v.ai_script).replace(/</g,"&lt;")+'</div></div>';
+  }
+
+  // ===== 区2: Flow 复刻脚本（给 AI 看的）=====
+  if(v.ai_flow_clips && Array.isArray(v.ai_flow_clips) && v.ai_flow_clips.length){
+    h+='<div class="preview-card" style="margin-bottom:10px;border-left:3px solid var(--violet)"><h5>🤖 Veo / Flow 复刻脚本 <span style="font-size:10px;font-weight:400;color:var(--text3)">中英双语 · 一键复制粘贴到 labs.google/fx/tools/flow</span></h5>';
+    if(v.ai_flow_guide){
+      h+='<div style="padding:8px 10px;background:var(--violet-light);border-radius:6px;font-size:11px;line-height:1.6;color:var(--violet-text);margin-bottom:10px;white-space:pre-wrap">⚙️ '+String(v.ai_flow_guide).replace(/</g,"&lt;")+'</div>';
+    }
+    v.ai_flow_clips.forEach(function(c,ci){
+      var esc=function(x){return (x==null?"":String(x)).replace(/</g,"&lt;").replace(/>/g,"&gt;")};
+      var safeEn=(c.prompt_en||"").replace(/\\/g,"\\\\").replace(/`/g,"\\`").replace(/\$/g,"\\$");
+      var safeCn=(c.prompt_cn||"").replace(/\\/g,"\\\\").replace(/`/g,"\\`").replace(/\$/g,"\\$");
+      h+='<div style="border:1px solid var(--border);border-radius:6px;margin-bottom:8px;overflow:hidden">';
+      h+='<div style="padding:6px 10px;background:var(--surface2);display:flex;justify-content:space-between;align-items:center"><b style="font-size:12px">📹 Clip '+esc(c.n)+' <span style="font-weight:400;color:var(--text2);font-size:10px">('+esc(c.time_range)+')</span></b></div>';
+      if(c.ingredients_hint){
+        h+='<div style="padding:6px 10px;background:#FEF3C7;font-size:10px;color:var(--amber-text);border-bottom:1px solid var(--border)">📎 '+esc(c.ingredients_hint)+'</div>';
+      }
+      // EN
+      h+='<div style="padding:8px 10px;border-bottom:1px dashed var(--border)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;color:var(--text3);font-weight:600">🇬🇧 EN PROMPT</span><button class="btn bg" style="font-size:10px;padding:2px 8px" onclick="navigator.clipboard.writeText(`'+safeEn+'`).then(function(){toast(\'已复制 EN\',\'tgs\')})">📋 复制</button></div>';
+      h+='<div style="font-size:11px;line-height:1.6;color:var(--text);white-space:pre-wrap;font-family:ui-monospace,monospace">'+esc(c.prompt_en)+'</div></div>';
+      // CN
+      h+='<div style="padding:8px 10px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:10px;color:var(--text3);font-weight:600">🇨🇳 CN PROMPT</span><button class="btn bg" style="font-size:10px;padding:2px 8px" onclick="navigator.clipboard.writeText(`'+safeCn+'`).then(function(){toast(\'已复制 CN\',\'tgs\')})">📋 复制</button></div>';
+      h+='<div style="font-size:11px;line-height:1.6;color:var(--text);white-space:pre-wrap">'+esc(c.prompt_cn)+'</div></div>';
+      h+='</div>';
+    });
+    h+='</div>';
+  }
+
+  // ===== 区3: 整片分析 =====
   var blocks=[
-    {label:"🎬 完整脚本",val:v.ai_script},
-    {label:"📐 拍摄手法",val:v.ai_shooting},
-    {label:"🎥 运镜手法",val:v.ai_camera},
-    {label:"🚶 模特走位",val:v.ai_blocking},
     {label:"🪝 钩子分析",val:v.ai_hook},
     {label:"⏱️ 节奏卡点",val:v.ai_rhythm},
     {label:"🎵 BGM 分析",val:v.ai_bgm},
     {label:"📋 可复刻性",val:v.ai_replicability}
   ];
-  blocks.forEach(function(b){
-    if(b.val&&b.val.trim()){
-      h+='<div class="preview-card" style="margin-bottom:8px"><h5>'+b.label+'</h5>';
-      h+='<div style="font-size:12px;line-height:1.6;color:var(--text);white-space:pre-wrap">'+b.val.replace(/</g,"&lt;")+'</div></div>';
-    }
-  });
+  var hasAnyBlock=blocks.some(function(b){return b.val&&b.val.trim()});
+  if(hasAnyBlock){
+    h+='<div style="margin:14px 0 6px;font-size:12px;font-weight:600;color:var(--text2);border-bottom:1px solid var(--border);padding-bottom:4px">📊 整片分析</div>';
+    blocks.forEach(function(b){
+      if(b.val&&b.val.trim()){
+        h+='<div class="preview-card" style="margin-bottom:8px"><h5>'+b.label+'</h5>';
+        h+='<div style="font-size:12px;line-height:1.6;color:var(--text);white-space:pre-wrap">'+b.val.replace(/</g,"&lt;")+'</div></div>';
+      }
+    });
+  }
 
   list.innerHTML=h;
 }
