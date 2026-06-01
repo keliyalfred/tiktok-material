@@ -5752,6 +5752,7 @@ function renderSurgeList(){
        '<td style="padding:8px 6px"><span class="tag tt2" style="font-size:9px">'+(m.category||"—")+'</span></td>'+
        '<td style="padding:8px 6px;text-align:center;white-space:nowrap">'+
        '<a class="btn bg" href="https://www.tiktok.com/search?q='+searchQ+'" target="_blank" style="font-size:9px;padding:3px 8px;margin:0 2px;text-decoration:none">🔍 搜</a>'+
+       (m.music_play_url?'<button class="btn bg" style="font-size:9px;padding:3px 8px;margin:0 2px;color:var(--violet);border-color:var(--violet-light);background:var(--violet-light)" onclick="playMusic(\''+String(m.music_play_url).replace(/\\/g,"\\\\").replace(/'/g,"\\'")+'\')">♫ 试听</button>':'')+
        '<button class="btn bg" style="font-size:9px;padding:3px 8px;margin:0 2px" onclick="showBGMDetail(\''+safeName+'\')">🔗 关联</button>'+
        '</td>'+
        '</tr>';
