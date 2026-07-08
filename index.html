@@ -6181,7 +6181,7 @@ function renderInfluencerList(){
        '<td style="padding:6px;text-align:right;font-weight:600;color:var(--rose)">'+(d.priority_score!=null?Math.round(d.priority_score):'—')+'</td>'+
        '<td style="padding:6px;text-align:center">'+statusBadge(d.outreach_status)+'</td>'+
        '<td style="padding:6px;text-align:center;white-space:nowrap">'+
-         '<a class="btn bg" href="'+esc(d.profile_url)+'" target="_blank" style="font-size:9px;padding:3px 6px;margin:0 1px;text-decoration:none" title="打开 TikTok 主页">🔗</a>'+
+         (d.outreach_status!=='contactable'&&d.outreach_status!=='candidate'&&d.outreach_status!=='bio_fetched'?'<button class="btn bg" style="font-size:9px;padding:3px 6px;margin:0 1px;color:var(--amber);border-color:var(--amber-light);background:#FFFBEB" onclick="undoInfluencerStatus('+d.id+')" title="撤回状态（改回可发信）">↩</button>':'')+'<a class="btn bg" href="'+esc(d.profile_url)+'" target="_blank" style="font-size:9px;padding:3px 6px;margin:0 1px;text-decoration:none" title="打开 TikTok 主页">🔗</a>'+
          (email?'<button class="btn bg" style="font-size:9px;padding:3px 6px;margin:0 1px" onclick="copyInfluencerEmail(\''+esc(email).replace(/\\/g,'\\\\').replace(/\x27/g,'\\\x27')+'\')" title="复制邮箱">📧</button>':'')+
          '<button class="btn bp" style="font-size:9px;padding:3px 6px;margin:0 1px" onclick="setInfluencerStatus('+d.id+',\'queued\')" title="拟联系">🎯</button>'+
          '<button class="btn bg" style="font-size:9px;padding:3px 6px;margin:0 1px" onclick="showInfluencerDetail('+d.id+')" title="详情">📋</button>'+
@@ -6249,6 +6249,20 @@ function updateBulkBar(){
   }else{
     bar.style.display="none";
   }
+}
+
+// ---- 撤回状态 ----
+async function undoInfluencerStatus(id){
+  // 智能判断撤回目标：
+  //   如果有 email → 回到 contactable
+  //   如果有 bio 但没 email → 回到 bio_fetched
+  //   否则 → 回到 candidate
+  var d = influencerData.find(function(x){return x.id===id});
+  if(!d) return;
+  var target = 'candidate';
+  if(d.email && d.email !== '') target = 'contactable';
+  else if(d.bio_raw && d.bio_raw !== '') target = 'bio_fetched';
+  await setInfluencerStatus(id, target);
 }
 
 // ---- 操作：状态变更 ----
