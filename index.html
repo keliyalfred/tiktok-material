@@ -5913,17 +5913,35 @@ async function loadInfluencers(){
   var wrap=document.getElementById("influencerListWrap");
   if(wrap)wrap.innerHTML='<div class="loading">查询候选池...</div>';
   try{
-    var url=U+"/rest/v1/influencer_pool?select=*&order=priority_score.desc&limit=5000";
-    var r=await fetch(url,{headers:{"apikey":K}});
-    if(!r.ok){
-      var errText=await r.text();
-      if(errText.indexOf("does not exist")>=0||errText.indexOf("relation")>=0){
-        wrap.innerHTML='<div class="empty">⚠️ influencer_pool 表未创建<br><div style="font-size:11px;margin-top:6px">请先在 Supabase 执行 <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">setup_influencer_pool_v4.sql</code></div></div>';
-        return;
+    // Supabase REST API 默认最多返回 1000 条，用分页方式突破
+    // 用 Range header 一次拉 1000，循环直到拿完
+    influencerData = [];
+    var offset = 0;
+    var pageSize = 1000;
+    var maxLoops = 20;  // 兜底防死循环，最多拉 20000 条
+    while(maxLoops-- > 0){
+      var url=U+"/rest/v1/influencer_pool?select=*&order=priority_score.desc";
+      var r=await fetch(url,{
+        headers:{
+          "apikey":K,
+          "Range-Unit":"items",
+          "Range":offset+"-"+(offset+pageSize-1)
+        }
+      });
+      if(!r.ok){
+        var errText=await r.text();
+        if(errText.indexOf("does not exist")>=0||errText.indexOf("relation")>=0){
+          wrap.innerHTML='<div class="empty">⚠️ influencer_pool 表未创建<br><div style="font-size:11px;margin-top:6px">请先在 Supabase 执行 <code style="background:var(--surface2);padding:1px 5px;border-radius:3px">setup_influencer_pool_v4.sql</code></div></div>';
+          return;
+        }
+        throw new Error(errText.substring(0,200));
       }
-      throw new Error(errText.substring(0,200));
+      var batch = await r.json();
+      influencerData = influencerData.concat(batch);
+      if(batch.length < pageSize) break;  // 拿完了
+      offset += pageSize;
     }
-    influencerData = await r.json();
+    var _skip_json_parse = true;
     updateInfluencerFunnel();
     renderStyleKeywordChips();
     applyInfluencerFilters();
