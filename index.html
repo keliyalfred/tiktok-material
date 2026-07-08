@@ -5831,6 +5831,9 @@ async function showInfluencerView(){
     // 顶部状态漏斗
     '<div id="influencerFunnel" style="padding:10px 12px;background:linear-gradient(90deg,var(--rose-light),var(--pink-light));border-radius:8px;margin-bottom:10px"><div class="loading" style="padding:4px">加载达人漏斗...</div></div>'+
     
+    // 待处理浮标（回信/挂车/发布 三合一）
+    '<div id="pendingPanel" style="margin-bottom:10px"></div>'+
+    
     // 工具栏
     '<div class="toolbar">'+
       '<div class="tt"><span class="nc" style="background:var(--rose-light);color:var(--rose);width:20px;height:20px;border-radius:4px">👥</span>达人开发 <span class="ct" id="influencerCount"></span></div>'+
@@ -5943,6 +5946,7 @@ async function loadInfluencers(){
     }
     var _skip_json_parse = true;
     updateInfluencerFunnel();
+    loadPendingActions();
     renderStyleKeywordChips();
     applyInfluencerFilters();
   }catch(e){
@@ -5951,6 +5955,123 @@ async function loadInfluencers(){
 }
 
 // ---- 漏斗 ----
+// ---- 待处理浮标：一次拉 replied / posted_new / shop_sample 三类 ----
+async function loadPendingActions(){
+  var panel = document.getElementById("pendingPanel");
+  if(!panel) return;
+  try{
+    var r = await fetch(U+"/rest/v1/rpc/get_pending_actions",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":K},
+      body:JSON.stringify({})
+    });
+    if(!r.ok){
+      var errText = await r.text();
+      if(errText.indexOf("does not exist")>=0 || errText.indexOf("could not find")>=0){
+        panel.innerHTML = '<div style="padding:8px 12px;background:var(--amber-light);border-radius:6px;font-size:11px;color:var(--amber-text)">⚠️ 待处理列表 RPC 未安装 — 请先在 Supabase 执行 <code style="background:white;padding:1px 5px;border-radius:3px">setup_posted_tracker.sql</code></div>';
+        return;
+      }
+      throw new Error(errText.substring(0,200));
+    }
+    var data = await r.json();
+    renderPendingPanel(data);
+  }catch(e){
+    panel.innerHTML = '<div style="padding:8px 12px;background:#FEE2E2;border-radius:6px;font-size:11px;color:#B91C1C">待处理列表加载失败: '+e.message+'</div>';
+  }
+}
+
+function renderPendingPanel(data){
+  var panel = document.getElementById("pendingPanel");
+  if(!panel) return;
+  var replied = data.replied || [];
+  var posted = data.posted_new || [];
+  var shop = data.shop_sample || [];
+  var counts = data.counts || {};
+  
+  // 三类都空，就不显示（不占位）
+  if(!replied.length && !posted.length && !shop.length){
+    panel.innerHTML = '';
+    return;
+  }
+  
+  var esc = function(x){return (x==null?'':String(x)).replace(/</g,'&lt;').replace(/>/g,'&gt;')};
+  var h = '<div style="background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border:1px solid var(--amber);border-radius:8px;padding:12px">';
+  h += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px"><span style="font-size:14px">📋</span><b style="font-size:12px;color:var(--amber-text)">待处理列表</b><span style="font-size:10px;color:var(--text3)">（近 7 天新动态）</span></div>';
+  
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">';
+  
+  // 三列：新回信 / 挂车样品 / 新发布
+  h += renderPendingColumn('💬 新回信', 'var(--emerald)', replied, function(d){
+    var esc2 = function(x){return (x==null?"":String(x)).replace(/</g,"&lt;").replace(/>/g,"&gt;")};
+    return '<a href="'+esc2(d.profile_url)+'" target="_blank" style="text-decoration:none;color:inherit"><b>@'+esc2(d.creator_username)+'</b></a>'+
+           (d.creator_nickname?'<div style="color:var(--text3);font-size:9px">'+esc2(d.creator_nickname)+'</div>':'')+
+           '<div style="margin-top:3px"><button class="btn bp" style="font-size:9px;padding:2px 6px" onclick="setInfluencerStatus('+d.id+',\'negotiating\')">→ 洽谈中</button> <button class="btn bg" style="font-size:9px;padding:2px 6px" onclick="showInfluencerDetail('+d.id+')">详情</button></div>';
+  });
+  
+  h += renderPendingColumn('📦 已寄样待跟进', 'var(--pink)', shop, function(d){
+    var esc2 = function(x){return (x==null?"":String(x)).replace(/</g,"&lt;").replace(/>/g,"&gt;")};
+    return '<a href="'+esc2(d.profile_url)+'" target="_blank" style="text-decoration:none;color:inherit"><b>@'+esc2(d.creator_username)+'</b></a>'+
+           (d.creator_nickname?'<div style="color:var(--text3);font-size:9px">'+esc2(d.creator_nickname)+'</div>':'')+
+           '<div style="margin-top:3px"><button class="btn bp" style="font-size:9px;padding:2px 6px" onclick="setInfluencerStatus('+d.id+',\'posted\')">→ 已发布</button> <button class="btn bg" style="font-size:9px;padding:2px 6px" onclick="showInfluencerDetail('+d.id+')">详情</button></div>';
+  });
+  
+  h += renderPendingColumn('🎬 新发布视频', 'var(--rose)', posted, function(d){
+    var esc2 = function(x){return (x==null?"":String(x)).replace(/</g,"&lt;").replace(/>/g,"&gt;")};
+    var videos = d.posted_video_urls || [];
+    var latestVideo = videos[videos.length-1] || '';
+    return '<a href="'+esc2(d.profile_url)+'" target="_blank" style="text-decoration:none;color:inherit"><b>@'+esc2(d.creator_username)+'</b></a>'+
+           '<div style="color:var(--rose);font-size:9px;margin-top:2px">+' + (d.new_posts_count || 1) + ' 条新视频</div>'+
+           (latestVideo?'<div style="margin-top:2px"><a href="'+esc2(latestVideo)+'" target="_blank" style="font-size:9px;color:var(--indigo)">▶ 打开最新</a></div>':'')+
+           '<div style="margin-top:3px"><button class="btn bg" style="font-size:9px;padding:2px 6px" onclick="markPostsSeen('+d.id+')">✓ 已看</button> <button class="btn bg" style="font-size:9px;padding:2px 6px" onclick="showInfluencerDetail('+d.id+')">详情</button></div>';
+  });
+  
+  h += '</div>';
+  
+  // 底部小提示
+  h += '<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--amber);font-size:10px;color:var(--text3);display:flex;justify-content:space-between">';
+  h += '<span>💡 新发布是每天自动追踪的（cron 触发 sync_posted_videos）</span>';
+  h += '<span>回信/挂车需手工在详情页勾选 → 或直接来这里操作</span>';
+  h += '</div>';
+  
+  h += '</div>';
+  panel.innerHTML = h;
+}
+
+function renderPendingColumn(title, color, items, itemRenderer){
+  var h = '<div style="background:white;border-radius:6px;padding:8px;border-left:3px solid '+color+'">';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><b style="font-size:11px;color:'+color+'">'+title+'</b><span style="font-size:10px;color:var(--text3);background:var(--surface2);padding:1px 6px;border-radius:8px">'+items.length+'</span></div>';
+  if(!items.length){
+    h += '<div style="font-size:10px;color:var(--text3);padding:8px 0;text-align:center">暂无</div>';
+  }else{
+    h += '<div style="max-height:180px;overflow-y:auto;font-size:10px">';
+    items.slice(0,10).forEach(function(d){
+      h += '<div style="padding:5px;border-bottom:1px solid var(--border)">'+itemRenderer(d)+'</div>';
+    });
+    if(items.length>10){
+      h += '<div style="font-size:9px;color:var(--text3);padding:4px;text-align:center">... 还有 '+(items.length-10)+' 个</div>';
+    }
+    h += '</div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+async function markPostsSeen(id){
+  try{
+    var r = await fetch(U+"/rest/v1/rpc/mark_posts_seen",{
+      method:"POST",
+      headers:{"Content-Type":"application/json","apikey":K},
+      body:JSON.stringify({p_influencer_id: id})
+    });
+    if(!r.ok) throw new Error(await r.text());
+    toast('✓ 已标记已看','tgs');
+    // 本地同步
+    var d = influencerData.find(function(x){return x.id===id});
+    if(d) d.new_posts_count = 0;
+    loadPendingActions();
+  }catch(e){toast('标记失败: '+e.message,'tge')}
+}
+
 function updateInfluencerFunnel(){
   var funnel=document.getElementById("influencerFunnel");
   if(!funnel)return;
