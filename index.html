@@ -6452,6 +6452,13 @@ function showInfluencerDetail(id){
       '<div style="background:var(--surface2);padding:8px;border-radius:6px"><div style="font-size:10px;color:var(--text3)">均播放</div><div style="font-weight:600">'+fmt(d.avg_views_per_video)+'</div></div>'+
       '<div style="background:var(--rose-light);padding:8px;border-radius:6px"><div style="font-size:10px;color:var(--text3)">播/粉比</div><div style="font-weight:700;color:var(--rose)">'+(d.creator_followers>0?((d.avg_views_per_video||0)/d.creator_followers).toFixed(1)+'×':'—')+'</div></div>'+
     '</div>'+
+    // API 元信息条：地区/认证/视频数（TikAPI 抓 bio 时顺便拿到的）
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;font-size:10px">'+
+      (d.api_region?'<span style="padding:3px 8px;background:var(--indigo-light);color:var(--indigo);border-radius:10px;font-weight:600">🌍 '+esc(d.api_region)+(d.api_region==='US'?' ✓':'')+'</span>':'')+
+      (d.region&&d.region!==d.api_region?'<span style="padding:3px 8px;background:var(--surface2);color:var(--text2);border-radius:10px" title="档案填的地区">档案: '+esc(d.region)+'</span>':'')+
+      (d.api_verified===true?'<span style="padding:3px 8px;background:#DBEAFE;color:#1D4ED8;border-radius:10px;font-weight:600">✓ TikTok 认证</span>':'')+
+      (d.api_video_count?'<span style="padding:3px 8px;background:var(--surface2);color:var(--text2);border-radius:10px">🎥 '+esc(d.api_video_count)+' 条视频</span>':'')+
+    '</div>'+
     (d.email?'<div style="padding:8px;background:var(--indigo-light);border-radius:6px;margin-bottom:10px;font-size:12px"><b>📧 '+esc(d.email)+'</b> <button class="btn bg" style="font-size:10px;margin-left:6px" onclick="copyInfluencerEmail(\''+esc(d.email).replace(/\x27/g,'\\\x27')+'\')">复制</button></div>':'')+
     (d.instagram?'<div style="font-size:12px;margin-bottom:6px">📸 IG: <b>@'+esc(d.instagram)+'</b></div>':'')+
     (d.linktree_url?'<div style="font-size:12px;margin-bottom:6px">🔗 <a href="'+esc(d.linktree_url)+'" target="_blank">'+esc(d.linktree_url)+'</a></div>':'')+
