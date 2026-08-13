@@ -5811,7 +5811,8 @@ var influencerFilters = {         // 当前筛选条件
   styles: [],
   keywords: [],
   verifiedOnly: false,
-  hasEmailOnly: true              // 默认只看有邮箱的
+  hasEmailOnly: true,             // 默认只看有邮箱的
+  hideDone: true                  // 默认隐藏「不合适 / 已归档」
 };
 var influencerSort = {field:'priority_score', dir:'desc'};
 var influencerPageSize = 50;
@@ -5848,10 +5849,12 @@ async function showInfluencerView(){
         // 状态
         '<div><label style="font-size:10px;color:var(--text3);font-weight:600">📍 状态</label><br>'+
           '<select id="fStatus" onchange="onInfluencerFilterChange()" style="width:100%;padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px">'+
-            '<option value="all">全部</option>'+
+            // ★ 修复：原来 contactable 带 selected，但 influencerFilters.status 初始是 'all'
+            //   下拉框显示"可发信"、实际却在按"全部"筛 —— 显示和实际对不上
+            '<option value="all" selected>全部</option>'+
             '<option value="candidate">candidate 未联系</option>'+
             '<option value="bio_fetched">bio_fetched 无邮箱</option>'+
-            '<option value="contactable" selected>contactable 可发信</option>'+
+            '<option value="contactable">contactable 可发信</option>'+
             '<option value="queued">queued 拟联系</option>'+
             '<option value="letter_sent">letter_sent 已发信</option>'+
             '<option value="opened">opened 已打开</option>'+
@@ -5890,6 +5893,7 @@ async function showInfluencerView(){
       '<div style="margin-top:10px;display:flex;gap:15px;align-items:center">'+
         '<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" id="fHasEmail" checked onchange="onInfluencerFilterChange()"/> 仅有邮箱</label>'+
         '<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer"><input type="checkbox" id="fVerified" onchange="onInfluencerFilterChange()"/> 仅认证</label>'+
+        '<label style="display:flex;align-items:center;gap:4px;font-size:11px;cursor:pointer" title="标记过🚫不合适、🗄已归档的人默认不出现在列表里"><input type="checkbox" id="fHideDone" checked onchange="onInfluencerFilterChange()"/> 隐藏「不合适/已归档」</label>'+
         '<button class="btn bg" style="font-size:11px;margin-left:auto" onclick="resetInfluencerFilters()">重置筛选</button>'+
       '</div>'+
     '</div>'+
@@ -5899,7 +5903,7 @@ async function showInfluencerView(){
       '<span id="bulkSelectedCount" style="font-weight:600;color:var(--indigo-text)"></span>'+
       '<button class="btn bp" style="font-size:11px;margin-left:auto" onclick="bulkSetStatus(\'queued\')">🎯 批量拟联系</button>'+
       '<button class="btn bg" style="font-size:11px" onclick="bulkSetStatus(\'archived\')">🗄 批量归档</button>'+
-      '<button class="btn bg" style="font-size:11px" onclick="bulkSetStatus(\'rejected\')">🚫 批量拒绝</button>'+
+      '<button class="btn bg" style="font-size:11px;color:#B91C1C;border-color:#FECACA;background:#FEF2F2" onclick="bulkSetStatus(\'rejected\')">🚫 批量不合适</button>'+
       '<button class="btn bg" style="font-size:11px" onclick="exportSelectedInfluencersCSV()">📥 导出 CSV</button>'+
       '<button class="btn bg" style="font-size:11px" onclick="clearInfluencerSelection()">清除</button>'+
     '</div>'+
@@ -6086,6 +6090,7 @@ function updateInfluencerFunnel(){
     {key:'negotiating',  label:'洽谈中',      icon:'🤝', color:'var(--teal)'},
     {key:'sample_sent',  label:'已寄样',      icon:'📦', color:'var(--pink)'},
     {key:'posted',       label:'已发布',      icon:'🎬', color:'var(--rose)'},
+    {key:'rejected',     label:'不合适',      icon:'🚫', color:'#B91C1C'},
     {key:'archived',     label:'已归档',      icon:'🗄', color:'var(--text3)'}
   ];
   var counts={};
@@ -6104,6 +6109,11 @@ function updateInfluencerFunnel(){
 
 function quickFilterStatus(k){
   document.getElementById("fStatus").value=k;
+  // ★ 修复：点漏斗「候选 2225」时如果还锁着"仅有邮箱"，会显示 0 人、看起来像坏了
+  //    这两个状态按定义就是没邮箱的，自动放开该限制
+  if(k==='candidate'||k==='bio_fetched'){
+    document.getElementById("fHasEmail").checked=false;
+  }
   onInfluencerFilterChange();
   document.getElementById("influencerFilterPanel").style.display="block";
 }
@@ -6122,7 +6132,7 @@ function renderStyleKeywordChips(){
   if(stEl){
     stEl.innerHTML=styles.map(function(s){
       var on=influencerFilters.styles.indexOf(s)>=0;
-      return '<span onclick="toggleStyleChip(\''+s+'\')" style="padding:3px 8px;border-radius:12px;font-size:10px;cursor:pointer;background:'+(on?'var(--rose)':'white')+';color:'+(on?'white':'var(--text2)')+';border:1px solid '+(on?'var(--rose)':'var(--border)')+'">'+s+' ('+styleSet[s]+')</span>';
+      return '<span onclick="toggleInfluencerStyleChip(\''+s+'\')" style="padding:3px 8px;border-radius:12px;font-size:10px;cursor:pointer;background:'+(on?'var(--rose)':'white')+';color:'+(on?'white':'var(--text2)')+';border:1px solid '+(on?'var(--rose)':'var(--border)')+'">'+s+' ('+styleSet[s]+')</span>';
     }).join('');
   }
   var kwEl=document.getElementById("fKeywordsChips");
@@ -6134,7 +6144,9 @@ function renderStyleKeywordChips(){
   }
 }
 
-function toggleStyleChip(s){
+// ★ 改名：原来叫 toggleStyleChip，和第 1537 行素材库的同名函数撞车
+//   JS 后定义的覆盖先定义的 → 素材拆分/成片组装里的风格 chips 全点不动
+function toggleInfluencerStyleChip(s){
   var i=influencerFilters.styles.indexOf(s);
   if(i>=0)influencerFilters.styles.splice(i,1);
   else influencerFilters.styles.push(s);
@@ -6166,10 +6178,12 @@ function onInfluencerFilterChange(){
   influencerFilters.minViewsFollowersRatio=document.getElementById("fMinRatio").value;
   influencerFilters.hasEmailOnly=document.getElementById("fHasEmail").checked;
   influencerFilters.verifiedOnly=document.getElementById("fVerified").checked;
+  var hd=document.getElementById("fHideDone");
+  influencerFilters.hideDone=hd?hd.checked:true;
   applyInfluencerFilters();
 }
 function resetInfluencerFilters(){
-  influencerFilters={status:'all',search:'',minFollowers:'',maxFollowers:'',minAvgViews:'',minViewsFollowersRatio:'',styles:[],keywords:[],verifiedOnly:false,hasEmailOnly:true};
+  influencerFilters={status:'all',search:'',minFollowers:'',maxFollowers:'',minAvgViews:'',minViewsFollowersRatio:'',styles:[],keywords:[],verifiedOnly:false,hasEmailOnly:true,hideDone:true};
   document.getElementById("fStatus").value='all';
   document.getElementById("fMinFol").value='';
   document.getElementById("fMaxFol").value='';
@@ -6177,16 +6191,21 @@ function resetInfluencerFilters(){
   document.getElementById("fMinRatio").value='';
   document.getElementById("fHasEmail").checked=true;
   document.getElementById("fVerified").checked=false;
+  var _hd=document.getElementById("fHideDone");if(_hd)_hd.checked=true;
   document.getElementById("influencerSearch").value='';
   renderStyleKeywordChips();
   applyInfluencerFilters();
 }
 
 // ---- 应用筛选 + 排序 ----
-function applyInfluencerFilters(){
+// keepPage=true 时保留当前页码（状态标记后不跳回第 1 页）
+function applyInfluencerFilters(keepPage){
+  var _prevPage = influencerCurrentPage;
   var f=influencerFilters;
   influencerFiltered=influencerData.filter(function(d){
     if(f.status!=='all'&&d.outreach_status!==f.status)return false;
+    // 默认把「已拒绝 / 已归档」从工作视图里藏起来（明确筛这两个状态时不生效）
+    if(f.hideDone&&f.status==='all'&&(d.outreach_status==='rejected'||d.outreach_status==='archived'))return false;
     if(f.hasEmailOnly&&(!d.email||d.email===''))return false;
     if(f.verifiedOnly&&!d.is_verified)return false;
     if(f.minFollowers&&(d.creator_followers||0)<Number(f.minFollowers))return false;
@@ -6218,10 +6237,67 @@ function applyInfluencerFilters(){
     if(va==null)va=-Infinity;if(vb==null)vb=-Infinity;
     if(va<vb)return -1*sd;if(va>vb)return 1*sd;return 0;
   });
-  influencerCurrentPage=1;
+  // ★ 修复：标记状态后不再跳回第 1 页
+  if(keepPage){
+    var _maxPage=Math.max(1,Math.ceil(influencerFiltered.length/influencerPageSize));
+    influencerCurrentPage=Math.min(_prevPage,_maxPage);
+  }else{
+    influencerCurrentPage=1;
+  }
   var cntEl=document.getElementById("influencerCount");
   if(cntEl)cntEl.textContent=influencerFiltered.length+"人（总"+influencerData.length+"）";
   renderInfluencerList();
+}
+
+// ---- 行内操作按钮 ----
+// 状态推进链：每个状态只显示"下一步"那一个按钮，不堆一排
+var INFLUENCER_NEXT_STEP = {
+  candidate:   {to:'queued',      icon:'🎯', tip:'加入拟联系'},
+  bio_fetched: {to:'queued',      icon:'🎯', tip:'加入拟联系'},
+  contactable: {to:'queued',      icon:'🎯', tip:'加入拟联系'},
+  queued:      {to:'letter_sent', icon:'📤', tip:'标记已发信'},
+  letter_sent: {to:'replied',     icon:'💬', tip:'标记已回复'},
+  replied:     {to:'negotiating', icon:'🤝', tip:'标记洽谈中'},
+  negotiating: {to:'sample_sent', icon:'📦', tip:'标记已寄样'},
+  sample_sent: {to:'posted',      icon:'🎬', tip:'标记已发布'}
+};
+
+function influencerRowActions(d, email, esc){
+  var st = d.outreach_status;
+  var B = function(cls,extra,fn,tip,label){
+    return '<button class="btn '+cls+'" style="font-size:9px;padding:3px 5px;margin:0 1px;'+(extra||'')+'" onclick="'+fn+'" title="'+tip+'">'+label+'</button>';
+  };
+  var h = '';
+
+  // ↩ 撤回（已经推进过状态的才显示）
+  if(st!=='contactable' && st!=='candidate' && st!=='bio_fetched'){
+    h += B('bg','color:var(--amber);border-color:var(--amber-light);background:#FFFBEB',
+           'undoInfluencerStatus('+d.id+')','撤回状态（退回上一层）','↩');
+  }
+
+  // 🔗 主页
+  h += '<a class="btn bg" href="'+esc(d.profile_url)+'" target="_blank" style="font-size:9px;padding:3px 5px;margin:0 1px;text-decoration:none" title="打开 TikTok 主页">🔗</a>';
+
+  // 📧 复制邮箱
+  if(email){
+    h += B('bg','','copyInfluencerEmail(\''+esc(email).replace(/\\/g,'\\\\').replace(/\x27/g,'\\\x27')+'\')','复制邮箱','📧');
+  }
+
+  // ▶ 下一步（随状态变化）
+  var nx = INFLUENCER_NEXT_STEP[st];
+  if(nx){
+    h += B('bp','','setInfluencerStatus('+d.id+',\''+nx.to+'\')',nx.tip,nx.icon);
+  }
+
+  // 🚫 看过·不合适
+  if(st!=='rejected'){
+    h += B('bg','color:#B91C1C;border-color:#FECACA;background:#FEF2F2',
+           'setInfluencerStatus('+d.id+',\'rejected\')','看过了 — 不合适，从列表隐藏','🚫');
+  }
+
+  // 📋 详情
+  h += B('bg','','showInfluencerDetail('+d.id+')','详情','📋');
+  return h;
 }
 
 // ---- 列表渲染 ----
@@ -6252,7 +6328,7 @@ function renderInfluencerList(){
       sample_sent:{bg:'#FCE7F3',fg:'#BE185D',lb:'已寄样'},
       posted:{bg:'#FFE4E6',fg:'#BE123C',lb:'已发布'},
       archived:{bg:'#F3F4F6',fg:'#6B7280',lb:'归档'},
-      rejected:{bg:'#FEE2E2',fg:'#B91C1C',lb:'拒绝'},
+      rejected:{bg:'#FEE2E2',fg:'#B91C1C',lb:'不合适'},
       bounced:{bg:'#FEE2E2',fg:'#B91C1C',lb:'退信'}
     };
     var c=m[st]||m.candidate;
@@ -6260,19 +6336,19 @@ function renderInfluencerList(){
   };
 
   var h='<div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden">';
-  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:1100px">';
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;min-width:1040px">';
   h+='<thead style="background:var(--surface2)"><tr>'+
      '<th style="padding:8px 6px;width:30px;text-align:center"><input type="checkbox" id="selectAllInfluencers" onchange="toggleAllInfluencersOnPage(this.checked)"/></th>'+
      '<th style="padding:8px 6px;text-align:left;font-size:10px;color:var(--text2);width:44px">头像</th>'+
-     '<th style="padding:8px 6px;text-align:left;font-size:10px;color:var(--text2);min-width:150px">达人</th>'+
+     '<th style="padding:8px 6px;text-align:left;font-size:10px;color:var(--text2);min-width:135px">达人</th>'+
      '<th style="padding:8px 6px;text-align:right;font-size:10px;color:var(--text2);width:70px;cursor:pointer" onclick="sortInfluencers(\'creator_followers\')">👥粉丝'+(influencerSort.field==='creator_followers'?(influencerSort.dir==='desc'?' ↓':' ↑'):'')+'</th>'+
      '<th style="padding:8px 6px;text-align:right;font-size:10px;color:var(--text2);width:70px;cursor:pointer" onclick="sortInfluencers(\'avg_views_per_video\')">📹均播'+(influencerSort.field==='avg_views_per_video'?(influencerSort.dir==='desc'?' ↓':' ↑'):'')+'</th>'+
      '<th style="padding:8px 6px;text-align:right;font-size:10px;color:var(--rose);background:var(--rose-light);width:64px">🔥播/粉</th>'+
-     '<th style="padding:8px 6px;text-align:left;font-size:10px;color:var(--text2);min-width:130px">调性</th>'+
-     '<th style="padding:8px 6px;text-align:left;font-size:10px;color:var(--text2);min-width:170px">📧邮箱</th>'+
+     '<th style="padding:8px 6px;text-align:left;font-size:10px;color:var(--text2);min-width:112px">调性</th>'+
+     '<th style="padding:8px 6px;text-align:left;font-size:10px;color:var(--text2);min-width:150px">📧邮箱</th>'+
      '<th style="padding:8px 6px;text-align:right;font-size:10px;color:var(--text2);width:50px;cursor:pointer" onclick="sortInfluencers(\'priority_score\')">分'+(influencerSort.field==='priority_score'?(influencerSort.dir==='desc'?' ↓':' ↑'):'')+'</th>'+
      '<th style="padding:8px 6px;text-align:center;font-size:10px;color:var(--text2);width:70px">状态</th>'+
-     '<th style="padding:8px 6px;text-align:center;font-size:10px;color:var(--text2);width:150px">操作</th>'+
+     '<th style="padding:8px 6px;text-align:center;font-size:10px;color:var(--text2);width:190px">操作</th>'+
      '</tr></thead><tbody>';
 
   pageData.forEach(function(d){
@@ -6287,8 +6363,10 @@ function renderInfluencerList(){
     var emailShort=email.length>25?email.substring(0,23)+'...':email;
     var verifiedBadge=d.is_verified?' <span title="TikTok 认证" style="color:var(--sky)">✓</span>':'';
 
-    h+='<tr style="border-top:1px solid var(--border);vertical-align:top"'+(influencerSelected[d.id]?' style="background:var(--indigo-light)"':'')+'>'+
-       '<td style="padding:6px;text-align:center"><input type="checkbox" '+checked+' onchange="toggleInfluencerSelect('+d.id+',this.checked)"/></td>'+
+    // ★ 修复：原来写了两个 style 属性，浏览器忽略第二个 → 选中行高亮从来没生效过
+    var rowBg=influencerSelected[d.id]?'background:var(--indigo-light);':(d.outreach_status==='rejected'?'background:#FEF2F2;opacity:.62;':'');
+    h+='<tr style="border-top:1px solid var(--border);vertical-align:top;'+rowBg+'">'+
+       '<td style="padding:6px;text-align:center"><input type="checkbox" '+checked+' onchange="toggleInfluencerSelect('+d.id+',this.checked,this)"/></td>'+
        '<td style="padding:6px">'+avatar+initialsBox+'</td>'+
        '<td style="padding:6px 8px">'+
          '<div style="font-weight:600;color:var(--text)">@'+esc(d.creator_username)+verifiedBadge+'</div>'+
@@ -6302,10 +6380,7 @@ function renderInfluencerList(){
        '<td style="padding:6px;text-align:right;font-weight:600;color:var(--rose)">'+(d.priority_score!=null?Math.round(d.priority_score):'—')+'</td>'+
        '<td style="padding:6px;text-align:center">'+statusBadge(d.outreach_status)+'</td>'+
        '<td style="padding:6px;text-align:center;white-space:nowrap">'+
-         (d.outreach_status!=='contactable'&&d.outreach_status!=='candidate'&&d.outreach_status!=='bio_fetched'?'<button class="btn bg" style="font-size:9px;padding:3px 6px;margin:0 1px;color:var(--amber);border-color:var(--amber-light);background:#FFFBEB" onclick="undoInfluencerStatus('+d.id+')" title="撤回状态（改回可发信）">↩</button>':'')+'<a class="btn bg" href="'+esc(d.profile_url)+'" target="_blank" style="font-size:9px;padding:3px 6px;margin:0 1px;text-decoration:none" title="打开 TikTok 主页">🔗</a>'+
-         (email?'<button class="btn bg" style="font-size:9px;padding:3px 6px;margin:0 1px" onclick="copyInfluencerEmail(\''+esc(email).replace(/\\/g,'\\\\').replace(/\x27/g,'\\\x27')+'\')" title="复制邮箱">📧</button>':'')+
-         '<button class="btn bp" style="font-size:9px;padding:3px 6px;margin:0 1px" onclick="setInfluencerStatus('+d.id+',\'queued\')" title="拟联系">🎯</button>'+
-         '<button class="btn bg" style="font-size:9px;padding:3px 6px;margin:0 1px" onclick="showInfluencerDetail('+d.id+')" title="详情">📋</button>'+
+         influencerRowActions(d,email,esc)+
        '</td>'+
        '</tr>';
   });
@@ -6343,9 +6418,16 @@ function sortInfluencers(field){
 }
 
 // ---- 选择 ----
-function toggleInfluencerSelect(id,checked){
+function toggleInfluencerSelect(id,checked,el){
   if(checked)influencerSelected[id]=true;
   else delete influencerSelected[id];
+  // ★ 立即给整行上色（原来只更新批量栏、行高亮要等下次重绘才出现）
+  var tr=el&&el.closest?el.closest('tr'):null;
+  if(tr){
+    var d=influencerData.find(function(x){return x.id===id});
+    tr.style.background = checked ? 'var(--indigo-light)'
+      : ((d&&d.outreach_status==='rejected') ? '#FEF2F2' : '');
+  }
   updateBulkBar();
 }
 function toggleAllInfluencersOnPage(checked){
@@ -6398,10 +6480,12 @@ async function setInfluencerStatus(id, status){
     // 本地同步
     var d=influencerData.find(function(x){return x.id===id});
     if(d)d.outreach_status=status;
-    var labels={queued:'🎯 已加入拟联系队列',archived:'🗄 已归档',rejected:'🚫 已拒绝'};
+    var labels={queued:'🎯 已加入拟联系队列',letter_sent:'📤 已标记发信',replied:'💬 已标记回复',
+                negotiating:'🤝 已标记洽谈中',sample_sent:'📦 已标记寄样',posted:'🎬 已标记发布',
+                archived:'🗄 已归档',rejected:'🚫 已标记不合适'};
     toast(labels[status]||('状态更新为 '+status),'tgs');
     updateInfluencerFunnel();
-    applyInfluencerFilters();
+    applyInfluencerFilters(true);   // ★ 保留当前页
   }catch(e){toast('更新失败: '+e.message,'tge')}
 }
 
@@ -6422,7 +6506,7 @@ async function bulkSetStatus(status){
     influencerSelected={};
     toast('✅ 批量更新 '+ids.length+' 人为 '+status,'tgs');
     updateInfluencerFunnel();
-    applyInfluencerFilters();
+    applyInfluencerFilters(true);   // ★ 保留当前页
   }catch(e){toast('批量失败: '+e.message,'tge')}
 }
 
@@ -6470,7 +6554,7 @@ function showInfluencerDetail(id){
       '<a class="btn bp" href="'+esc(d.profile_url)+'" target="_blank" style="font-size:11px;text-decoration:none">🔗 打开 TikTok 主页</a>'+
       '<button class="btn bg" style="font-size:11px" onclick="setInfluencerStatus('+d.id+',\'queued\');this.closest(\'[style*=fixed]\').remove()">🎯 加入拟联系</button>'+
       '<button class="btn bg" style="font-size:11px" onclick="setInfluencerStatus('+d.id+',\'archived\');this.closest(\'[style*=fixed]\').remove()">🗄 归档</button>'+
-      '<button class="btn bg" style="font-size:11px" onclick="setInfluencerStatus('+d.id+',\'rejected\');this.closest(\'[style*=fixed]\').remove()">🚫 拒绝</button>'+
+      '<button class="btn bg" style="font-size:11px;color:#B91C1C;border-color:#FECACA;background:#FEF2F2" onclick="setInfluencerStatus('+d.id+',\'rejected\');this.closest(\'[style*=fixed]\').remove()">🚫 看过·不合适</button>'+
     '</div>'+
     '</div>';
   m.innerHTML=h;
